@@ -23,6 +23,7 @@ export function InstallPrompt() {
       }}
     >
       <div
+        className={isIOS ? "animate-scale-in" : ""}
         style={{
           display: "flex",
           alignItems: "center",

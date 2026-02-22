@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Share } from "lucide-react";
 import { ALL_RULESETS } from "@/lib/rulesets";
 
 // ===== Header =====
@@ -446,6 +447,51 @@ function RulesModal({
             )}
           </div>
         )}
+
+        <InstallSection />
+      </div>
+    </div>
+  );
+}
+
+function InstallSection() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(display-mode: standalone)").matches) return;
+    const ua = navigator.userAgent;
+    const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (ios) setShow(true);
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+      <h3
+        style={{
+          fontSize: 14,
+          fontWeight: 600,
+          color: "#ffffff",
+          marginBottom: 12,
+          fontFamily: '"IBM Plex Mono", monospace',
+        }}
+      >
+        Install on your device
+      </h3>
+      <p style={{ lineHeight: 1.7 }}>
+        Play Weetzee like a real app — no browser, works offline.
+      </p>
+      <div style={{ marginTop: 12, color: "#ffffff" }}>
+        <p style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          1. Tap the <Share size={14} style={{ flexShrink: 0 }} /> share button
+        </p>
+        <p style={{ marginTop: 8 }}>
+          2. Scroll down and tap <span style={{ fontWeight: 500 }}>&quot;Add to Home Screen&quot;</span>
+        </p>
+        <p style={{ marginTop: 8 }}>
+          3. Tap <span style={{ fontWeight: 500 }}>&quot;Add&quot;</span>
+        </p>
       </div>
     </div>
   );
