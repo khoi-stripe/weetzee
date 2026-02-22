@@ -77,7 +77,7 @@ function RulesetContent() {
       <div
         ref={containerRef}
         className="flex flex-col flex-1 min-h-0 items-center justify-center"
-        style={{ padding: GAP, gap: GAP }}
+        style={{ padding: GAP, gap: 24 }}
       >
         <p
           className="shrink-0"

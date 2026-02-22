@@ -74,7 +74,7 @@ export function PlayerSelector({
     <div
       ref={containerRef}
       className="flex flex-col items-center justify-center"
-      style={{ flex: 1, minHeight: 0, width: "100%", padding: GAP, gap: GAP }}
+      style={{ flex: 1, minHeight: 0, width: "100%", padding: GAP, gap: 24 }}
     >
       <p
         className="shrink-0"
