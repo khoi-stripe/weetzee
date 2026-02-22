@@ -6,6 +6,24 @@ import { getRuleset } from "@/lib/rulesets";
 import type { GameState, GameView } from "@/lib/types";
 
 const STORAGE_KEY = "weetzee-game";
+const PREFS_KEY = "weetzee-prefs";
+
+type HouseRulesPrefs = {
+  rollBankingEnabled: boolean;
+  multipleWeetzeesEnabled: boolean;
+};
+
+function savePrefs(prefs: HouseRulesPrefs) {
+  try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch {}
+}
+
+function loadPrefs(): HouseRulesPrefs {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { rollBankingEnabled: false, multipleWeetzeesEnabled: false };
+}
 
 type SerializableState = Omit<GameState, "ruleset"> & { rulesetId: string };
 
@@ -55,6 +73,9 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
       dispatch({ type: "RESTORE", state: saved });
     } else {
       clearState();
+      const prefs = loadPrefs();
+      if (prefs.rollBankingEnabled) dispatch({ type: "TOGGLE_ROLL_BANKING" });
+      if (prefs.multipleWeetzeesEnabled) dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
     }
   }, [playerCount, rulesetId]);
 
@@ -85,10 +106,18 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
 
   function toggleRollBanking() {
     dispatch({ type: "TOGGLE_ROLL_BANKING" });
+    savePrefs({
+      rollBankingEnabled: !state.rollBankingEnabled,
+      multipleWeetzeesEnabled: state.multipleWeetzeesEnabled,
+    });
   }
 
   function toggleMultipleWeetzees() {
     dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
+    savePrefs({
+      rollBankingEnabled: state.rollBankingEnabled,
+      multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled,
+    });
   }
 
   function endGame() {
