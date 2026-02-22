@@ -54,7 +54,6 @@ export function Die({
       style={{
         border: `1px solid ${borderColor}`,
         background: held ? heldColor : "#000000",
-        transition: "border-color 150ms, background 150ms",
       }}
     >
       {label ? (
