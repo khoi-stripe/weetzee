@@ -100,6 +100,7 @@ export function Header({
       {showRules && (
         <RulesModal
           onClose={() => setShowRules(false)}
+          onChangeRuleset={() => { setShowRules(false); setShowExitConfirm(true); }}
           rulesetName={rulesetName}
           showAllRulesets={showAllRulesets}
           rollBankingEnabled={rollBankingEnabled}
@@ -322,6 +323,7 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
 
 function RulesModal({
   onClose,
+  onChangeRuleset,
   rulesetName,
   showAllRulesets = false,
   rollBankingEnabled,
@@ -330,6 +332,7 @@ function RulesModal({
   onToggleMultipleWeetzees,
 }: {
   onClose: () => void;
+  onChangeRuleset?: () => void;
   rulesetName?: string;
   showAllRulesets?: boolean;
   rollBankingEnabled?: boolean;
@@ -413,7 +416,7 @@ function RulesModal({
               </span>
             </div>
             <button
-              onClick={() => router.push("/")}
+              onClick={onChangeRuleset ?? (() => router.push("/"))}
               className="pressable"
               style={{
                 background: "none",

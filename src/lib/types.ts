@@ -76,4 +76,5 @@ export type GameAction =
   | { type: "SCORE_CATEGORY"; categoryId: string }
   | { type: "SET_VIEW"; view: GameView }
   | { type: "TOGGLE_ROLL_BANKING" }
-  | { type: "TOGGLE_MULTIPLE_WEETZEES" };
+  | { type: "TOGGLE_MULTIPLE_WEETZEES" }
+  | { type: "RESTORE"; state: GameState };

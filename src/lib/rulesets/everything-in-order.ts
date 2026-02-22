@@ -3,7 +3,7 @@ import { UPPER_SECTION, LOWER_SECTION, getBonusScore, getFullTotal } from "./yah
 
 export const EVERYTHING_IN_ORDER_RULESET: Ruleset = {
   id: "everything-in-order",
-  name: "In Order",
+  name: "Everything in Order",
   description: "Score categories top to bottom",
   diceCount: 5,
   rollsPerTurn: 3,

@@ -1,9 +1,41 @@
 "use client";
 
-import { useReducer } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { gameReducer, makeInitialState } from "@/lib/engine";
 import { getRuleset } from "@/lib/rulesets";
 import type { GameState, GameView } from "@/lib/types";
+
+const STORAGE_KEY = "weetzee-game";
+
+type SerializableState = Omit<GameState, "ruleset"> & { rulesetId: string };
+
+function saveState(state: GameState) {
+  try {
+    const { ruleset, ...rest } = state;
+    const serializable: SerializableState = { ...rest, rulesetId: ruleset.id };
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+  } catch {}
+}
+
+function loadState(playerCount: number, rulesetId: string): GameState | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const saved: SerializableState = JSON.parse(raw);
+    if (saved.rulesetId !== rulesetId || saved.players.length !== playerCount) return null;
+    const ruleset = getRuleset(saved.rulesetId);
+    const { rulesetId: _, ...rest } = saved;
+    return { ...rest, ruleset };
+  } catch {
+    return null;
+  }
+}
+
+function clearState() {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch {}
+}
 
 export function useGame(playerCount: number, rulesetId: string = "yahtzee") {
   const ruleset = getRuleset(rulesetId);
@@ -12,6 +44,24 @@ export function useGame(playerCount: number, rulesetId: string = "yahtzee") {
     undefined,
     () => makeInitialState(ruleset, playerCount)
   );
+
+  const didRestore = useRef(false);
+
+  useEffect(() => {
+    if (didRestore.current) return;
+    didRestore.current = true;
+    const saved = loadState(playerCount, rulesetId);
+    if (saved) dispatch({ type: "RESTORE", state: saved });
+  }, [playerCount, rulesetId]);
+
+  useEffect(() => {
+    if (!didRestore.current) return;
+    if (state.gameOver) {
+      clearState();
+    } else {
+      saveState(state);
+    }
+  }, [state]);
 
   function roll() {
     dispatch({ type: "ROLL" });

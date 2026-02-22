@@ -206,6 +206,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled };
     }
 
+    case "RESTORE": {
+      return action.state;
+    }
+
     default:
       return state;
   }
