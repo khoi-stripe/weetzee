@@ -69,7 +69,8 @@ body {
 }
 
 .animate-roll-loop {
-  animation: roll 150ms ease-in-out infinite;
+  animation: roll 300ms ease-in-out infinite;
+  filter: url(#wavy);
 }
 
 @keyframes spin-in {

@@ -26,6 +26,7 @@ export interface Player {
   color: string;
   scores: Record<string, number | null>;
   bankedRolls: number;
+  extraWeetzees: number;
 }
 
 // ===== Die =====
@@ -50,6 +51,7 @@ export interface GameState {
   view: GameView;
   gameOver: boolean;
   rollBankingEnabled: boolean;
+  multipleWeetzeesEnabled: boolean;
 }
 
 // ===== Actions =====
@@ -59,4 +61,5 @@ export type GameAction =
   | { type: "TOGGLE_HOLD"; dieId: number }
   | { type: "SCORE_CATEGORY"; categoryId: string }
   | { type: "SET_VIEW"; view: GameView }
-  | { type: "TOGGLE_ROLL_BANKING" };
+  | { type: "TOGGLE_ROLL_BANKING" }
+  | { type: "TOGGLE_MULTIPLE_WEETZEES" };

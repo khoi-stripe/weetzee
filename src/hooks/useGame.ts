@@ -32,7 +32,11 @@ export function useGame(playerCount: number) {
     dispatch({ type: "TOGGLE_ROLL_BANKING" });
   }
 
-  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking };
+  function toggleMultipleWeetzees() {
+    dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
+  }
+
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

@@ -34,7 +34,7 @@ export function PlayerBar({
       >
         {players.map((player, i) => {
           const isActive = i === currentPlayerIndex;
-          const total = getFullTotal(player.scores);
+          const total = getFullTotal(player.scores, player.extraWeetzees);
           return (
             <div
               key={player.id}

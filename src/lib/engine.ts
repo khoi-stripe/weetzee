@@ -19,6 +19,10 @@ function rollDice(dice: Die[]): Die[] {
   return dice.map((d) => (d.held ? d : { ...d, value: rollValue() }));
 }
 
+function hasAllSame(dice: number[]): boolean {
+  return dice.length > 0 && dice.every((d) => d === dice[0]);
+}
+
 // ===== Player Factory =====
 
 export function makePlayers(count: number): Player[] {
@@ -28,6 +32,7 @@ export function makePlayers(count: number): Player[] {
     color: PLAYER_COLORS[i] ?? "#ffffff",
     scores: {},
     bankedRolls: 0,
+    extraWeetzees: 0,
   }));
 }
 
@@ -44,6 +49,7 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     view: "rolling",
     gameOver: false,
     rollBankingEnabled: false,
+    multipleWeetzeesEnabled: false,
   };
 }
 
@@ -143,7 +149,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "SCORE_CATEGORY": {
       const currentPlayer = state.players[state.currentPlayerIndex];
-      // Already scored this category
       if (currentPlayer.scores[action.categoryId] !== undefined) return state;
 
       const diceValues = state.dice.map((d) => d.value);
@@ -154,9 +159,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       const score = category.evaluate(diceValues) ?? 0;
 
+      const isWeetzee = hasAllSame(diceValues);
+      const alreadyScoredWeetzee = currentPlayer.scores["weetzee"] !== undefined && currentPlayer.scores["weetzee"] !== null;
+      const earnExtraWeetzee = state.multipleWeetzeesEnabled && isWeetzee && alreadyScoredWeetzee && (currentPlayer.scores["weetzee"] ?? 0) > 0;
+
       const updatedPlayers = state.players.map((p, i) =>
         i === state.currentPlayerIndex
-          ? { ...p, scores: { ...p.scores, [action.categoryId]: score } }
+          ? {
+              ...p,
+              scores: { ...p.scores, [action.categoryId]: score },
+              extraWeetzees: earnExtraWeetzee ? p.extraWeetzees + 1 : p.extraWeetzees,
+            }
           : p
       );
 
@@ -175,6 +188,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "TOGGLE_ROLL_BANKING": {
       return { ...state, rollBankingEnabled: !state.rollBankingEnabled };
+    }
+
+    case "TOGGLE_MULTIPLE_WEETZEES": {
+      return { ...state, multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled };
     }
 
     default:

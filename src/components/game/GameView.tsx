@@ -311,6 +311,7 @@ function ContentStrip({
           onToggleHold={toggleHold}
           justScoredCategoryId={justScoredCategoryId}
           justScoredPlayerIndex={justScoredPlayerIndex}
+          multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
         />
       </div>
     </div>

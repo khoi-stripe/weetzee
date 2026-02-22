@@ -13,7 +13,7 @@ export function GameOverScreen({ players }: { players: Player[] }) {
   const router = useRouter();
 
   const ranked = [...players]
-    .map((p) => ({ ...p, total: getFullTotal(p.scores) }))
+    .map((p) => ({ ...p, total: getFullTotal(p.scores, p.extraWeetzees) }))
     .sort((a, b) => b.total - a.total);
 
   const winner = ranked[0];

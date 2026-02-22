@@ -122,10 +122,12 @@ export function getBonusScore(scores: Record<string, number | null>): number {
   return getUpperTotal(scores) >= UPPER_BONUS_THRESHOLD ? UPPER_BONUS_VALUE : 0;
 }
 
-/** Full player total including bonus */
-export function getFullTotal(scores: Record<string, number | null>): number {
+export const EXTRA_WEETZEE_VALUE = 100;
+
+/** Full player total including bonus and extra weetzees */
+export function getFullTotal(scores: Record<string, number | null>, extraWeetzees: number = 0): number {
   const manualTotal = Object.entries(scores)
     .filter(([id]) => id !== "bonus")
     .reduce((sum, [, v]) => sum + (v ?? 0), 0);
-  return manualTotal + getBonusScore(scores);
+  return manualTotal + getBonusScore(scores) + extraWeetzees * EXTRA_WEETZEE_VALUE;
 }

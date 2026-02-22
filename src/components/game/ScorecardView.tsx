@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Die } from "./Die";
 import type { Die as DieType, Player } from "@/lib/types";
 import type { ScoreCategory } from "@/lib/types";
 import { getAvailableScores } from "@/lib/engine";
-import { getBonusScore, getFullTotal, getUpperTotal, UPPER_BONUS_THRESHOLD } from "@/lib/rulesets/yahtzee";
+import { getBonusScore, getUpperTotal, UPPER_BONUS_THRESHOLD, EXTRA_WEETZEE_VALUE } from "@/lib/rulesets/yahtzee";
 import type { Ruleset } from "@/lib/types";
 
 // ===== ScorecardView =====
@@ -26,6 +26,7 @@ export function ScorecardView({
   onToggleHold,
   justScoredCategoryId,
   justScoredPlayerIndex,
+  multipleWeetzeesEnabled,
 }: {
   players: Player[];
   currentPlayerIndex: number;
@@ -40,6 +41,7 @@ export function ScorecardView({
   onToggleHold: (id: number) => void;
   justScoredCategoryId?: string | null;
   justScoredPlayerIndex?: number | null;
+  multipleWeetzeesEnabled?: boolean;
 }) {
   const currentPlayer = players[currentPlayerIndex];
   const diceValues = dice.map((d) => d.value);
@@ -54,46 +56,87 @@ export function ScorecardView({
 
   const locked = justScoredCategoryId != null;
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showFade, setShowFade] = useState(false);
+
+  const checkFade = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 2;
+    setShowFade(el.scrollHeight > el.clientHeight && !atBottom);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkFade();
+    el.addEventListener("scroll", checkFade, { passive: true });
+    const ro = new ResizeObserver(checkFade);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", checkFade);
+      ro.disconnect();
+    };
+  }, [checkFade]);
+
   return (
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: "0 16px 16px", gap: 16 }}>
-      {/* Scrollable table */}
-      <div
-        className="min-h-0 overflow-y-auto overflow-x-hidden rounded scrollbar-visible"
-        style={{ border: "1px solid #ffffff" }}
-      >
-        <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
-          <colgroup>
-            <col style={{ width: "38%" }} />
-            {players.map((p) => (
-              <col key={p.id} style={{ width: `${62 / players.length}%` }} />
-            ))}
-          </colgroup>
-          <thead>
-            <tr>
-              <Th>Player</Th>
+      {/* Scrollable table with fade */}
+      <div className="relative min-h-0">
+        <div
+          ref={scrollRef}
+          className="min-h-0 overflow-y-auto overflow-x-hidden rounded scrollbar-visible"
+          style={{ border: "1px solid #ffffff", maxHeight: "100%" }}
+        >
+          <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "38%" }} />
               {players.map((p) => (
-                <Th key={p.id} style={{ color: p.color }}>
-                  {p.name}
-                </Th>
+                <col key={p.id} style={{ width: `${62 / players.length}%` }} />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((cat) => (
-              <ScoreRow
-                key={cat.id}
-                category={cat}
-                players={players}
-                currentPlayerIndex={currentPlayerIndex}
-                availableScore={availableScores[cat.id]}
-                onScore={() => { if (!locked) onScoreCategory(cat.id); }}
-                justScored={cat.id === justScoredCategoryId}
-                justScoredPlayerIndex={justScoredPlayerIndex ?? null}
-              />
-            ))}
-            <BonusRow players={players} />
-          </tbody>
-        </table>
+            </colgroup>
+            <thead>
+              <tr>
+                <Th>Player</Th>
+                {players.map((p) => (
+                  <Th key={p.id} style={{ color: p.color }}>
+                    {p.name}
+                  </Th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map((cat) => (
+                <ScoreRow
+                  key={cat.id}
+                  category={cat}
+                  players={players}
+                  currentPlayerIndex={currentPlayerIndex}
+                  availableScore={availableScores[cat.id]}
+                  onScore={() => { if (!locked) onScoreCategory(cat.id); }}
+                  justScored={cat.id === justScoredCategoryId}
+                  justScoredPlayerIndex={justScoredPlayerIndex ?? null}
+                />
+              ))}
+              <BonusRow players={players} />
+              {multipleWeetzeesEnabled && <WeetzeeBonusRow players={players} />}
+            </tbody>
+          </table>
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 40,
+            background: "linear-gradient(to bottom, transparent, #000000)",
+            borderRadius: "0 0 4px 4px",
+            pointerEvents: "none",
+            opacity: showFade ? 1 : 0,
+            transition: "opacity 200ms",
+          }}
+        />
       </div>
 
       <div className="flex-1" />
@@ -227,6 +270,46 @@ function BonusRow({ players }: { players: Player[] }) {
             }}
           >
             {label}
+          </td>
+        );
+      })}
+    </tr>
+  );
+}
+
+// ===== Weetzee Bonus Row =====
+
+function WeetzeeBonusRow({ players }: { players: Player[] }) {
+  return (
+    <tr>
+      <td
+        style={{
+          padding: "8px 16px",
+          borderRight: "1px solid #ffffff",
+          background: "#000000",
+          fontFamily: '"IBM Plex Mono", monospace',
+          fontSize: 14,
+          color: "#ffffff",
+        }}
+      >
+        Weetzee+
+      </td>
+      {players.map((player, i) => {
+        const count = player.extraWeetzees;
+        const points = count * EXTRA_WEETZEE_VALUE;
+        return (
+          <td
+            key={player.id}
+            style={{
+              padding: "8px 16px",
+              borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
+              background: "#000000",
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 14,
+              color: count > 0 ? player.color : "#ffffff",
+            }}
+          >
+            {count > 0 ? points : "—"}
           </td>
         );
       })}

@@ -25,6 +25,8 @@ function GameContent() {
       <Header
         rollBankingEnabled={state.rollBankingEnabled}
         onToggleRollBanking={game.toggleRollBanking}
+        multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
+        onToggleMultipleWeetzees={game.toggleMultipleWeetzees}
       />
       <GameView game={game} />
     </div>
