@@ -70,11 +70,10 @@ export function getAvailableScores(
 ): Record<string, number> {
   const result: Record<string, number> = {};
   for (const cat of ruleset.categories) {
+    if (cat.id === "bonus") continue;
     if (playerScores[cat.id] === undefined || playerScores[cat.id] === null) {
       const score = cat.evaluate(dice);
-      if (score !== null) {
-        result[cat.id] = score;
-      }
+      result[cat.id] = score ?? 0;
     }
   }
   return result;
@@ -82,8 +81,9 @@ export function getAvailableScores(
 
 function isGameOver(state: GameState): boolean {
   const { ruleset, players } = state;
+  const scoreable = ruleset.categories.filter((cat) => cat.id !== "bonus");
   return players.every((p) =>
-    ruleset.categories.every((cat) => p.scores[cat.id] !== undefined)
+    scoreable.every((cat) => p.scores[cat.id] !== undefined)
   );
 }
 

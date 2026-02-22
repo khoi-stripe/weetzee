@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Weetzee — Offline</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap");
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      height:100dvh;display:flex;align-items:center;justify-content:center;
+      background:#000;color:#fff;
+      font-family:"IBM Plex Mono",monospace;text-align:center;padding:24px;
+    }
+    h1{font-size:16px;font-weight:500;margin-bottom:12px}
+    p{font-size:13px;color:#999}
+    button{
+      margin-top:24px;padding:12px 24px;
+      border:1px solid #fff;background:transparent;color:#fff;
+      font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:500;
+      border-radius:999px;cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>You're offline</h1>
+    <p>Check your connection and try again.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>

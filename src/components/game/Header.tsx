@@ -27,13 +27,22 @@ export function Header({
 }) {
   const router = useRouter();
   const [showRules, setShowRules] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  function handleBack() {
+    if (backLabel === "Exit") {
+      setShowExitConfirm(true);
+    } else {
+      router.push("/");
+    }
+  }
 
   return (
     <>
       <div className="relative shrink-0 w-full" style={{ height: 48 }}>
         {showBack && (
           <button
-            onClick={() => router.push("/")}
+            onClick={handleBack}
             className="absolute flex items-center justify-center pressable"
             style={{
               left: 16,
@@ -97,6 +106,65 @@ export function Header({
           multipleWeetzeesEnabled={multipleWeetzeesEnabled}
           onToggleMultipleWeetzees={onToggleMultipleWeetzees}
         />
+      )}
+
+      {showExitConfirm && (
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{
+            zIndex: 200,
+            background: "rgba(0, 0, 0, 0.85)",
+            animation: "interstitial-in 200ms ease forwards",
+          }}
+        >
+          <div
+            style={{
+              fontFamily: '"IBM Plex Mono", monospace',
+              textAlign: "center",
+              padding: 32,
+            }}
+          >
+            <p style={{ fontSize: 16, fontWeight: 500, color: "#ffffff", marginBottom: 24 }}>
+              End this game?
+            </p>
+            <div className="flex gap-6 justify-center">
+              <button
+                onClick={() => setShowExitConfirm(false)}
+                className="flex items-center justify-center rounded-full pressable"
+                style={{
+                  width: 100,
+                  height: 100,
+                  border: "1px solid #ffffff",
+                  background: "transparent",
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => router.push("/")}
+                className="flex items-center justify-center rounded-full pressable"
+                style={{
+                  width: 100,
+                  height: 100,
+                  border: "1px solid #ffffff",
+                  background: "#ffffff",
+                  fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#000000",
+                  cursor: "pointer",
+                }}
+              >
+                End game
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

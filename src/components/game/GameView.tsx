@@ -321,6 +321,7 @@ function PlayerInterstitial({ player, exiting }: { player: Player; exiting: bool
       style={{
         background: "rgba(0, 0, 0, 0.85)",
         zIndex: 50,
+        padding: 16,
         animation: exiting
           ? "interstitial-out 400ms ease forwards"
           : "interstitial-in 300ms ease forwards",
@@ -331,7 +332,6 @@ function PlayerInterstitial({ player, exiting }: { player: Player; exiting: bool
         style={{
           width: "100%",
           aspectRatio: "1 / 1",
-          maxWidth: "80%",
           background: player.color,
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 20,
@@ -339,7 +339,7 @@ function PlayerInterstitial({ player, exiting }: { player: Player; exiting: bool
           color: "#000000",
           animation: exiting
             ? "scale-out 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
-            : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 150ms both",
+            : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
         }}
       >
         {player.name}

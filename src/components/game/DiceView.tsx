@@ -47,6 +47,50 @@ const CYCLE_INTERVAL = 50;
 const CYCLE_BASE_DURATION = 300;
 const CYCLE_STAGGER_PER_DIE = 60;
 
+// ===== Synthesized roll sounds =====
+
+const BLEEP_NOTES = [440, 523, 587, 659, 698, 784, 880, 988, 1047];
+
+let _audioCtx: AudioContext | null = null;
+function getAudioCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  if (!_audioCtx) _audioCtx = new AudioContext();
+  if (_audioCtx.state === "suspended") _audioCtx.resume();
+  return _audioCtx;
+}
+
+function playBleep(freq?: number, duration = 0.04, volume = 0.08) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "square";
+  osc.frequency.value = freq ?? BLEEP_NOTES[Math.floor(Math.random() * BLEEP_NOTES.length)];
+  gain.gain.setValueAtTime(volume, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + duration);
+}
+
+function playSettle(index: number, total: number) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  const baseFreq = 600 + index * (400 / Math.max(total, 1));
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(baseFreq, t);
+  osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.2, t + 0.06);
+  gain.gain.setValueAtTime(0.12, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 0.1);
+}
+
 // ===== DiceView =====
 
 export function DiceView({
@@ -150,7 +194,7 @@ export function DiceView({
     // Mark all unheld dice as rolling
     setRollingDice(new Set(unheldIndices));
 
-    // Start cycling random values for unheld dice, with random color flashes
+    // Start cycling random values for unheld dice, with random color flashes + bleeps
     cycleRef.current = setInterval(() => {
       setDisplayValues((prev) => {
         const next = [...prev];
@@ -166,6 +210,7 @@ export function DiceView({
         }
         return flashing;
       });
+      if (Math.random() < 0.6) playBleep();
     }, CYCLE_INTERVAL);
 
     // Stagger settle: each unheld die locks in at a different time
@@ -174,7 +219,6 @@ export function DiceView({
       const delay = CYCLE_BASE_DURATION + seq * CYCLE_STAGGER_PER_DIE;
       settleTimers.current.push(
         setTimeout(() => {
-          // Lock this die to its final value and stop its rolling animation
           setDisplayValues((prev) => {
             const next = [...prev];
             next[dieIdx] = dice[dieIdx].value;
@@ -185,6 +229,7 @@ export function DiceView({
             next.delete(dieIdx);
             return next;
           });
+          playSettle(seq, shuffledUnheld.length);
         }, delay)
       );
     });

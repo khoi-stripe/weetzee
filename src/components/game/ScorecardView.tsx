@@ -154,7 +154,7 @@ export function ScorecardView({
             </colgroup>
             <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
               <tr>
-                <Th>Player</Th>
+                <Th>{""}</Th>
                 {players.map((p) => (
                   <Th key={p.id} style={{ color: p.color }}>
                     {p.name}
@@ -180,19 +180,20 @@ export function ScorecardView({
               ))}
               <BonusRow players={players} ruleset={ruleset} />
               {multipleWeetzeesEnabled && <WeetzeeBonusRow players={players} />}
-              <TotalRow players={players} ruleset={ruleset} />
             </tbody>
+            <tfoot style={{ position: "sticky", bottom: 0, zIndex: 1 }}>
+              <TotalRow players={players} ruleset={ruleset} />
+            </tfoot>
           </table>
         </div>
         <div
           style={{
             position: "absolute",
-            bottom: 0,
+            bottom: 38,
             left: 0,
             right: 0,
             height: 40,
             background: "linear-gradient(to bottom, transparent, #000000)",
-            borderRadius: "0 0 4px 4px",
             pointerEvents: "none",
             opacity: showFade ? 1 : 0,
             transition: "opacity 200ms",
@@ -416,13 +417,13 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
       <td
         style={{
           padding: "8px 16px",
-          borderTop: "1px solid #ffffff",
           borderRight: "1px solid #ffffff",
           background: "#ffffff",
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 14,
           fontWeight: 600,
           color: "#000000",
+          boxShadow: "inset 0 1px 0 #ffffff",
         }}
       >
         Total
@@ -434,8 +435,8 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
             key={player.id}
             style={{
               padding: "8px 16px",
-              borderTop: "1px solid #ffffff",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
+              boxShadow: "inset 0 1px 0 #ffffff",
               background: player.color,
               fontFamily: '"IBM Plex Mono", monospace',
               fontSize: 14,
@@ -595,7 +596,6 @@ function Th({
     <th
       style={{
         padding: "8px 16px",
-        borderBottom: "1px solid #ffffff",
         borderRight: "1px solid #ffffff",
         background: "#000000",
         fontFamily: '"IBM Plex Mono", monospace',
@@ -603,6 +603,7 @@ function Th({
         fontWeight: 400,
         color: "#ffffff",
         textAlign: "left",
+        boxShadow: "inset 0 -1px 0 #ffffff",
         ...style,
       }}
     >

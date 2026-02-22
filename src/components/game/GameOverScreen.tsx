@@ -5,10 +5,6 @@ import type { Player, Ruleset } from "@/lib/types";
 import { getRulesetTotal } from "@/lib/rulesets";
 import { Header } from "./Header";
 
-// ===== GameOverScreen =====
-// Shown when all categories are filled for all players.
-// Lists players sorted by score, highlights winner.
-
 export function GameOverScreen({ players, ruleset }: { players: Player[]; ruleset: Ruleset }) {
   const router = useRouter();
 
@@ -26,52 +22,40 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
       <Header />
 
       <div
-        className="flex flex-col flex-1 min-h-0 items-center justify-center gap-6"
-        style={{ padding: 32 }}
+        className="flex flex-col flex-1 min-h-0 items-center justify-center"
+        style={{ padding: 16, gap: 24 }}
       >
-        <p
-          style={{
-            fontFamily: '"IBM Plex Mono", monospace',
-            fontSize: 16,
-            fontWeight: 500,
-            color: winner.color,
-            textAlign: "center",
-          }}
-        >
-          {winner.name} wins!
-        </p>
-
         <div
-          className="w-full flex flex-col overflow-hidden"
           style={{
-            border: "1px solid #ffffff",
-            borderRadius: 4,
+            width: "100%",
+            maxWidth: "calc(100dvh - 48px - 109.67px - 24px - 32px - 32px)",
+            aspectRatio: "1 / 1",
           }}
         >
-          {ranked.map((player, i) => (
-            <div
-              key={player.id}
-              className="flex items-center"
-              style={{
-                padding: "12px 16px",
-                borderBottom: i < ranked.length - 1 ? "1px solid #ffffff" : "none",
-                background: i === 0 ? `${player.color}1a` : "#000000",
-                fontFamily: '"IBM Plex Mono", monospace',
-                fontSize: 14,
-                fontWeight: i === 0 ? 500 : 400,
-                color: player.color,
-                gap: 8,
-              }}
-            >
-              <span className="flex-1">{player.name}</span>
-              <span>{player.total}</span>
-            </div>
-          ))}
+          <div
+            className="w-full h-full flex flex-col items-center justify-center"
+            style={{
+              background: winner.color,
+              borderRadius: 4,
+              border: `1px solid ${winner.color}`,
+              fontFamily: '"IBM Plex Mono", monospace',
+              color: "#000000",
+              padding: "10%",
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 500 }}>
+              {winner.name} wins!
+            </span>
+            <span style={{ fontSize: 48, fontWeight: 700 }}>
+              {winner.total}
+            </span>
+          </div>
         </div>
 
         <button
           onClick={() => router.push("/")}
-          className="flex items-center justify-center rounded-full pressable"
+          className="flex items-center justify-center rounded-full shrink-0 pressable"
           style={{
             width: 109.67,
             height: 109.67,
