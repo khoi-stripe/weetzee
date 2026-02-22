@@ -625,6 +625,7 @@ function MiniDiceStrip({
             disabled={!canHold}
             rolling={rollingDice.has(i)}
             flash={flashDice.has(i)}
+            label={rollsUsed === 0 ? "Roll" : undefined}
           />
         </div>
       ))}
