@@ -28,7 +28,7 @@ export default function SetupPage() {
 
       <div
         className="flex flex-col flex-1 min-h-0 items-center justify-center gap-4"
-        style={{ padding: "16px 0" }}
+        style={{ padding: 16 }}
       >
         <p
           style={{

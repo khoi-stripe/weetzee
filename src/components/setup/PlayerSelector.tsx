@@ -5,15 +5,6 @@ import { Die } from "@/components/game/Die";
 import { PLAYER_COLORS } from "@/lib/types";
 import { playTap } from "@/lib/sounds";
 
-// ===== Layout computation =====
-
-const CANDIDATE_LAYOUTS: [number, number][] = [
-  [2, 3],
-  [3, 2],
-  [1, 6],
-  [6, 1],
-];
-
 function computeLayout(
   w: number,
   h: number,
@@ -22,8 +13,8 @@ function computeLayout(
 ): { cols: number; rows: number; cellSize: number } {
   let best = { cols: 1, rows: itemCount, cellSize: 0 };
 
-  for (const [cols, rows] of CANDIDATE_LAYOUTS) {
-    if (cols * rows < itemCount) continue;
+  for (let cols = 1; cols <= itemCount; cols++) {
+    const rows = Math.ceil(itemCount / cols);
     const cellW = (w - gap * (cols - 1)) / cols;
     const cellH = (h - gap * (rows - 1)) / rows;
     const cellSize = Math.floor(Math.min(cellW, cellH));
@@ -72,7 +63,6 @@ export function PlayerSelector({
         flex: 1,
         minHeight: 0,
         width: "100%",
-        maxWidth: 280,
         display: "grid",
         gridTemplateColumns: layout.cellSize > 0
           ? `repeat(${layout.cols}, ${layout.cellSize}px)`

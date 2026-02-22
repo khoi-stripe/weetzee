@@ -7,23 +7,15 @@ import { Die } from "@/components/game/Die";
 import { ALL_RULESETS } from "@/lib/rulesets";
 import { playTap } from "@/lib/sounds";
 
-const CANDIDATE_LAYOUTS: [number, number][] = [
-  [2, 2],
-  [3, 2],
-  [2, 3],
-  [1, 4],
-  [4, 1],
-];
-
 function computeLayout(
   w: number,
   h: number,
   count: number,
   gap: number
 ): { cols: number; rows: number; cellSize: number } {
-  let best = { cols: 2, rows: 2, cellSize: 0 };
-  for (const [cols, rows] of CANDIDATE_LAYOUTS) {
-    if (cols * rows < count) continue;
+  let best = { cols: 1, rows: count, cellSize: 0 };
+  for (let cols = 1; cols <= count; cols++) {
+    const rows = Math.ceil(count / cols);
     const cellW = (w - gap * (cols - 1)) / cols;
     const cellH = (h - gap * (rows - 1)) / rows;
     const cellSize = Math.floor(Math.min(cellW, cellH));
@@ -72,7 +64,7 @@ function RulesetContent() {
 
       <div
         className="flex flex-col flex-1 min-h-0 items-center justify-center gap-4"
-        style={{ padding: "16px 0" }}
+        style={{ padding: 16 }}
       >
         <p
           style={{
@@ -92,7 +84,6 @@ function RulesetContent() {
             flex: 1,
             minHeight: 0,
             width: "100%",
-            maxWidth: 280,
             display: "grid",
             gridTemplateColumns: layout.cellSize > 0
               ? `repeat(${layout.cols}, ${layout.cellSize}px)`
