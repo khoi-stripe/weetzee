@@ -21,7 +21,7 @@ const KISMET_PIP_COLORS: Record<string, string> = {
 };
 
 function kismetPipColor(value: number): string {
-  if (value <= 2) return KISMET_PIP_COLORS.black;
+  if (value <= 2) return KISMET_PIP_COLORS.white;
   if (value <= 4) return KISMET_PIP_COLORS.red;
   return KISMET_PIP_COLORS.green;
 }
