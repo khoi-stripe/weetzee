@@ -82,7 +82,7 @@ export function Die({
           className="absolute inset-0 flex items-center justify-center"
           style={{
 
-            fontSize: "10cqi",
+            fontSize: "clamp(9px, 18cqi, 14px)",
             fontWeight: 500,
             color: held ? "#000000" : "#ffffff",
             transform: "rotate(-45deg)",

@@ -627,25 +627,26 @@ function MiniDiceStrip({
           />
         </div>
       ))}
-      <button
-        onClick={canRoll ? onRoll : undefined}
-        disabled={!canRoll}
-        className="flex-1 min-w-0 flex items-center justify-center rounded-full aspect-square pressable"
-        style={{
-          border: "1px solid #ffffff",
-          background: "transparent",
-
-          fontSize: 10,
-          fontWeight: 500,
-          color: "#ffffff",
-          opacity: canRoll ? 1 : 0.35,
-          cursor: canRoll ? "pointer" : "default",
-          transition: "opacity 200ms",
-          padding: 0,
-        }}
-      >
-        {rollLabel}
-      </button>
+      <div className="flex-1 min-w-0 aspect-square" style={{ containerType: "inline-size" }}>
+        <button
+          onClick={canRoll ? onRoll : undefined}
+          disabled={!canRoll}
+          className="w-full h-full flex items-center justify-center rounded-full pressable"
+          style={{
+            border: "1px solid #ffffff",
+            background: "transparent",
+            fontSize: "clamp(9px, 18cqi, 14px)",
+            fontWeight: 500,
+            color: "#ffffff",
+            opacity: canRoll ? 1 : 0.35,
+            cursor: canRoll ? "pointer" : "default",
+            transition: "opacity 200ms",
+            padding: 0,
+          }}
+        >
+          {rollLabel}
+        </button>
+      </div>
     </div>
   );
 }

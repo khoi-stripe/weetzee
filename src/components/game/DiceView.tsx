@@ -263,14 +263,13 @@ export function DiceView({
           />
         </div>
       ))}
-      <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%" }}>
+      <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
         <RollButton
           rollsUsed={rollsUsed}
           rollsPerTurn={rollsPerTurn}
           canRoll={canRoll}
           onRoll={onRoll}
           showButton={showButton}
-          cellSize={layout.cellSize}
         />
       </div>
     </div>
@@ -285,14 +284,12 @@ function RollButton({
   canRoll,
   onRoll,
   showButton,
-  cellSize,
 }: {
   rollsUsed: number;
   rollsPerTurn: number;
   canRoll: boolean;
   onRoll: () => void;
   showButton: boolean;
-  cellSize: number;
 }) {
   const [introDone, setIntroDone] = useState(false);
 
@@ -315,7 +312,7 @@ function RollButton({
         border: "1px solid #ffffff",
         opacity: canRoll ? 1 : 0.35,
 
-        fontSize: cellSize > 80 ? 14 : cellSize > 60 ? 11 : 9,
+        fontSize: "8cqi",
         fontWeight: 500,
         color: "#ffffff",
         background: "transparent",
