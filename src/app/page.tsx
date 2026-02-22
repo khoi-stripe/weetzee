@@ -5,15 +5,12 @@ import { useRouter } from "next/navigation";
 import { Header } from "@/components/game/Header";
 import { PlayerSelector } from "@/components/setup/PlayerSelector";
 
-// ===== Setup Page =====
-// Matches Figma: "Number of players" title, vertical dice selector, circular Start button.
-
 export default function SetupPage() {
   const [playerCount, setPlayerCount] = useState(1);
   const router = useRouter();
 
-  function startGame() {
-    router.push(`/game?players=${playerCount}`);
+  function next() {
+    router.push(`/ruleset?players=${playerCount}`);
   }
 
   return (
@@ -43,11 +40,10 @@ export default function SetupPage() {
           Number of players
         </p>
 
-        <PlayerSelector count={playerCount} max={3} onChange={setPlayerCount} />
+        <PlayerSelector count={playerCount} max={6} onChange={setPlayerCount} />
 
-        {/* Start button — circular, 109.67px, opacity-50 until pressed */}
         <button
-          onClick={startGame}
+          onClick={next}
           className="flex items-center justify-center rounded-full shrink-0 pressable"
           style={{
             width: 109.67,
@@ -62,7 +58,7 @@ export default function SetupPage() {
             cursor: "pointer",
           }}
         >
-          Start
+          Next
         </button>
       </div>
     </div>

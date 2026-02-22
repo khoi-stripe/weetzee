@@ -2,17 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ALL_RULESETS } from "@/lib/rulesets";
 
 // ===== Header =====
 
 export function Header({
   showBack = true,
+  backLabel = "Exit",
+  rulesetName,
+  showAllRulesets = false,
   rollBankingEnabled,
   onToggleRollBanking,
   multipleWeetzeesEnabled,
   onToggleMultipleWeetzees,
 }: {
   showBack?: boolean;
+  backLabel?: string;
+  rulesetName?: string;
+  showAllRulesets?: boolean;
   rollBankingEnabled?: boolean;
   onToggleRollBanking?: () => void;
   multipleWeetzeesEnabled?: boolean;
@@ -40,9 +47,9 @@ export function Header({
               border: "none",
               padding: 0,
             }}
-            aria-label="Exit"
+            aria-label={backLabel}
           >
-            Exit
+            {backLabel}
           </button>
         )}
         <p
@@ -83,6 +90,8 @@ export function Header({
       {showRules && (
         <RulesModal
           onClose={() => setShowRules(false)}
+          rulesetName={rulesetName}
+          showAllRulesets={showAllRulesets}
           rollBankingEnabled={rollBankingEnabled}
           onToggleRollBanking={onToggleRollBanking}
           multipleWeetzeesEnabled={multipleWeetzeesEnabled}
@@ -95,19 +104,142 @@ export function Header({
 
 // ===== Rules Modal =====
 
+function ClassicRules() {
+  return (
+    <>
+      <Section title="Upper section">
+        <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
+        <p style={{ marginTop: 8, color: "#999999" }}>
+          Bonus: Score 35 extra points if upper section totals 63 or more.
+        </p>
+      </Section>
+      <Section title="Lower section">
+        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
+        <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
+        <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
+        <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
+        <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
+        <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
+        <RuleRow name="Weetzee" desc="50 pts — all five dice the same" />
+      </Section>
+    </>
+  );
+}
+
+function RaceToBottomRules() {
+  return (
+    <>
+      <Section title="Upper section">
+        <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
+        <p style={{ marginTop: 8, color: "#999999" }}>
+          Bonus: 35 points if upper section totals 63+. (Works against you here!)
+        </p>
+      </Section>
+      <Section title="Lower section">
+        <p>Same categories as Classic, but the lowest total wins.</p>
+        <p style={{ marginTop: 8, color: "#999999" }}>
+          Strategy: try to score 0 in as many categories as possible.
+        </p>
+      </Section>
+    </>
+  );
+}
+
+function ALittleHelpRules() {
+  return (
+    <>
+      <Section title="Upper section">
+        <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
+        <p style={{ marginTop: 8, color: "#999999" }}>
+          Bonus: Score 35 extra points if upper section totals 63 or more.
+        </p>
+      </Section>
+      <Section title="Lower section">
+        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
+        <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
+        <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
+        <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
+        <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
+        <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
+        <RuleRow name="Weetzee" desc="50 pts — all six dice the same" />
+      </Section>
+    </>
+  );
+}
+
+function KismetRules() {
+  return (
+    <>
+      <Section title="Colored pips">
+        <RuleRow name="1, 2" desc="Black" />
+        <RuleRow name="3, 4" desc="Red" />
+        <RuleRow name="5, 6" desc="Green" />
+      </Section>
+      <Section title="Basic section">
+        <RuleRow name="Aces – Sixes" desc="Sum of the matching face value" />
+        <p style={{ marginTop: 8, color: "#999999" }}>
+          Tiered bonus: 35 pts at 63+, 55 pts at 71+, 75 pts at 78+.
+        </p>
+      </Section>
+      <Section title="Kismet section">
+        <RuleRow name="2 Pair Same Color" desc="Sum of all dice (two pairs sharing a pip color)" />
+        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
+        <RuleRow name="Straight" desc="30 pts — five sequential dice" />
+        <RuleRow name="Flush" desc="35 pts — all five dice the same color" />
+        <RuleRow name="Full House" desc="Sum + 15 — three of one + pair of another" />
+        <RuleRow name="Full House SC" desc="Sum + 20 — full house, all same color" />
+        <RuleRow name="4 of a kind" desc="Sum + 25 (need 4 matching)" />
+        <RuleRow name="Yarborough" desc="Sum of all dice (no requirement)" />
+        <RuleRow name="Kismet" desc="Sum + 50 — all five dice the same" />
+      </Section>
+    </>
+  );
+}
+
+function GameRulesBlock({ id, name, diceCount, description }: { id: string; name: string; diceCount: number; description: string }) {
+  return (
+    <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+      <h2
+        style={{
+          fontSize: 16,
+          fontWeight: 600,
+          color: "#ffffff",
+          marginBottom: 4,
+          fontFamily: '"IBM Plex Mono", monospace',
+        }}
+      >
+        {name}
+      </h2>
+      <p style={{ color: "#999999", fontSize: 12, marginBottom: 8 }}>
+        {description} — {diceCount} dice, 3 rolls per turn
+        {id === "race-to-bottom" ? ", lowest score wins" : ", highest score wins"}
+      </p>
+      {id === "yahtzee" && <ClassicRules />}
+      {id === "race-to-bottom" && <RaceToBottomRules />}
+      {id === "a-little-help" && <ALittleHelpRules />}
+      {id === "kismet" && <KismetRules />}
+    </div>
+  );
+}
+
 function RulesModal({
   onClose,
+  rulesetName,
+  showAllRulesets = false,
   rollBankingEnabled,
   onToggleRollBanking,
   multipleWeetzeesEnabled,
   onToggleMultipleWeetzees,
 }: {
   onClose: () => void;
+  rulesetName?: string;
+  showAllRulesets?: boolean;
   rollBankingEnabled?: boolean;
   onToggleRollBanking?: () => void;
   multipleWeetzeesEnabled?: boolean;
   onToggleMultipleWeetzees?: () => void;
 }) {
+  const router = useRouter();
   return (
     <div
       className="fixed inset-0 flex flex-col"
@@ -165,35 +297,55 @@ function RulesModal({
           color: "#cccccc",
         }}
       >
-        <Section title="Objective">
-          Score the most points by rolling five dice across 13 rounds.
+        {rulesetName && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginTop: 16,
+              padding: "12px 0",
+              borderBottom: "1px solid #333333",
+            }}
+          >
+            <div>
+              <span style={{ color: "#999999", fontSize: 12 }}>Playing</span>
+              <span style={{ color: "#ffffff", fontWeight: 500, marginLeft: 8, fontSize: 14 }}>
+                {rulesetName}
+              </span>
+            </div>
+            <button
+              onClick={() => router.push("/")}
+              className="pressable"
+              style={{
+                background: "none",
+                border: "1px solid #666666",
+                borderRadius: 4,
+                padding: "4px 10px",
+                fontFamily: '"IBM Plex Mono", monospace',
+                fontSize: 12,
+                color: "#999999",
+                cursor: "pointer",
+              }}
+            >
+              Change
+            </button>
+          </div>
+        )}
+
+        <Section title="How to play">
+          Roll your dice, then optionally hold any and re-roll the rest — up to 3 rolls per turn.
+          After rolling, choose a scoring category. You may place a zero in any unused category if
+          your roll doesn&apos;t qualify.
         </Section>
 
-        <Section title="Each turn">
-          Roll all 5 dice, then optionally hold any dice and re-roll the rest — up to 3 rolls
-          total per turn. After rolling, choose a scoring category.
-        </Section>
-
-        <Section title="Upper section">
-          <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
-          <p style={{ marginTop: 8, color: "#999999" }}>
-            Bonus: Score 35 extra points if upper section totals 63 or more.
-          </p>
-        </Section>
-
-        <Section title="Lower section">
-          <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
-          <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
-          <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
-          <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
-          <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
-          <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
-          <RuleRow name="Weetzee" desc="50 pts — all five dice the same" />
-        </Section>
-
-        <Section title="Scoring a zero">
-          You may place a zero in any unused category if your roll doesn&apos;t qualify.
-        </Section>
+        {showAllRulesets ? (
+          ALL_RULESETS.map((r) => (
+            <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
+          ))
+        ) : (
+          <ClassicRules />
+        )}
 
         {(onToggleRollBanking || onToggleMultipleWeetzees) && (
           <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>

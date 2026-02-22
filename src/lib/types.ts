@@ -11,14 +11,26 @@ export interface ScoreCategory {
 export interface Ruleset {
   id: string;
   name: string;
+  description: string;
   diceCount: number;
   rollsPerTurn: number;
   categories: ScoreCategory[];
+  winCondition: "highest" | "lowest";
+  getBonus?: (scores: Record<string, number | null>) => number;
+  getTotal?: (scores: Record<string, number | null>, extraWeetzees?: number) => number;
+  pipColors?: boolean;
 }
 
 // ===== Player =====
 
-export const PLAYER_COLORS = ["#ffcc00", "#34c759", "#007aff", "#ff6b6b"] as const;
+export const PLAYER_COLORS = [
+  "#ffcc00",  // yellow
+  "#34c759",  // green
+  "#00d4ff",  // cyan
+  "#af52de",  // violet
+  "#ff6b9d",  // pink
+  "#2dd4bf",  // teal
+] as const;
 
 export interface Player {
   id: string;

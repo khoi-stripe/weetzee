@@ -14,16 +14,29 @@ const PIP_LAYOUTS: Record<number, [number, number][]> = {
   6: [[25, 20], [75, 20], [25, 50], [75, 50], [25, 80], [75, 80]],
 };
 
+const KISMET_PIP_COLORS: Record<string, string> = {
+  black: "#ffffff",
+  red: "#ef4444",
+  green: "#22c55e",
+};
+
+function kismetPipColor(value: number): string {
+  if (value <= 2) return KISMET_PIP_COLORS.black;
+  if (value <= 4) return KISMET_PIP_COLORS.red;
+  return KISMET_PIP_COLORS.green;
+}
+
 export function Die({
   value,
   held = false,
-  heldColor = "#ffcc00",
+  heldColor = "#ffffff",
   size = "full",
   onClick,
   disabled = false,
   rolling = false,
   flash = false,
   label,
+  coloredPips = false,
 }: {
   value: number;
   held?: boolean;
@@ -34,13 +47,19 @@ export function Die({
   rolling?: boolean;
   flash?: boolean;
   label?: string;
+  coloredPips?: boolean;
 }) {
   const pips = PIP_LAYOUTS[value] ?? [];
   const pipSize = size === "sm" ? "16%" : "17%";
 
   const accent = flash && !held ? heldColor : null;
-  const borderColor = held ? heldColor : accent ?? "#ffffff";
-  const pipColor = held ? "#000000" : accent ?? "#ffffff";
+  const kismetColor = coloredPips ? kismetPipColor(value) : null;
+  const strokeColor = kismetColor ?? accent ?? "#ffffff";
+  const heldFill = kismetColor ?? heldColor;
+
+  const borderColor = held ? heldFill : strokeColor;
+  const bg = held ? heldFill : "#000000";
+  const pipColor = held ? "#000000" : strokeColor;
 
   return (
     <div
@@ -54,7 +73,7 @@ export function Die({
       style={{
         borderRadius: rolling ? undefined : 4,
         border: `1px solid ${borderColor}`,
-        background: held ? heldColor : "#000000",
+        background: bg,
       }}
     >
       {label ? (

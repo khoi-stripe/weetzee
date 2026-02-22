@@ -1,20 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { Player } from "@/lib/types";
-import { getFullTotal } from "@/lib/rulesets/yahtzee";
+import type { Player, Ruleset } from "@/lib/types";
+import { getRulesetTotal } from "@/lib/rulesets";
 import { Header } from "./Header";
 
 // ===== GameOverScreen =====
 // Shown when all categories are filled for all players.
 // Lists players sorted by score, highlights winner.
 
-export function GameOverScreen({ players }: { players: Player[] }) {
+export function GameOverScreen({ players, ruleset }: { players: Player[]; ruleset: Ruleset }) {
   const router = useRouter();
 
   const ranked = [...players]
-    .map((p) => ({ ...p, total: getFullTotal(p.scores, p.extraWeetzees) }))
-    .sort((a, b) => b.total - a.total);
+    .map((p) => ({ ...p, total: getRulesetTotal(ruleset, p.scores, p.extraWeetzees) }))
+    .sort((a, b) => ruleset.winCondition === "lowest" ? a.total - b.total : b.total - a.total);
 
   const winner = ranked[0];
 

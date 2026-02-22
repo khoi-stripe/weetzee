@@ -2,28 +2,28 @@ import type { Ruleset, ScoreCategory } from "../types";
 
 // ===== Scoring Utilities =====
 
-function counts(dice: number[]): Record<number, number> {
+export function counts(dice: number[]): Record<number, number> {
   return dice.reduce<Record<number, number>>((acc, v) => {
     acc[v] = (acc[v] ?? 0) + 1;
     return acc;
   }, {});
 }
 
-function sum(dice: number[]): number {
+export function sum(dice: number[]): number {
   return dice.reduce((a, b) => a + b, 0);
 }
 
-function hasNOfAKind(dice: number[], n: number): boolean {
+export function hasNOfAKind(dice: number[], n: number): boolean {
   return Object.values(counts(dice)).some((c) => c >= n);
 }
 
-function isSmallStraight(dice: number[]): boolean {
+export function isSmallStraight(dice: number[]): boolean {
   const unique = [...new Set(dice)].sort((a, b) => a - b);
   const sequences = [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]];
   return sequences.some((seq) => seq.every((n) => unique.includes(n)));
 }
 
-function isLargeStraight(dice: number[]): boolean {
+export function isLargeStraight(dice: number[]): boolean {
   const unique = [...new Set(dice)].sort((a, b) => a - b);
   if (unique.length !== 5) return false;
   return (
@@ -32,21 +32,21 @@ function isLargeStraight(dice: number[]): boolean {
   );
 }
 
-function isFullHouse(dice: number[]): boolean {
+export function isFullHouse(dice: number[]): boolean {
   const vals = Object.values(counts(dice)).sort();
   return JSON.stringify(vals) === JSON.stringify([2, 3]);
 }
 
 // ===== Categories =====
 
-const UPPER_SECTION: ScoreCategory[] = [1, 2, 3, 4, 5, 6].map((face) => ({
+export const UPPER_SECTION: ScoreCategory[] = [1, 2, 3, 4, 5, 6].map((face) => ({
   id: `upper_${face}`,
   name: ["Ones", "Twos", "Threes", "Fours", "Fives", "Sixes"][face - 1],
   evaluate: (dice) => dice.filter((d) => d === face).reduce((a, b) => a + b, 0),
   maxScore: face * 5,
 }));
 
-const LOWER_SECTION: ScoreCategory[] = [
+export const LOWER_SECTION: ScoreCategory[] = [
   {
     id: "three_of_a_kind",
     name: "3 of a kind",
@@ -101,10 +101,14 @@ const LOWER_SECTION: ScoreCategory[] = [
 
 export const YAHTZEE_RULESET: Ruleset = {
   id: "yahtzee",
-  name: "Weetzee",
+  name: "Classic",
+  description: "Standard Weetzee rules",
   diceCount: 5,
   rollsPerTurn: 3,
   categories: [...UPPER_SECTION, ...LOWER_SECTION],
+  winCondition: "highest",
+  getBonus: getBonusScore,
+  getTotal: getFullTotal,
 };
 
 // Upper section category IDs for bonus calculation

@@ -1,21 +1,38 @@
 "use client";
 
-import type { Player } from "@/lib/types";
-import { getFullTotal } from "@/lib/rulesets/yahtzee";
+import { useEffect, useRef, useState } from "react";
+import type { Player, Ruleset } from "@/lib/types";
+import { getRulesetTotal } from "@/lib/rulesets";
 
-// ===== PlayerBar =====
-// Shared score bar between dice and scorecard views.
-// Tappable: tapping it toggles to the scorecard view.
+const MIN_CELL_WIDTH_WITH_SCORE = 70;
 
 export function PlayerBar({
   players,
   currentPlayerIndex,
+  ruleset,
   onClick,
 }: {
   players: Player[];
   currentPlayerIndex: number;
+  ruleset: Ruleset;
   onClick?: () => void;
 }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const [showScores, setShowScores] = useState(true);
+
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    function measure() {
+      const w = el!.getBoundingClientRect().width;
+      setShowScores(w / players.length >= MIN_CELL_WIDTH_WITH_SCORE);
+    }
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [players.length]);
+
   return (
     <div
       className="shrink-0 w-full"
@@ -23,6 +40,7 @@ export function PlayerBar({
       onClick={onClick}
     >
       <div
+        ref={barRef}
         className={`flex overflow-hidden ${onClick ? "pressable" : ""}`}
         style={{
           border: "1px solid #ffffff",
@@ -34,20 +52,21 @@ export function PlayerBar({
       >
         {players.map((player, i) => {
           const isActive = i === currentPlayerIndex;
-          const total = getFullTotal(player.scores, player.extraWeetzees);
+          const total = getRulesetTotal(ruleset, player.scores, player.extraWeetzees);
           return (
             <div
               key={player.id}
-              className="flex items-center gap-2 flex-1 min-w-0"
+              className="flex items-center flex-1 min-w-0 justify-center"
               style={{
-                padding: "8px 16px",
-                background: isActive ? `${player.color}4d` : "transparent",
-                color: player.color,
+                padding: "8px 8px",
+                gap: 6,
+                background: isActive ? player.color : "transparent",
+                color: isActive ? "#000000" : player.color,
                 borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               }}
             >
-              <span className="flex-1 min-w-0">{player.name}</span>
-              <span className="flex-1 min-w-0 text-right">{total}</span>
+              <span className="shrink-0">{player.name}</span>
+              {showScores && <span className="shrink-0">{total}</span>}
             </div>
           );
         })}

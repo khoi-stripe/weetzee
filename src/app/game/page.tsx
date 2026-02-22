@@ -9,12 +9,13 @@ import { GameOverScreen } from "@/components/game/GameOverScreen";
 
 function GameContent() {
   const params = useSearchParams();
-  const playerCount = Math.min(Math.max(parseInt(params.get("players") ?? "2"), 1), 3);
-  const game = useGame(playerCount);
+  const playerCount = Math.min(Math.max(parseInt(params.get("players") ?? "2"), 1), 6);
+  const rulesetId = params.get("ruleset") ?? "yahtzee";
+  const game = useGame(playerCount, rulesetId);
   const { state } = game;
 
   if (state.gameOver) {
-    return <GameOverScreen players={state.players} />;
+    return <GameOverScreen players={state.players} ruleset={state.ruleset} />;
   }
 
   return (
@@ -23,6 +24,7 @@ function GameContent() {
       style={{ height: "100dvh", background: "#000000", overflow: "hidden" }}
     >
       <Header
+        rulesetName={state.ruleset.name}
         rollBankingEnabled={state.rollBankingEnabled}
         onToggleRollBanking={game.toggleRollBanking}
         multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}

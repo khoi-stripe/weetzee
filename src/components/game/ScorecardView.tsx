@@ -5,7 +5,8 @@ import { Die } from "./Die";
 import type { Die as DieType, Player } from "@/lib/types";
 import type { ScoreCategory } from "@/lib/types";
 import { getAvailableScores } from "@/lib/engine";
-import { getBonusScore, getUpperTotal, UPPER_BONUS_THRESHOLD, EXTRA_WEETZEE_VALUE } from "@/lib/rulesets/yahtzee";
+import { getRulesetBonus, getRulesetTotal } from "@/lib/rulesets";
+import { EXTRA_WEETZEE_VALUE } from "@/lib/rulesets/yahtzee";
 import type { Ruleset } from "@/lib/types";
 
 // ===== ScorecardView =====
@@ -55,6 +56,11 @@ export function ScorecardView({
   const categories = ruleset.categories.filter((c) => c.id !== "bonus");
 
   const locked = justScoredCategoryId != null;
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedCategoryId(null);
+  }, [turn, currentPlayerIndex]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showFade, setShowFade] = useState(false);
@@ -66,6 +72,11 @@ export function ScorecardView({
     setShowFade(el.scrollHeight > el.clientHeight && !atBottom);
   }, []);
 
+  const scrollLock = useRef<{ axis: "x" | "y" | null; startX: number; startY: number; scrollX: number; scrollY: number }>({
+    axis: null, startX: 0, startY: 0, scrollX: 0, scrollY: 0,
+  });
+  const LOCK_THRESHOLD = 4;
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -73,8 +84,47 @@ export function ScorecardView({
     el.addEventListener("scroll", checkFade, { passive: true });
     const ro = new ResizeObserver(checkFade);
     ro.observe(el);
+
+    function onTouchStart(e: TouchEvent) {
+      const t = e.touches[0];
+      scrollLock.current = { axis: null, startX: t.clientX, startY: t.clientY, scrollX: el!.scrollLeft, scrollY: el!.scrollTop };
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      const lock = scrollLock.current;
+      const t = e.touches[0];
+      const dx = t.clientX - lock.startX;
+      const dy = t.clientY - lock.startY;
+
+      if (!lock.axis) {
+        if (Math.abs(dx) > LOCK_THRESHOLD || Math.abs(dy) > LOCK_THRESHOLD) {
+          lock.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+        } else {
+          return;
+        }
+      }
+
+      e.preventDefault();
+      if (lock.axis === "x") {
+        el!.scrollLeft = lock.scrollX - dx;
+      } else {
+        el!.scrollTop = lock.scrollY - dy;
+      }
+    }
+
+    function onTouchEnd() {
+      scrollLock.current.axis = null;
+    }
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+
     return () => {
       el.removeEventListener("scroll", checkFade);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
       ro.disconnect();
     };
   }, [checkFade]);
@@ -85,17 +135,24 @@ export function ScorecardView({
       <div className="relative min-h-0">
         <div
           ref={scrollRef}
-          className="min-h-0 overflow-y-auto overflow-x-hidden rounded scrollbar-visible"
+          className="min-h-0 overflow-y-auto overflow-x-auto rounded scrollbar-visible"
           style={{ border: "1px solid #ffffff", maxHeight: "100%" }}
         >
-          <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
+          <table
+            className="border-collapse"
+            style={{
+              tableLayout: "fixed",
+              minWidth: players.length > 3 ? `${140 + players.length * 64}px` : "100%",
+              width: "100%",
+            }}
+          >
             <colgroup>
-              <col style={{ width: "38%" }} />
+              <col style={{ width: 140 }} />
               {players.map((p) => (
-                <col key={p.id} style={{ width: `${62 / players.length}%` }} />
+                <col key={p.id} />
               ))}
             </colgroup>
-            <thead>
+            <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
               <tr>
                 <Th>Player</Th>
                 {players.map((p) => (
@@ -113,13 +170,17 @@ export function ScorecardView({
                   players={players}
                   currentPlayerIndex={currentPlayerIndex}
                   availableScore={availableScores[cat.id]}
-                  onScore={() => { if (!locked) onScoreCategory(cat.id); }}
+                  selected={cat.id === selectedCategoryId}
+                  onScore={() => {
+                    if (!locked) setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id);
+                  }}
                   justScored={cat.id === justScoredCategoryId}
                   justScoredPlayerIndex={justScoredPlayerIndex ?? null}
                 />
               ))}
-              <BonusRow players={players} />
+              <BonusRow players={players} ruleset={ruleset} />
               {multipleWeetzeesEnabled && <WeetzeeBonusRow players={players} />}
+              <TotalRow players={players} ruleset={ruleset} />
             </tbody>
           </table>
         </div>
@@ -140,12 +201,37 @@ export function ScorecardView({
       </div>
 
       <div className="flex-1" />
+
+      {selectedCategoryId && !locked && (
+        <button
+          onClick={() => {
+            onScoreCategory(selectedCategoryId);
+            setSelectedCategoryId(null);
+          }}
+          className="shrink-0 w-full pressable"
+          style={{
+            padding: "12px 0",
+            border: "1px solid #ffffff",
+            borderRadius: 4,
+            background: "#ffffff",
+            fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 14,
+            fontWeight: 500,
+            color: "#000000",
+            cursor: "pointer",
+          }}
+        >
+          Done
+        </button>
+      )}
+
       {/* Interactive mini dice strip + roll button */}
       <MiniDiceStrip
         dice={dice}
         rollsUsed={rollsUsed}
         rollsPerTurn={rollsPerTurn}
         playerColor={playerColor}
+        coloredPips={!!ruleset.pipColors}
         onRoll={onRoll}
         onToggleHold={onToggleHold}
       />
@@ -160,6 +246,7 @@ function ScoreRow({
   players,
   currentPlayerIndex,
   availableScore,
+  selected = false,
   onScore,
   justScored,
   justScoredPlayerIndex,
@@ -168,6 +255,7 @@ function ScoreRow({
   players: Player[];
   currentPlayerIndex: number;
   availableScore: number | undefined;
+  selected?: boolean;
   onScore: () => void;
   justScored: boolean;
   justScoredPlayerIndex: number | null;
@@ -186,11 +274,12 @@ function ScoreRow({
           padding: "8px 16px",
           borderBottom: "1px solid #ffffff",
           borderRight: "1px solid #ffffff",
-          background: "#000000",
+          background: selected ? "#ffffff" : "#000000",
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 14,
-          color: "#ffffff",
-          fontWeight: 400,
+          color: selected ? "#000000" : "#ffffff",
+          fontWeight: selected ? 500 : 400,
+          transition: "background 150ms, color 150ms",
         }}
       >
         {category.name}
@@ -199,12 +288,15 @@ function ScoreRow({
         const scored = player.scores[category.id];
         const isCurrent = i === currentPlayerIndex;
         const isJustScoredCell = justScored && i === justScoredPlayerIndex;
-        const showPreview = isCurrent && !alreadyScored && availableScore !== undefined && !justScored;
-        const bg = isJustScoredCell
+        const isSelectedCell = selected && isCurrent;
+        const showPreview = isCurrent && !alreadyScored && availableScore !== undefined && !justScored && !selected;
+        const bg = isSelectedCell
           ? player.color
-          : showPreview
-            ? `${player.color}33`
-            : "#000000";
+          : isJustScoredCell
+            ? player.color
+            : showPreview
+              ? `${player.color}33`
+              : "#000000";
 
         return (
           <td
@@ -216,12 +308,14 @@ function ScoreRow({
               background: bg,
               fontFamily: '"IBM Plex Mono", monospace',
               fontSize: 14,
-              fontWeight: isJustScoredCell ? 500 : 400,
-              color: isJustScoredCell ? "#000000" : showPreview ? player.color : "#ffffff",
+              fontWeight: isSelectedCell || isJustScoredCell ? 500 : 400,
+              color: isSelectedCell || isJustScoredCell ? "#000000" : showPreview ? player.color : "#ffffff",
               transition: "background 150ms, color 150ms",
             }}
           >
-            {showPreview ? (
+            {isSelectedCell ? (
+              availableScore
+            ) : showPreview ? (
               <span className="pressable" style={{ display: "inline-block" }}>
                 {availableScore}
               </span>
@@ -237,7 +331,7 @@ function ScoreRow({
 
 // ===== Bonus Row =====
 
-function BonusRow({ players }: { players: Player[] }) {
+function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset }) {
   return (
     <tr>
       <td
@@ -253,10 +347,7 @@ function BonusRow({ players }: { players: Player[] }) {
         Bonus
       </td>
       {players.map((player, i) => {
-        const upperTotal = getUpperTotal(player.scores);
-        const bonus = getBonusScore(player.scores);
-        const progress = Math.min(upperTotal, UPPER_BONUS_THRESHOLD);
-        const label = bonus > 0 ? bonus : `${progress}/${UPPER_BONUS_THRESHOLD}`;
+        const bonus = getRulesetBonus(ruleset, player.scores);
         return (
           <td
             key={player.id}
@@ -269,7 +360,7 @@ function BonusRow({ players }: { players: Player[] }) {
               color: bonus > 0 ? player.color : "#ffffff",
             }}
           >
-            {label}
+            {bonus > 0 ? bonus : "—"}
           </td>
         );
       })}
@@ -317,6 +408,49 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
   );
 }
 
+// ===== Total Row =====
+
+function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset }) {
+  return (
+    <tr>
+      <td
+        style={{
+          padding: "8px 16px",
+          borderTop: "1px solid #ffffff",
+          borderRight: "1px solid #ffffff",
+          background: "#ffffff",
+          fontFamily: '"IBM Plex Mono", monospace',
+          fontSize: 14,
+          fontWeight: 600,
+          color: "#000000",
+        }}
+      >
+        Total
+      </td>
+      {players.map((player, i) => {
+        const total = getRulesetTotal(ruleset, player.scores, player.extraWeetzees);
+        return (
+          <td
+            key={player.id}
+            style={{
+              padding: "8px 16px",
+              borderTop: "1px solid #ffffff",
+              borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
+              background: player.color,
+              fontFamily: '"IBM Plex Mono", monospace',
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#000000",
+            }}
+          >
+            {total}
+          </td>
+        );
+      })}
+    </tr>
+  );
+}
+
 // ===== Mini Dice Strip =====
 
 const MINI_CYCLE_INTERVAL = 50;
@@ -331,6 +465,7 @@ function MiniDiceStrip({
   rollsUsed,
   rollsPerTurn,
   playerColor,
+  coloredPips = false,
   onRoll,
   onToggleHold,
 }: {
@@ -338,6 +473,7 @@ function MiniDiceStrip({
   rollsUsed: number;
   rollsPerTurn: number;
   playerColor: string;
+  coloredPips?: boolean;
   onRoll: () => void;
   onToggleHold: (id: number) => void;
 }) {
@@ -415,6 +551,7 @@ function MiniDiceStrip({
             size="sm"
             held={die.held}
             heldColor={playerColor}
+            coloredPips={coloredPips}
             onClick={canHold ? () => onToggleHold(die.id) : undefined}
             disabled={!canHold}
             rolling={rollingDice.has(i)}

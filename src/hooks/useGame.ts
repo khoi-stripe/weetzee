@@ -2,14 +2,15 @@
 
 import { useReducer } from "react";
 import { gameReducer, makeInitialState } from "@/lib/engine";
-import { YAHTZEE_RULESET } from "@/lib/rulesets/yahtzee";
+import { getRuleset } from "@/lib/rulesets";
 import type { GameState, GameView } from "@/lib/types";
 
-export function useGame(playerCount: number) {
+export function useGame(playerCount: number, rulesetId: string = "yahtzee") {
+  const ruleset = getRuleset(rulesetId);
   const [state, dispatch] = useReducer(
     gameReducer,
     undefined,
-    () => makeInitialState(YAHTZEE_RULESET, playerCount)
+    () => makeInitialState(ruleset, playerCount)
   );
 
   function roll() {

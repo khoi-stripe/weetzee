@@ -201,8 +201,6 @@ function ContentStrip({
 
   const effectiveRolls = getEffectiveRollsPerTurn(state);
 
-  const [justScoredCategoryId, setJustScoredCategoryId] = useState<string | null>(null);
-  const [justScoredPlayerIndex, setJustScoredPlayerIndex] = useState<number | null>(null);
   const scoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -238,17 +236,12 @@ function ContentStrip({
   function handleScoreCategory(id: string) {
     if (scoreTimer.current) return;
 
-    setJustScoredCategoryId(id);
-    setJustScoredPlayerIndex(state.currentPlayerIndex);
-
     const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
     const nextPlayer = state.players[nextPlayerIndex];
     const isSinglePlayer = state.players.length === 1;
 
     scoreTimer.current = setTimeout(() => {
       scoreCategory(id);
-      setJustScoredCategoryId(null);
-      setJustScoredPlayerIndex(null);
       scoreTimer.current = null;
 
       if (isSinglePlayer) {
@@ -260,7 +253,7 @@ function ContentStrip({
           snapTo(0);
         }, 2000);
       }
-    }, 1500);
+    }, 500);
   }
 
   return (
@@ -280,6 +273,7 @@ function ContentStrip({
           rollsUsed={state.rollsUsed}
           rollsPerTurn={effectiveRolls}
           playerColor={currentPlayer.color}
+          coloredPips={!!state.ruleset.pipColors}
           onRoll={roll}
           onToggleHold={toggleHold}
         />
@@ -290,6 +284,7 @@ function ContentStrip({
         <PlayerBar
           players={state.players}
           currentPlayerIndex={state.currentPlayerIndex}
+          ruleset={state.ruleset}
           onClick={() => snapTo(activePanel === 0 ? 1 : 0)}
         />
       </div>
@@ -308,8 +303,8 @@ function ContentStrip({
           onScoreCategory={handleScoreCategory}
           onRoll={roll}
           onToggleHold={toggleHold}
-          justScoredCategoryId={justScoredCategoryId}
-          justScoredPlayerIndex={justScoredPlayerIndex}
+          justScoredCategoryId={null}
+          justScoredPlayerIndex={null}
           multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
         />
       </div>

@@ -61,6 +61,7 @@ export function DiceView({
   rollsUsed,
   rollsPerTurn,
   playerColor,
+  coloredPips = false,
   onRoll,
   onToggleHold,
 }: {
@@ -68,6 +69,7 @@ export function DiceView({
   rollsUsed: number;
   rollsPerTurn: number;
   playerColor: string;
+  coloredPips?: boolean;
   onRoll: () => void;
   onToggleHold: (id: number) => void;
 }) {
@@ -260,6 +262,7 @@ export function DiceView({
             value={displayValues[i] ?? die.value}
             held={die.held}
             heldColor={playerColor}
+            coloredPips={coloredPips}
             onClick={canHold ? () => onToggleHold(die.id) : undefined}
             disabled={!canHold}
             label={rollsUsed === 0 ? "Roll me" : undefined}

@@ -7,11 +7,10 @@ import { PLAYER_COLORS } from "@/lib/types";
 // ===== Layout computation =====
 
 const CANDIDATE_LAYOUTS: [number, number][] = [
-  [1, 3],
-  [3, 1],
-  [1, 4],
-  [4, 1],
-  [2, 2],
+  [2, 3],
+  [3, 2],
+  [1, 6],
+  [6, 1],
 ];
 
 function computeLayout(
@@ -39,7 +38,7 @@ function computeLayout(
 
 export function PlayerSelector({
   count,
-  max = 3,
+  max = 6,
   onChange,
 }: {
   count: number;
