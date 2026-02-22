@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/game/Header";
 import { Die } from "@/components/game/Die";
 import { ALL_RULESETS } from "@/lib/rulesets";
+import { playTap } from "@/lib/sounds";
 
 const CANDIDATE_LAYOUTS: [number, number][] = [
   [2, 2],
@@ -54,6 +55,7 @@ function RulesetContent() {
   }, []);
 
   function startGame() {
+    playTap();
     router.push(`/game?players=${playerCount}&ruleset=${rulesetId}`);
   }
 
@@ -116,7 +118,7 @@ function RulesetContent() {
                   value={ALL_RULESETS.indexOf(r) + 1}
                   held={selected}
                   label={r.name}
-                  onClick={() => setRulesetId(r.id)}
+                  onClick={() => { playTap(); setRulesetId(r.id); }}
                 />
               </div>
             );

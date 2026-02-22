@@ -2,6 +2,7 @@
 
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { Share } from "lucide-react";
+import { playTap } from "@/lib/sounds";
 
 export function InstallPrompt() {
   const { showPrompt, isIOS, install, dismiss } = useInstallPrompt();
@@ -61,7 +62,7 @@ export function InstallPrompt() {
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <button
-            onClick={dismiss}
+            onClick={() => { playTap(); dismiss(); }}
             className="pressable"
             style={{
               padding: "8px 12px",
@@ -78,7 +79,7 @@ export function InstallPrompt() {
           </button>
           {!isIOS && (
             <button
-              onClick={install}
+              onClick={() => { playTap(); install(); }}
               className="pressable"
               style={{
                 padding: "8px 16px",

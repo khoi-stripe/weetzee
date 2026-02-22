@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Share } from "lucide-react";
 import { ALL_RULESETS } from "@/lib/rulesets";
+import { playTap, playToggle } from "@/lib/sounds";
 
 // ===== Header =====
 
@@ -33,6 +34,7 @@ export function Header({
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   function handleBack() {
+    playTap();
     if (backLabel === "Exit") {
       setShowExitConfirm(true);
     } else {
@@ -78,7 +80,7 @@ export function Header({
           Weetzee
         </p>
         <button
-          onClick={() => setShowRules(true)}
+          onClick={() => { playTap(); setShowRules(true); }}
           className="absolute flex items-center justify-center pressable"
           style={{
             right: 16,
@@ -134,7 +136,7 @@ export function Header({
             </p>
             <div className="flex gap-6 justify-center">
               <button
-                onClick={() => setShowExitConfirm(false)}
+                onClick={() => { playTap(); setShowExitConfirm(false); }}
                 className="flex items-center justify-center rounded-full pressable"
                 style={{
                   width: 100,
@@ -151,7 +153,7 @@ export function Header({
                 Cancel
               </button>
               <button
-                onClick={() => router.push("/")}
+                onClick={() => { playTap(); router.push("/"); }}
                 className="flex items-center justify-center rounded-full pressable"
                 style={{
                   width: 100,
@@ -371,7 +373,7 @@ function RulesModal({
           Rules
         </p>
         <button
-          onClick={onClose}
+          onClick={() => { playTap(); onClose(); }}
           className="absolute flex items-center justify-center pressable"
           style={{
             right: 16,
@@ -422,7 +424,7 @@ function RulesModal({
               </span>
             </div>
             <button
-              onClick={onChangeRuleset ?? (() => router.push("/"))}
+              onClick={() => { playTap(); (onChangeRuleset ?? (() => router.push("/")))(); }}
               className="pressable"
               style={{
                 background: "none",
@@ -584,7 +586,7 @@ function ToggleRow({
 }) {
   return (
     <div
-      onClick={onToggle}
+      onClick={() => { playToggle(!enabled); onToggle(); }}
       style={{
         display: "flex",
         alignItems: "center",

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Die } from "./Die";
 import type { Die as DieType } from "@/lib/types";
 import { rollValue } from "@/lib/engine";
+import { getAudioCtx, playBleep, playSettle, playTap } from "@/lib/sounds";
 
 // ===== Layout computation =====
 
@@ -43,50 +44,6 @@ const DICE_STAGGER = 100;
 const CYCLE_INTERVAL = 50;
 const CYCLE_BASE_DURATION = 300;
 const CYCLE_STAGGER_PER_DIE = 60;
-
-// ===== Synthesized roll sounds =====
-
-const BLEEP_NOTES = [440, 523, 587, 659, 698, 784, 880, 988, 1047];
-
-function getAudioCtx(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as { __weetzeeAudioCtx?: AudioContext };
-  if (!w.__weetzeeAudioCtx) w.__weetzeeAudioCtx = new AudioContext();
-  if (w.__weetzeeAudioCtx.state === "suspended") w.__weetzeeAudioCtx.resume();
-  return w.__weetzeeAudioCtx;
-}
-
-function playBleep(freq?: number, duration = 0.04, volume = 0.08) {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  const t = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "square";
-  osc.frequency.value = freq ?? BLEEP_NOTES[Math.floor(Math.random() * BLEEP_NOTES.length)];
-  gain.gain.setValueAtTime(volume, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start(t);
-  osc.stop(t + duration);
-}
-
-function playSettle(index: number, total: number) {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  const t = ctx.currentTime;
-  const baseFreq = 600 + index * (400 / Math.max(total, 1));
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(baseFreq, t);
-  osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.2, t + 0.06);
-  gain.gain.setValueAtTime(0.12, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start(t);
-  osc.stop(t + 0.1);
-}
 
 // ===== DiceView =====
 
@@ -298,7 +255,7 @@ export function DiceView({
             held={die.held}
             heldColor={playerColor}
             coloredPips={coloredPips}
-            onClick={canHold ? () => onToggleHold(die.id) : undefined}
+            onClick={canHold ? () => { playTap(); onToggleHold(die.id); } : undefined}
             disabled={!canHold}
             label={rollsUsed === 0 ? "Roll me" : undefined}
             rolling={rollingDice.has(i)}

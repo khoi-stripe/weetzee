@@ -7,6 +7,7 @@ import { PlayerBar } from "./PlayerBar";
 import type { UseGameReturn } from "@/hooks/useGame";
 import type { Player } from "@/lib/types";
 import { getEffectiveRollsPerTurn } from "@/lib/engine";
+import { playTap, playTurnChange } from "@/lib/sounds";
 
 // ===== GameView =====
 // One continuous vertical page: DiceView → PlayerBar → ScorecardView.
@@ -130,6 +131,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
     if (player) {
       setInterstitialExiting(false);
       setInterstitialPlayer(player);
+      playTurnChange();
     } else {
       setInterstitialExiting(true);
       setTimeout(() => {
@@ -285,7 +287,7 @@ function ContentStrip({
           players={state.players}
           currentPlayerIndex={state.currentPlayerIndex}
           ruleset={state.ruleset}
-          onClick={() => snapTo(activePanel === 0 ? 1 : 0)}
+          onClick={() => { playTap(); snapTo(activePanel === 0 ? 1 : 0); }}
         />
       </div>
 

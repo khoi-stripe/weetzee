@@ -1,12 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Player, Ruleset } from "@/lib/types";
 import { getRulesetTotal } from "@/lib/rulesets";
 import { Header } from "./Header";
+import { playWin, playTap } from "@/lib/sounds";
 
 export function GameOverScreen({ players, ruleset }: { players: Player[]; ruleset: Ruleset }) {
   const router = useRouter();
+
+  useEffect(() => {
+    const timer = setTimeout(playWin, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const ranked = [...players]
     .map((p) => ({ ...p, total: getRulesetTotal(ruleset, p.scores, p.extraWeetzees) }))
@@ -54,7 +61,7 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
         </div>
 
         <button
-          onClick={() => router.push("/")}
+          onClick={() => { playTap(); router.push("/"); }}
           className="flex items-center justify-center rounded-full shrink-0 pressable"
           style={{
             width: 109.67,

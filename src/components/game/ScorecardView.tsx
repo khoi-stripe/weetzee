@@ -8,6 +8,7 @@ import { getAvailableScores } from "@/lib/engine";
 import { getRulesetBonus, getRulesetTotal } from "@/lib/rulesets";
 import { EXTRA_WEETZEE_VALUE } from "@/lib/rulesets/classic";
 import { rollValue } from "@/lib/engine";
+import { playSelect, playDeselect, playConfirm, playTap } from "@/lib/sounds";
 import type { Ruleset } from "@/lib/types";
 
 // ===== ScorecardView =====
@@ -210,7 +211,9 @@ export function ScorecardView({
                   onScore={() => {
                     if (!locked) {
                       saveScroll();
-                      setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id);
+                      const deselecting = cat.id === selectedCategoryId;
+                      setSelectedCategoryId(deselecting ? null : cat.id);
+                      if (deselecting) playDeselect(); else playSelect();
                     }
                   }}
                   justScored={cat.id === justScoredCategoryId}
@@ -257,6 +260,7 @@ export function ScorecardView({
       <button
         onClick={selectedCategoryId && !locked ? () => {
           saveScroll();
+          playConfirm();
           onScoreCategory(selectedCategoryId);
           setSelectedCategoryId(null);
         } : undefined}
@@ -617,7 +621,7 @@ function MiniDiceStrip({
             held={die.held}
             heldColor={playerColor}
             coloredPips={coloredPips}
-            onClick={canHold ? () => onToggleHold(die.id) : undefined}
+            onClick={canHold ? () => { playTap(); onToggleHold(die.id); } : undefined}
             disabled={!canHold}
             rolling={rollingDice.has(i)}
             flash={flashDice.has(i)}

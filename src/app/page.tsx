@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/game/Header";
 import { PlayerSelector } from "@/components/setup/PlayerSelector";
+import { playTap } from "@/lib/sounds";
 
 export default function SetupPage() {
   const [playerCount, setPlayerCount] = useState(1);
   const router = useRouter();
 
   function next() {
+    playTap();
     router.push(`/ruleset?players=${playerCount}`);
   }
 

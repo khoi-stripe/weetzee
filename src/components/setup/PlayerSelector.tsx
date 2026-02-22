@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Die } from "@/components/game/Die";
 import { PLAYER_COLORS } from "@/lib/types";
+import { playTap } from "@/lib/sounds";
 
 // ===== Layout computation =====
 
@@ -100,7 +101,7 @@ export function PlayerSelector({
               value={playerNum}
               held={isSelected}
               heldColor={color}
-              onClick={() => onChange(playerNum)}
+              onClick={() => { playTap(); onChange(playerNum); }}
             />
           </div>
         );
