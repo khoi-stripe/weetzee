@@ -48,33 +48,24 @@ export function playSettle(index: number, total: number) {
 }
 
 // ===== General tap =====
-// Filtered noise burst — short, percussive click.
-// Uses a high-frequency sine with instant attack and ~25ms decay.
+// Soft sine "pop" — warm, rounded tone with quick pitch drop.
+// Starts at ~600Hz and falls to ~300Hz over 60ms for a gentle, woody feel.
 
 export function playTap() {
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
-  const bufferSize = ctx.sampleRate * 0.025;
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
 
-  const src = ctx.createBufferSource();
-  src.buffer = buffer;
-
-  const filter = ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = 4000;
-  filter.Q.value = 1.5;
-
+  const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.07, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
-
-  src.connect(filter).connect(gain).connect(ctx.destination);
-  src.start(t);
-  src.stop(t + 0.025);
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(600, t);
+  osc.frequency.exponentialRampToValueAtTime(300, t + 0.06);
+  gain.gain.setValueAtTime(0.09, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 0.07);
 }
 
 // ===== Score category selection =====
