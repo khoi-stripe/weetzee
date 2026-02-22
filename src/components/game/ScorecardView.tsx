@@ -58,7 +58,7 @@ export function ScorecardView({
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: "0 16px 16px", gap: 16 }}>
       {/* Scrollable table */}
       <div
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden rounded"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden rounded scrollbar-visible"
         style={{ border: "1px solid #ffffff" }}
       >
         <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
@@ -134,7 +134,6 @@ function ScoreRow({
 
   return (
     <tr
-      className={isScoreable ? "pressable" : ""}
       onClick={isScoreable ? onScore : undefined}
       style={{ cursor: isScoreable ? "pointer" : "default" }}
     >
@@ -166,6 +165,7 @@ function ScoreRow({
         return (
           <td
             key={player.id}
+            className={showPreview ? "pressable" : ""}
             style={{
               padding: "8px 16px",
               borderBottom: "1px solid #ffffff",

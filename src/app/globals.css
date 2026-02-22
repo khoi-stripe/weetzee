@@ -40,6 +40,22 @@ body {
   overscroll-behavior: none;
 }
 
+/* Persistent thin scrollbar */
+.scrollbar-visible::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+.scrollbar-visible {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
 @keyframes roll {
   0%   { transform: rotate(0deg) scale(1); }
   25%  { transform: rotate(-16deg) scale(0.95); }
