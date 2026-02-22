@@ -1,5 +1,5 @@
 import type { Ruleset } from "../types";
-import { UPPER_SECTION, LOWER_SECTION, getBonusScore, getFullTotal } from "./yahtzee";
+import { UPPER_SECTION, LOWER_SECTION, getBonusScore, getFullTotal } from "./classic";
 
 export const EVERYTHING_IN_ORDER_RULESET: Ruleset = {
   id: "everything-in-order",

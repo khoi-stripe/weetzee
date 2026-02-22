@@ -1,8 +1,8 @@
 import type { Ruleset, ScoreCategory } from "../types";
 import {
   counts, sum, hasNOfAKind, isSmallStraight,
-  UPPER_SECTION_IDS, UPPER_BONUS_THRESHOLD, UPPER_BONUS_VALUE, EXTRA_WEETZEE_VALUE,
-} from "./yahtzee";
+  getBonusScore, computeTotal,
+} from "./classic";
 
 function isFullHouse6(dice: number[]): boolean {
   const vals = Object.values(counts(dice)).sort((a, b) => a - b);
@@ -75,16 +75,8 @@ const LOWER_SECTION_6: ScoreCategory[] = [
   },
 ];
 
-function getBonus6(scores: Record<string, number | null>): number {
-  const upperTotal = UPPER_SECTION_IDS.reduce((s, id) => s + (scores[id] ?? 0), 0);
-  return upperTotal >= UPPER_BONUS_THRESHOLD ? UPPER_BONUS_VALUE : 0;
-}
-
 function getTotal6(scores: Record<string, number | null>, extraWeetzees: number = 0): number {
-  const manualTotal = Object.entries(scores)
-    .filter(([id]) => id !== "bonus")
-    .reduce((s, [, v]) => s + (v ?? 0), 0);
-  return manualTotal + getBonus6(scores) + extraWeetzees * EXTRA_WEETZEE_VALUE;
+  return computeTotal(scores, getBonusScore, extraWeetzees);
 }
 
 export const A_LITTLE_HELP_RULESET: Ruleset = {
@@ -95,7 +87,7 @@ export const A_LITTLE_HELP_RULESET: Ruleset = {
   rollsPerTurn: 3,
   categories: [...UPPER_SECTION_6, ...LOWER_SECTION_6],
   winCondition: "highest",
-  getBonus: getBonus6,
+  getBonus: getBonusScore,
   getTotal: getTotal6,
   fiveOfAKindId: "weetzee",
 };

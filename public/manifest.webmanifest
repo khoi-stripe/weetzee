@@ -1,7 +1,7 @@
 {
   "name": "Weetzee",
   "short_name": "Weetzee",
-  "description": "Mobile Yahtzee",
+  "description": "Mobile dice game",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

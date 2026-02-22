@@ -17,7 +17,7 @@ export default function SetupPage() {
     <div
       className="flex flex-col"
       style={{
-        height: "100dvh",
+        height: "100%",
         background: "#000000",
         overflow: "hidden",
       }}
@@ -30,7 +30,7 @@ export default function SetupPage() {
       >
         <p
           style={{
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: 16,
             fontWeight: 400,
             color: "#ffffff",
@@ -50,7 +50,7 @@ export default function SetupPage() {
             height: 109.67,
             border: "1px solid #ffffff",
             background: "transparent",
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: 14,
             fontWeight: 500,
             color: "#ffffff",

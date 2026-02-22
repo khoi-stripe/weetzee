@@ -37,7 +37,7 @@ function clearState() {
   } catch {}
 }
 
-export function useGame(playerCount: number, rulesetId: string = "yahtzee") {
+export function useGame(playerCount: number, rulesetId: string = "classic") {
   const ruleset = getRuleset(rulesetId);
   const [state, dispatch] = useReducer(
     gameReducer,

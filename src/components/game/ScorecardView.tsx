@@ -6,7 +6,8 @@ import type { Die as DieType, Player } from "@/lib/types";
 import type { ScoreCategory } from "@/lib/types";
 import { getAvailableScores } from "@/lib/engine";
 import { getRulesetBonus, getRulesetTotal } from "@/lib/rulesets";
-import { EXTRA_WEETZEE_VALUE } from "@/lib/rulesets/yahtzee";
+import { EXTRA_WEETZEE_VALUE } from "@/lib/rulesets/classic";
+import { rollValue } from "@/lib/engine";
 import type { Ruleset } from "@/lib/types";
 
 // ===== ScorecardView =====
@@ -268,7 +269,7 @@ export function ScorecardView({
             border: "1px solid #ffffff",
             borderRadius: 4,
             background: "#ffffff",
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: 14,
             fontWeight: 500,
             color: "#000000",
@@ -329,7 +330,7 @@ function ScoreRow({
           borderBottom: "1px solid #ffffff",
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
-          fontFamily: '"IBM Plex Mono", monospace',
+
           fontSize: 14,
           color: "#ffffff",
           fontWeight: 400,
@@ -363,7 +364,7 @@ function ScoreRow({
               borderBottom: "1px solid #ffffff",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: bg,
-              fontFamily: '"IBM Plex Mono", monospace',
+  
               fontSize: 14,
               fontWeight: isSelectedCell || isJustScoredCell ? 500 : 400,
               color: isSelectedCell || isJustScoredCell ? "#000000" : showPreview ? player.color : "#ffffff",
@@ -396,7 +397,7 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
-          fontFamily: '"IBM Plex Mono", monospace',
+
           fontSize: 14,
           color: "#ffffff",
           position: "sticky",
@@ -415,7 +416,7 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
               padding: "8px 16px",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: "#000000",
-              fontFamily: '"IBM Plex Mono", monospace',
+  
               fontSize: 14,
               color: bonus > 0 ? player.color : "#ffffff",
             }}
@@ -438,7 +439,7 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
-          fontFamily: '"IBM Plex Mono", monospace',
+
           fontSize: 14,
           color: "#ffffff",
           position: "sticky",
@@ -458,7 +459,7 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
               padding: "8px 16px",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: "#000000",
-              fontFamily: '"IBM Plex Mono", monospace',
+  
               fontSize: 14,
               color: count > 0 ? player.color : "#ffffff",
             }}
@@ -481,7 +482,7 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
           background: "#000000",
-          fontFamily: '"IBM Plex Mono", monospace',
+
           fontSize: 14,
           fontWeight: 600,
           color: "#ffffff",
@@ -504,7 +505,7 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               boxShadow: "inset 0 1px 0 #ffffff",
               background: player.color,
-              fontFamily: '"IBM Plex Mono", monospace',
+  
               fontSize: 14,
               fontWeight: 600,
               color: "#000000",
@@ -525,10 +526,6 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
 
 const MINI_CYCLE_INTERVAL = 50;
 const MINI_CYCLE_DURATION = 350;
-
-function randomValue(): number {
-  return Math.floor(Math.random() * 6) + 1;
-}
 
 function MiniDiceStrip({
   dice,
@@ -585,7 +582,7 @@ function MiniDiceStrip({
     cycleRef.current = setInterval(() => {
       setDisplayValues((prev) => {
         const next = [...prev];
-        for (const idx of unheldIndices) next[idx] = randomValue();
+        for (const idx of unheldIndices) next[idx] = rollValue();
         return next;
       });
       setFlashDice(() => {
@@ -636,7 +633,7 @@ function MiniDiceStrip({
         style={{
           border: "1px solid #ffffff",
           background: "transparent",
-          fontFamily: '"IBM Plex Mono", monospace',
+
           fontSize: 10,
           fontWeight: 500,
           color: "#ffffff",
@@ -667,7 +664,7 @@ function Th({
         padding: "8px 16px",
         borderRight: "1px solid #ffffff",
         background: "#000000",
-        fontFamily: '"IBM Plex Mono", monospace',
+
         fontSize: 14,
         fontWeight: 400,
         color: "#ffffff",

@@ -333,7 +333,7 @@ function PlayerInterstitial({ player, exiting }: { player: Player; exiting: bool
           width: "100%",
           aspectRatio: "1 / 1",
           background: player.color,
-          fontFamily: '"IBM Plex Mono", monospace',
+
           fontSize: 20,
           fontWeight: 500,
           color: "#000000",

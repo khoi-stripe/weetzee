@@ -80,7 +80,7 @@ export function Die({
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: size === "sm" ? 8 : 14,
             fontWeight: 500,
             color: held ? "#000000" : "#ffffff",

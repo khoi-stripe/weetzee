@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Weetzee",
-  description: "Mobile Yahtzee",
+  description: "Mobile dice game",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

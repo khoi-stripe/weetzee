@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Die } from "./Die";
 import type { Die as DieType } from "@/lib/types";
+import { rollValue } from "@/lib/engine";
 
 // ===== Layout computation =====
 
@@ -28,10 +29,6 @@ function computeLayout(
 }
 
 // ===== Rolling animation helpers =====
-
-function randomValue(): number {
-  return Math.floor(Math.random() * 6) + 1;
-}
 
 function shuffle(arr: number[]): number[] {
   const a = [...arr];
@@ -199,7 +196,7 @@ export function DiceView({
       setDisplayValues((prev) => {
         const next = [...prev];
         for (const idx of unheldIndices) {
-          next[idx] = randomValue();
+          next[idx] = rollValue();
         }
         return next;
       });
@@ -360,7 +357,7 @@ function RollButton({
         height: "100%",
         border: "1px solid #ffffff",
         opacity: canRoll ? 1 : 0.35,
-        fontFamily: '"IBM Plex Mono", monospace',
+
         fontSize: cellSize > 80 ? 14 : cellSize > 60 ? 11 : 9,
         fontWeight: 500,
         color: "#ffffff",

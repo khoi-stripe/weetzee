@@ -25,19 +25,23 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body {
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+html {
   height: 100%;
+}
+
+body {
+  height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
   overflow: hidden;
+  overscroll-behavior: none;
   background: #000000;
   color: #ffffff;
   font-family: "IBM Plex Mono", monospace;
   -webkit-font-smoothing: antialiased;
-}
-
-/* Prevent pull-to-refresh on mobile */
-body {
-  overscroll-behavior: none;
 }
 
 /* Persistent thin scrollbar */

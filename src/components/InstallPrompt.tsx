@@ -35,7 +35,7 @@ export function InstallPrompt() {
           background: "rgba(30,30,30,0.95)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          fontFamily: '"IBM Plex Mono", monospace',
+
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -70,7 +70,7 @@ export function InstallPrompt() {
               color: "#999999",
               background: "none",
               border: "none",
-              fontFamily: '"IBM Plex Mono", monospace',
+    
               cursor: "pointer",
             }}
           >
@@ -88,7 +88,7 @@ export function InstallPrompt() {
                 background: "#ffffff",
                 border: "none",
                 borderRadius: 6,
-                fontFamily: '"IBM Plex Mono", monospace',
+      
                 cursor: "pointer",
               }}
             >

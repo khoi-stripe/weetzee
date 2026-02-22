@@ -17,7 +17,7 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
   return (
     <div
       className="flex flex-col"
-      style={{ height: "100dvh", background: "#000000", overflow: "hidden" }}
+      style={{ height: "100%", background: "#000000", overflow: "hidden" }}
     >
       <Header />
 
@@ -38,7 +38,7 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
               background: winner.color,
               borderRadius: 4,
               border: `1px solid ${winner.color}`,
-              fontFamily: '"IBM Plex Mono", monospace',
+
               color: "#000000",
               padding: "10%",
               gap: 8,
@@ -61,7 +61,7 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
             height: 109.67,
             border: "1px solid #ffffff",
             background: "transparent",
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: 14,
             fontWeight: 500,
             color: "#ffffff",

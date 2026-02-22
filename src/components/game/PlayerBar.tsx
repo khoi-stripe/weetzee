@@ -45,7 +45,7 @@ export function PlayerBar({
         style={{
           border: "1px solid #ffffff",
           borderRadius: 4,
-          fontFamily: '"IBM Plex Mono", monospace',
+
           fontSize: 14,
           fontWeight: 500,
         }}

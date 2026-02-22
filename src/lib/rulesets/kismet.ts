@@ -1,5 +1,5 @@
 import type { Ruleset, ScoreCategory } from "../types";
-import { counts, sum, hasNOfAKind, EXTRA_WEETZEE_VALUE } from "./yahtzee";
+import { counts, sum, hasNOfAKind, isLargeStraight, isFullHouse, computeTotal } from "./classic";
 
 export function pipColor(value: number): "black" | "red" | "green" {
   if (value <= 2) return "black";
@@ -27,22 +27,8 @@ function hasTwoPairSameColor(dice: number[]): boolean {
   return false;
 }
 
-function isKismetStraight(dice: number[]): boolean {
-  const unique = [...new Set(dice)].sort((a, b) => a - b);
-  if (unique.length !== 5) return false;
-  return (
-    JSON.stringify(unique) === JSON.stringify([1, 2, 3, 4, 5]) ||
-    JSON.stringify(unique) === JSON.stringify([2, 3, 4, 5, 6])
-  );
-}
-
-function isKismetFullHouse(dice: number[]): boolean {
-  const vals = Object.values(counts(dice)).sort();
-  return JSON.stringify(vals) === JSON.stringify([2, 3]);
-}
-
 function isFullHouseSameColor(dice: number[]): boolean {
-  return isKismetFullHouse(dice) && allSameColor(dice);
+  return isFullHouse(dice) && allSameColor(dice);
 }
 
 // ===== Basic Section (same as upper) =====
@@ -72,7 +58,7 @@ const KISMET_SECTION: ScoreCategory[] = [
   {
     id: "straight",
     name: "Straight",
-    evaluate: (dice) => (isKismetStraight(dice) ? 30 : null),
+    evaluate: (dice) => (isLargeStraight(dice) ? 30 : null),
     maxScore: 30,
   },
   {
@@ -84,7 +70,7 @@ const KISMET_SECTION: ScoreCategory[] = [
   {
     id: "full_house",
     name: "Full House",
-    evaluate: (dice) => (isKismetFullHouse(dice) ? sum(dice) + 15 : null),
+    evaluate: (dice) => (isFullHouse(dice) ? sum(dice) + 15 : null),
     maxScore: 45,
   },
   {
@@ -130,10 +116,7 @@ function getKismetBonus(scores: Record<string, number | null>): number {
 }
 
 function getKismetTotal(scores: Record<string, number | null>, extraWeetzees: number = 0): number {
-  const manualTotal = Object.entries(scores)
-    .filter(([id]) => id !== "bonus")
-    .reduce((s, [, v]) => s + (v ?? 0), 0);
-  return manualTotal + getKismetBonus(scores) + extraWeetzees * EXTRA_WEETZEE_VALUE;
+  return computeTotal(scores, getKismetBonus, extraWeetzees);
 }
 
 export const KISMET_RULESET: Ruleset = {

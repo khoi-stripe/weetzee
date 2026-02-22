@@ -34,7 +34,7 @@ function computeLayout(
 function RulesetContent() {
   const params = useSearchParams();
   const playerCount = params.get("players") ?? "1";
-  const [rulesetId, setRulesetId] = useState("yahtzee");
+  const [rulesetId, setRulesetId] = useState("classic");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState({ cols: 2, rows: 2, cellSize: 0 });
@@ -61,7 +61,7 @@ function RulesetContent() {
     <div
       className="flex flex-col"
       style={{
-        height: "100dvh",
+        height: "100%",
         background: "#000000",
         overflow: "hidden",
       }}
@@ -74,7 +74,7 @@ function RulesetContent() {
       >
         <p
           style={{
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: 16,
             fontWeight: 400,
             color: "#ffffff",
@@ -131,7 +131,7 @@ function RulesetContent() {
             height: 109.67,
             border: "1px solid #ffffff",
             background: "transparent",
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: 14,
             fontWeight: 500,
             color: "#ffffff",

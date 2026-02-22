@@ -10,7 +10,7 @@ import { GameOverScreen } from "@/components/game/GameOverScreen";
 function GameContent() {
   const params = useSearchParams();
   const playerCount = Math.min(Math.max(parseInt(params.get("players") ?? "2"), 1), 6);
-  const rulesetId = params.get("ruleset") ?? "yahtzee";
+  const rulesetId = params.get("ruleset") ?? "classic";
   const game = useGame(playerCount, rulesetId);
   const { state } = game;
 
@@ -21,7 +21,7 @@ function GameContent() {
   return (
     <div
       className="flex flex-col"
-      style={{ height: "100dvh", background: "#000000", overflow: "hidden" }}
+      style={{ height: "100%", background: "#000000", overflow: "hidden" }}
     >
       <Header
         rulesetName={state.ruleset.name}

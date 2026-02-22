@@ -26,15 +26,14 @@ export function isSmallStraight(dice: number[]): boolean {
 export function isLargeStraight(dice: number[]): boolean {
   const unique = [...new Set(dice)].sort((a, b) => a - b);
   if (unique.length !== 5) return false;
-  return (
-    JSON.stringify(unique) === JSON.stringify([1, 2, 3, 4, 5]) ||
-    JSON.stringify(unique) === JSON.stringify([2, 3, 4, 5, 6])
-  );
+  return unique[0] === 1 || unique[0] === 2
+    ? unique.every((v, i) => v === unique[0] + i)
+    : false;
 }
 
 export function isFullHouse(dice: number[]): boolean {
-  const vals = Object.values(counts(dice)).sort();
-  return JSON.stringify(vals) === JSON.stringify([2, 3]);
+  const vals = Object.values(counts(dice)).sort((a, b) => a - b);
+  return vals.length === 2 && vals[0] === 2 && vals[1] === 3;
 }
 
 // ===== Categories =====
@@ -99,8 +98,8 @@ export const LOWER_SECTION: ScoreCategory[] = [
   },
 ];
 
-export const YAHTZEE_RULESET: Ruleset = {
-  id: "yahtzee",
+export const CLASSIC_RULESET: Ruleset = {
+  id: "classic",
   name: "Classic",
   description: "Standard Weetzee rules",
   diceCount: 5,
@@ -129,10 +128,19 @@ export function getBonusScore(scores: Record<string, number | null>): number {
 
 export const EXTRA_WEETZEE_VALUE = 100;
 
-/** Full player total including bonus and extra weetzees */
-export function getFullTotal(scores: Record<string, number | null>, extraWeetzees: number = 0): number {
+/** Sum non-bonus scores + bonus from bonusFn + extra weetzee points */
+export function computeTotal(
+  scores: Record<string, number | null>,
+  bonusFn: (scores: Record<string, number | null>) => number,
+  extraWeetzees: number = 0
+): number {
   const manualTotal = Object.entries(scores)
     .filter(([id]) => id !== "bonus")
     .reduce((sum, [, v]) => sum + (v ?? 0), 0);
-  return manualTotal + getBonusScore(scores) + extraWeetzees * EXTRA_WEETZEE_VALUE;
+  return manualTotal + bonusFn(scores) + extraWeetzees * EXTRA_WEETZEE_VALUE;
+}
+
+/** Full player total including bonus and extra weetzees */
+export function getFullTotal(scores: Record<string, number | null>, extraWeetzees: number = 0): number {
+  return computeTotal(scores, getBonusScore, extraWeetzees);
 }

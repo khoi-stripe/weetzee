@@ -49,7 +49,7 @@ export function Header({
               left: 16,
               top: 10,
               height: 28,
-              fontFamily: '"IBM Plex Mono", monospace',
+
               fontSize: 14,
               fontWeight: 500,
               color: "#ffffff",
@@ -69,7 +69,7 @@ export function Header({
             left: "50%",
             transform: "translateX(-50%)",
             top: 13.5,
-            fontFamily: '"IBM Plex Mono", monospace',
+
             letterSpacing: 0,
           }}
         >
@@ -84,7 +84,7 @@ export function Header({
             height: 28,
             background: "none",
             border: "none",
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: 14,
             fontWeight: 500,
             fontStyle: "normal",
@@ -121,7 +121,7 @@ export function Header({
         >
           <div
             style={{
-              fontFamily: '"IBM Plex Mono", monospace',
+
               textAlign: "center",
               padding: 32,
             }}
@@ -138,7 +138,7 @@ export function Header({
                   height: 100,
                   border: "1px solid #ffffff",
                   background: "transparent",
-                  fontFamily: '"IBM Plex Mono", monospace',
+    
                   fontSize: 14,
                   fontWeight: 500,
                   color: "#ffffff",
@@ -155,7 +155,7 @@ export function Header({
                   height: 100,
                   border: "1px solid #ffffff",
                   background: "#ffffff",
-                  fontFamily: '"IBM Plex Mono", monospace',
+    
                   fontSize: 14,
                   fontWeight: 500,
                   color: "#000000",
@@ -303,7 +303,7 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
           fontWeight: 600,
           color: "#ffffff",
           marginBottom: 4,
-          fontFamily: '"IBM Plex Mono", monospace',
+
         }}
       >
         {name}
@@ -312,7 +312,7 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
         {description} — {diceCount} dice, 3 rolls per turn
         {id === "race-to-bottom" ? ", lowest score wins" : ", highest score wins"}
       </p>
-      {id === "yahtzee" && <ClassicRules />}
+      {id === "classic" && <ClassicRules />}
       {id === "race-to-bottom" && <RaceToBottomRules />}
       {id === "a-little-help" && <ALittleHelpRules />}
       {id === "kismet" && <KismetRules />}
@@ -359,7 +359,7 @@ function RulesModal({
             left: "50%",
             transform: "translateX(-50%)",
             top: 13.5,
-            fontFamily: '"IBM Plex Mono", monospace',
+
           }}
         >
           Rules
@@ -374,7 +374,7 @@ function RulesModal({
             height: 28,
             background: "none",
             border: "none",
-            fontFamily: '"IBM Plex Mono", monospace',
+
             fontSize: 20,
             fontWeight: 400,
             color: "#ffffff",
@@ -392,7 +392,7 @@ function RulesModal({
         className="flex-1 overflow-y-auto"
         style={{
           padding: "0 24px 48px",
-          fontFamily: '"IBM Plex Mono", monospace',
+
           fontSize: 13,
           lineHeight: 1.6,
           color: "#cccccc",
@@ -423,7 +423,7 @@ function RulesModal({
                 border: "1px solid #666666",
                 borderRadius: 4,
                 padding: "4px 10px",
-                fontFamily: '"IBM Plex Mono", monospace',
+  
                 fontSize: 12,
                 color: "#999999",
                 cursor: "pointer",
@@ -456,7 +456,7 @@ function RulesModal({
                 fontWeight: 600,
                 color: "#ffffff",
                 marginBottom: 12,
-                fontFamily: '"IBM Plex Mono", monospace',
+  
               }}
             >
               House rules
@@ -506,7 +506,7 @@ function InstallSection() {
           fontWeight: 600,
           color: "#ffffff",
           marginBottom: 12,
-          fontFamily: '"IBM Plex Mono", monospace',
+
         }}
       >
         Install on your device
@@ -538,7 +538,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
           fontWeight: 600,
           color: "#ffffff",
           marginBottom: 8,
-          fontFamily: '"IBM Plex Mono", monospace',
+
         }}
       >
         {title}

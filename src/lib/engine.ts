@@ -3,7 +3,7 @@ import { PLAYER_COLORS } from "./types";
 
 // ===== Dice Helpers =====
 
-function rollValue(): number {
+export function rollValue(): number {
   return Math.floor(Math.random() * 6) + 1;
 }
 
@@ -213,13 +213,4 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     default:
       return state;
   }
-}
-
-// ===== Score Totals =====
-
-export function getPlayerTotal(player: Player): number {
-  return Object.values(player.scores).reduce(
-    (sum: number, v) => sum + (v ?? 0),
-    0
-  );
 }
