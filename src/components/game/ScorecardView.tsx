@@ -58,7 +58,7 @@ export function ScorecardView({
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: "0 16px 16px", gap: 16 }}>
       {/* Scrollable table */}
       <div
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden rounded scrollbar-visible"
+        className="min-h-0 overflow-y-auto overflow-x-hidden rounded scrollbar-visible"
         style={{ border: "1px solid #ffffff" }}
       >
         <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
@@ -96,6 +96,7 @@ export function ScorecardView({
         </table>
       </div>
 
+      <div className="flex-1" />
       {/* Interactive mini dice strip + roll button */}
       <MiniDiceStrip
         dice={dice}
@@ -165,7 +166,6 @@ function ScoreRow({
         return (
           <td
             key={player.id}
-            className={showPreview ? "pressable" : ""}
             style={{
               padding: "8px 16px",
               borderBottom: "1px solid #ffffff",
@@ -178,7 +178,13 @@ function ScoreRow({
               transition: "background 150ms, color 150ms",
             }}
           >
-            {scored !== undefined ? scored : (showPreview || isJustScoredCell) ? availableScore : ""}
+            {showPreview ? (
+              <span className="pressable" style={{ display: "inline-block" }}>
+                {availableScore}
+              </span>
+            ) : (
+              scored !== undefined ? scored : isJustScoredCell ? availableScore : ""
+            )}
           </td>
         );
       })}

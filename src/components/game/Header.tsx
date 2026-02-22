@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 
 // ===== Header =====
 
-export function Header({ showBack = true }: { showBack?: boolean }) {
+export function Header({
+  showBack = true,
+  rollBankingEnabled,
+  onToggleRollBanking,
+}: {
+  showBack?: boolean;
+  rollBankingEnabled?: boolean;
+  onToggleRollBanking?: () => void;
+}) {
   const router = useRouter();
   const [showRules, setShowRules] = useState(false);
 
@@ -68,14 +76,28 @@ export function Header({ showBack = true }: { showBack?: boolean }) {
         </button>
       </div>
 
-      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+      {showRules && (
+        <RulesModal
+          onClose={() => setShowRules(false)}
+          rollBankingEnabled={rollBankingEnabled}
+          onToggleRollBanking={onToggleRollBanking}
+        />
+      )}
     </>
   );
 }
 
 // ===== Rules Modal =====
 
-function RulesModal({ onClose }: { onClose: () => void }) {
+function RulesModal({
+  onClose,
+  rollBankingEnabled,
+  onToggleRollBanking,
+}: {
+  onClose: () => void;
+  rollBankingEnabled?: boolean;
+  onToggleRollBanking?: () => void;
+}) {
   return (
     <div
       className="fixed inset-0 flex flex-col"
@@ -162,6 +184,67 @@ function RulesModal({ onClose }: { onClose: () => void }) {
         <Section title="Scoring a zero">
           You may place a zero in any unused category if your roll doesn&apos;t qualify.
         </Section>
+
+        {onToggleRollBanking && (
+          <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+            <h3
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "#ffffff",
+                marginBottom: 12,
+                fontFamily: '"IBM Plex Mono", monospace',
+              }}
+            >
+              House rules
+            </h3>
+            <div
+              onClick={onToggleRollBanking}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px 0",
+                cursor: "pointer",
+              }}
+            >
+              <div>
+                <div style={{ color: "#ffffff", fontWeight: 500, fontSize: 13 }}>
+                  Roll banking
+                </div>
+                <div style={{ color: "#999999", fontSize: 11, marginTop: 2 }}>
+                  Bank unused rolls for future turns (max 3)
+                </div>
+              </div>
+              <div
+                className="pressable"
+                style={{
+                  width: 40,
+                  height: 22,
+                  borderRadius: 11,
+                  background: rollBankingEnabled ? "#34c759" : "#333333",
+                  position: "relative",
+                  transition: "background 200ms",
+                  flexShrink: 0,
+                  marginLeft: 16,
+                }}
+              >
+                <div
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 9,
+                    background: "#ffffff",
+                    position: "absolute",
+                    top: 2,
+                    left: rollBankingEnabled ? 20 : 2,
+                    transition: "left 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

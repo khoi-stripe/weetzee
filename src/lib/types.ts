@@ -25,6 +25,7 @@ export interface Player {
   name: string;
   color: string;
   scores: Record<string, number | null>;
+  bankedRolls: number;
 }
 
 // ===== Die =====
@@ -48,6 +49,7 @@ export interface GameState {
   turn: number;
   view: GameView;
   gameOver: boolean;
+  rollBankingEnabled: boolean;
 }
 
 // ===== Actions =====
@@ -56,4 +58,5 @@ export type GameAction =
   | { type: "ROLL" }
   | { type: "TOGGLE_HOLD"; dieId: number }
   | { type: "SCORE_CATEGORY"; categoryId: string }
-  | { type: "SET_VIEW"; view: GameView };
+  | { type: "SET_VIEW"; view: GameView }
+  | { type: "TOGGLE_ROLL_BANKING" };

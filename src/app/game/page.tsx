@@ -22,7 +22,10 @@ function GameContent() {
       className="flex flex-col"
       style={{ height: "100dvh", background: "#000000", overflow: "hidden" }}
     >
-      <Header />
+      <Header
+        rollBankingEnabled={state.rollBankingEnabled}
+        onToggleRollBanking={game.toggleRollBanking}
+      />
       <GameView game={game} />
     </div>
   );

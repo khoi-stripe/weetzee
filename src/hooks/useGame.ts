@@ -28,7 +28,11 @@ export function useGame(playerCount: number) {
     dispatch({ type: "SET_VIEW", view });
   }
 
-  return { state, roll, toggleHold, scoreCategory, setView };
+  function toggleRollBanking() {
+    dispatch({ type: "TOGGLE_ROLL_BANKING" });
+  }
+
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

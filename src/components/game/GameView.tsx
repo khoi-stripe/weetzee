@@ -6,6 +6,7 @@ import { ScorecardView } from "./ScorecardView";
 import { PlayerBar } from "./PlayerBar";
 import type { UseGameReturn } from "@/hooks/useGame";
 import type { Player } from "@/lib/types";
+import { getEffectiveRollsPerTurn } from "@/lib/engine";
 
 // ===== GameView =====
 // One continuous vertical page: DiceView → PlayerBar → ScorecardView.
@@ -39,7 +40,8 @@ export function GameView({ game }: { game: UseGameReturn }) {
       autoTransitionTimer.current = null;
     }
 
-    const usedAllRolls = state.rollsUsed >= state.ruleset.rollsPerTurn;
+    const effectiveMax = getEffectiveRollsPerTurn(state);
+    const usedAllRolls = state.rollsUsed >= effectiveMax;
 
     if (usedAllRolls && activePanel === 0) {
 
@@ -54,7 +56,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.rollsUsed, state.ruleset.rollsPerTurn]);
+  }, [state.rollsUsed, state.ruleset.rollsPerTurn, state.rollBankingEnabled]);
 
   function snapTo(panel: 0 | 1) {
     setIsDragging(false);
@@ -197,6 +199,8 @@ function ContentStrip({
   const [containerH, setContainerH] = useState(0);
   const [barH, setBarH] = useState(66);
 
+  const effectiveRolls = getEffectiveRollsPerTurn(state);
+
   const [justScoredCategoryId, setJustScoredCategoryId] = useState<string | null>(null);
   const [justScoredPlayerIndex, setJustScoredPlayerIndex] = useState<number | null>(null);
   const scoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -275,7 +279,7 @@ function ContentStrip({
         <DiceView
           dice={state.dice}
           rollsUsed={state.rollsUsed}
-          rollsPerTurn={state.ruleset.rollsPerTurn}
+          rollsPerTurn={effectiveRolls}
           playerColor={currentPlayer.color}
           onRoll={roll}
           onToggleHold={toggleHold}
@@ -300,7 +304,7 @@ function ContentStrip({
           ruleset={state.ruleset}
           turn={state.turn}
           rollsUsed={state.rollsUsed}
-          rollsPerTurn={state.ruleset.rollsPerTurn}
+          rollsPerTurn={effectiveRolls}
           playerColor={currentPlayer.color}
           onScoreCategory={handleScoreCategory}
           onRoll={roll}

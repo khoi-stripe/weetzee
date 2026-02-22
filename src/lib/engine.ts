@@ -27,6 +27,7 @@ export function makePlayers(count: number): Player[] {
     name: `P${i + 1}`,
     color: PLAYER_COLORS[i] ?? "#ffffff",
     scores: {},
+    bankedRolls: 0,
   }));
 }
 
@@ -42,7 +43,16 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     turn: 1,
     view: "rolling",
     gameOver: false,
+    rollBankingEnabled: false,
   };
+}
+
+const MAX_BANKED_ROLLS = 3;
+
+export function getEffectiveRollsPerTurn(state: GameState): number {
+  if (!state.rollBankingEnabled) return state.ruleset.rollsPerTurn;
+  const player = state.players[state.currentPlayerIndex];
+  return state.ruleset.rollsPerTurn + player.bankedRolls;
 }
 
 // ===== Score Helpers =====
@@ -79,8 +89,22 @@ function advanceTurn(state: GameState): GameState {
 
   const newDice = makeDice(state.ruleset.diceCount);
 
+  let players = state.players;
+  if (state.rollBankingEnabled) {
+    const effectiveMax = getEffectiveRollsPerTurn(state);
+    const unused = Math.max(0, effectiveMax - state.rollsUsed);
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    const newBanked = Math.min(unused, MAX_BANKED_ROLLS);
+    players = state.players.map((p, i) =>
+      i === state.currentPlayerIndex
+        ? { ...p, bankedRolls: newBanked }
+        : p
+    );
+  }
+
   return {
     ...state,
+    players,
     currentPlayerIndex: nextPlayerIndex,
     dice: newDice,
     rollsUsed: 0,
@@ -94,7 +118,8 @@ function advanceTurn(state: GameState): GameState {
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case "ROLL": {
-      if (state.rollsUsed >= state.ruleset.rollsPerTurn) return state;
+      const effectiveMax = getEffectiveRollsPerTurn(state);
+      if (state.rollsUsed >= effectiveMax) return state;
       const newDice = rollDice(state.dice);
       const newRollsUsed = state.rollsUsed + 1;
 
@@ -146,6 +171,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "SET_VIEW": {
       return { ...state, view: action.view };
+    }
+
+    case "TOGGLE_ROLL_BANKING": {
+      return { ...state, rollBankingEnabled: !state.rollBankingEnabled };
     }
 
     default:
