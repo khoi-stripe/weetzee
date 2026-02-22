@@ -10,10 +10,8 @@ import { getEffectiveRollsPerTurn } from "@/lib/engine";
 import { playTap, playTurnChange } from "@/lib/sounds";
 
 // ===== GameView =====
-// One continuous vertical page: DiceView → PlayerBar → ScorecardView.
-// Swiping up reveals the scorecard; swiping down returns to dice.
-// PlayerBar is always visible as the seam between the two sections.
-// Tapping PlayerBar → scorecard. Tapping mini dice strip → dice.
+// Portrait: vertical sliding strip (DiceView → PlayerBar → ScorecardView).
+// Landscape: side-by-side (DiceView | ScorecardView) with PlayerBar on top.
 
 export function GameView({ game }: { game: UseGameReturn }) {
   const { state, roll, toggleHold, scoreCategory, setView } = game;
@@ -22,6 +20,20 @@ export function GameView({ game }: { game: UseGameReturn }) {
   const [dragOffset, setDragOffset] = useState(0);
   const touchStartY = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLandscape, setIsLandscape] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    function measure() {
+      const { width, height } = el!.getBoundingClientRect();
+      setIsLandscape(width > height);
+    }
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Sync state.view → activePanel (for manual SET_VIEW calls)
   useEffect(() => {
@@ -32,7 +44,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.view]);
 
-  // Auto-transition to scorecard after final roll with a delay
+  // Auto-transition to scorecard after final roll (portrait only)
   const autoTransitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -41,11 +53,12 @@ export function GameView({ game }: { game: UseGameReturn }) {
       autoTransitionTimer.current = null;
     }
 
+    if (isLandscape) return;
+
     const effectiveMax = getEffectiveRollsPerTurn(state);
     const usedAllRolls = state.rollsUsed >= effectiveMax;
 
     if (usedAllRolls && activePanel === 0) {
-
       autoTransitionTimer.current = setTimeout(() => {
         snapTo(1);
       }, 1500);
@@ -57,7 +70,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.rollsUsed, state.ruleset.rollsPerTurn, state.rollBankingEnabled]);
+  }, [state.rollsUsed, state.ruleset.rollsPerTurn, state.rollBankingEnabled, isLandscape]);
 
   function snapTo(panel: 0 | 1) {
     setIsDragging(false);
@@ -66,7 +79,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
     setView(panel === 1 ? "scorecard" : "rolling");
   }
 
-  // ===== Touch handlers =====
+  // ===== Touch handlers (portrait only) =====
 
   const touchInScrollable = useRef(false);
 
@@ -84,6 +97,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
   }
 
   function onTouchStart(e: React.TouchEvent) {
+    if (isLandscape) return;
     touchStartY.current = e.touches[0].clientY;
     touchInScrollable.current = isInsideScrollable(e.target);
     setIsDragging(false);
@@ -91,6 +105,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
   }
 
   function onTouchMove(e: React.TouchEvent) {
+    if (isLandscape) return;
     if (touchStartY.current === null || touchInScrollable.current) return;
     const delta = e.touches[0].clientY - touchStartY.current;
 
@@ -101,6 +116,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
   }
 
   function onTouchEnd(e: React.TouchEvent) {
+    if (isLandscape) return;
     if (touchStartY.current === null) return;
     const delta = e.changedTouches[0].clientY - touchStartY.current;
     touchStartY.current = null;
@@ -149,18 +165,29 @@ export function GameView({ game }: { game: UseGameReturn }) {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
-      <ContentStrip
-        activePanel={activePanel}
-        isDragging={isDragging}
-        dragOffset={dragOffset}
-        state={state}
-        currentPlayer={currentPlayer}
-        roll={roll}
-        toggleHold={toggleHold}
-        scoreCategory={scoreCategory}
-        snapTo={snapTo}
-        onShowInterstitial={showInterstitial}
-      />
+      {isLandscape ? (
+        <LandscapeLayout
+          state={state}
+          currentPlayer={currentPlayer}
+          roll={roll}
+          toggleHold={toggleHold}
+          scoreCategory={scoreCategory}
+          onShowInterstitial={showInterstitial}
+        />
+      ) : (
+        <ContentStrip
+          activePanel={activePanel}
+          isDragging={isDragging}
+          dragOffset={dragOffset}
+          state={state}
+          currentPlayer={currentPlayer}
+          roll={roll}
+          toggleHold={toggleHold}
+          scoreCategory={scoreCategory}
+          snapTo={snapTo}
+          onShowInterstitial={showInterstitial}
+        />
+      )}
       {interstitialPlayer && (
         <PlayerInterstitial player={interstitialPlayer} exiting={interstitialExiting} />
       )}
@@ -168,7 +195,93 @@ export function GameView({ game }: { game: UseGameReturn }) {
   );
 }
 
-// ===== Content Strip =====
+// ===== Landscape Layout =====
+// Side-by-side: DiceView left, ScorecardView right (no PlayerBar; current
+// player is indicated via the score table header styling).
+
+function LandscapeLayout({
+  state,
+  currentPlayer,
+  roll,
+  toggleHold,
+  scoreCategory,
+  onShowInterstitial,
+}: {
+  state: UseGameReturn["state"];
+  currentPlayer: { color: string };
+  roll: () => void;
+  toggleHold: (id: number) => void;
+  scoreCategory: (id: string) => void;
+  onShowInterstitial: (player: Player | null) => void;
+}) {
+  const effectiveRolls = getEffectiveRollsPerTurn(state);
+  const scoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (scoreTimer.current) clearTimeout(scoreTimer.current);
+    };
+  }, []);
+
+  function handleScoreCategory(id: string) {
+    if (scoreTimer.current) return;
+
+    const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+    const nextPlayer = state.players[nextPlayerIndex];
+    const isSinglePlayer = state.players.length === 1;
+
+    scoreTimer.current = setTimeout(() => {
+      scoreCategory(id);
+      scoreTimer.current = null;
+
+      if (!isSinglePlayer) {
+        onShowInterstitial(nextPlayer);
+        setTimeout(() => {
+          onShowInterstitial(null);
+        }, 2000);
+      }
+    }, 500);
+  }
+
+  return (
+    <div className="flex flex-row w-full h-full">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <DiceView
+          dice={state.dice}
+          rollsUsed={state.rollsUsed}
+          rollsPerTurn={effectiveRolls}
+          playerColor={currentPlayer.color}
+          coloredPips={!!state.ruleset.pipColors}
+          onRoll={roll}
+          onToggleHold={toggleHold}
+          alignTop
+        />
+      </div>
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <ScorecardView
+          players={state.players}
+          currentPlayerIndex={state.currentPlayerIndex}
+          dice={state.dice}
+          ruleset={state.ruleset}
+          turn={state.turn}
+          rollsUsed={state.rollsUsed}
+          rollsPerTurn={effectiveRolls}
+          playerColor={currentPlayer.color}
+          onScoreCategory={handleScoreCategory}
+          onRoll={roll}
+          onToggleHold={toggleHold}
+          justScoredCategoryId={null}
+          justScoredPlayerIndex={null}
+          multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
+          hideMiniDice
+          landscapeHeader
+        />
+      </div>
+    </div>
+  );
+}
+
+// ===== Content Strip (Portrait) =====
 // Lays out: [DiceView] [PlayerBar] [ScorecardView] vertically.
 // Each "page" is: dice+bar (panel 0) or bar+scorecard (panel 1).
 // The bar is the shared element.

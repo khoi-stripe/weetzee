@@ -55,6 +55,7 @@ export function DiceView({
   coloredPips = false,
   onRoll,
   onToggleHold,
+  alignTop = false,
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -63,6 +64,7 @@ export function DiceView({
   coloredPips?: boolean;
   onRoll: () => void;
   onToggleHold: (id: number) => void;
+  alignTop?: boolean;
 }) {
   const canRoll = rollsUsed < rollsPerTurn;
   const canHold = rollsUsed > 0;
@@ -236,7 +238,7 @@ export function DiceView({
           ? `repeat(${layout.rows}, ${layout.cellSize}px)`
           : `repeat(3, 1fr)`,
         gap: GAP,
-        placeContent: "center",
+        placeContent: alignTop ? "start center" : "center",
         padding: GAP,
       }}
     >

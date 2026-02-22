@@ -30,6 +30,8 @@ export function ScorecardView({
   justScoredCategoryId,
   justScoredPlayerIndex,
   multipleWeetzeesEnabled,
+  hideMiniDice = false,
+  landscapeHeader = false,
 }: {
   players: Player[];
   currentPlayerIndex: number;
@@ -45,6 +47,8 @@ export function ScorecardView({
   justScoredCategoryId?: string | null;
   justScoredPlayerIndex?: number | null;
   multipleWeetzeesEnabled?: boolean;
+  hideMiniDice?: boolean;
+  landscapeHeader?: boolean;
 }) {
   const currentPlayer = players[currentPlayerIndex];
   const diceValues = dice.map((d) => d.value);
@@ -165,7 +169,7 @@ export function ScorecardView({
   }
 
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: "0 16px 16px", gap: 16 }}>
+    <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: landscapeHeader ? "16px 16px 16px" : "0 16px 16px", gap: 16 }}>
       {/* Scrollable table with fade */}
       <div className="relative min-h-0">
         <div
@@ -190,11 +194,24 @@ export function ScorecardView({
             <thead>
               <tr>
                 <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>{""}</Th>
-                {players.map((p) => (
-                  <Th key={p.id} style={{ position: "sticky", top: 0, zIndex: 2, color: p.color }}>
-                    {p.name}
-                  </Th>
-                ))}
+                {players.map((p, i) => {
+                  const isActive = landscapeHeader && i === currentPlayerIndex;
+                  return (
+                    <Th
+                      key={p.id}
+                      style={{
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 2,
+                        color: isActive ? "#000000" : p.color,
+                        background: isActive ? p.color : "#000000",
+                        fontWeight: isActive ? 500 : 400,
+                      }}
+                    >
+                      {p.name}
+                    </Th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
@@ -280,16 +297,17 @@ export function ScorecardView({
         Done
       </button>
 
-      {/* Interactive mini dice strip + roll button */}
-      <MiniDiceStrip
-        dice={dice}
-        rollsUsed={rollsUsed}
-        rollsPerTurn={rollsPerTurn}
-        playerColor={playerColor}
-        coloredPips={!!ruleset.pipColors}
-        onRoll={onRoll}
-        onToggleHold={onToggleHold}
-      />
+      {!hideMiniDice && (
+        <MiniDiceStrip
+          dice={dice}
+          rollsUsed={rollsUsed}
+          rollsPerTurn={rollsPerTurn}
+          playerColor={playerColor}
+          coloredPips={!!ruleset.pipColors}
+          onRoll={onRoll}
+          onToggleHold={onToggleHold}
+        />
+      )}
     </div>
   );
 }
