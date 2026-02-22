@@ -347,6 +347,7 @@ function RulesModal({
       style={{
         zIndex: 100,
         background: "#000000",
+        paddingTop: "env(safe-area-inset-top, 0px)",
         animation: "interstitial-in 200ms ease forwards",
       }}
     >
