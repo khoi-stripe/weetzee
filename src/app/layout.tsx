@@ -24,30 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <svg className="absolute w-0 h-0" aria-hidden="true">
-          <defs>
-            <filter id="wavy" x="-15%" y="-15%" width="130%" height="130%">
-              <feTurbulence
-                type="turbulence"
-                baseFrequency="0.01"
-                numOctaves="3"
-                seed="1"
-              >
-                <animate
-                  attributeName="seed"
-                  from="1"
-                  to="3"
-                  dur="10s"
-                  repeatCount="indefinite"
-                />
-              </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" scale="12" />
-            </filter>
-          </defs>
-        </svg>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

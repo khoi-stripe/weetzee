@@ -46,12 +46,13 @@ export function Die({
     <div
       onClick={disabled ? undefined : onClick}
       className={[
-        "relative rounded-[4px] select-none",
+        "relative select-none",
         "w-full aspect-square",
         onClick && !disabled ? "pressable" : "",
         rolling ? "animate-roll-loop" : "",
       ].join(" ")}
       style={{
+        borderRadius: rolling ? undefined : 4,
         border: `1px solid ${borderColor}`,
         background: held ? heldColor : "#000000",
       }}

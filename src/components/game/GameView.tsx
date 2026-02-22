@@ -274,7 +274,6 @@ function ContentStrip({
         willChange: "transform",
       }}
     >
-      {/* Dice section — overflow hidden prevents rolling animation from peeking into scorecard */}
       <div className="w-full flex flex-col overflow-hidden" style={{ height: diceH || "auto" }}>
         <DiceView
           dice={state.dice}
@@ -335,8 +334,9 @@ function PlayerInterstitial({ player, exiting }: { player: Player; exiting: bool
       <div
         className="flex items-center justify-center rounded-full"
         style={{
-          width: 120,
-          height: 120,
+          width: "100%",
+          aspectRatio: "1 / 1",
+          maxWidth: "80%",
           background: player.color,
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 20,

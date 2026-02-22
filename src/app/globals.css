@@ -70,7 +70,8 @@ body {
 
 .animate-roll-loop {
   animation: roll 300ms ease-in-out infinite;
-  filter: url(#wavy);
+  overflow: hidden;
+  border-radius: 30% 45% 35% 40% / 40% 35% 45% 30% !important;
 }
 
 @keyframes spin-in {
