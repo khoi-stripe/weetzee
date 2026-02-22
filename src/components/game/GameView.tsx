@@ -65,14 +65,30 @@ export function GameView({ game }: { game: UseGameReturn }) {
 
   // ===== Touch handlers =====
 
+  const touchInScrollable = useRef(false);
+
+  function isInsideScrollable(target: EventTarget | null): boolean {
+    let el = target as HTMLElement | null;
+    while (el && el !== containerRef.current) {
+      if (el.scrollHeight > el.clientHeight && el.clientHeight > 0) {
+        const style = window.getComputedStyle(el);
+        const overflow = style.overflowY;
+        if (overflow === "auto" || overflow === "scroll") return true;
+      }
+      el = el.parentElement;
+    }
+    return false;
+  }
+
   function onTouchStart(e: React.TouchEvent) {
     touchStartY.current = e.touches[0].clientY;
+    touchInScrollable.current = isInsideScrollable(e.target);
     setIsDragging(false);
     setDragOffset(0);
   }
 
   function onTouchMove(e: React.TouchEvent) {
-    if (touchStartY.current === null) return;
+    if (touchStartY.current === null || touchInScrollable.current) return;
     const delta = e.touches[0].clientY - touchStartY.current;
 
     if (Math.abs(delta) > 10) {
@@ -89,6 +105,11 @@ export function GameView({ game }: { game: UseGameReturn }) {
     const wasDragging = isDragging;
     setIsDragging(false);
     setDragOffset(0);
+
+    if (touchInScrollable.current) {
+      touchInScrollable.current = false;
+      return;
+    }
 
     if (!wasDragging) return;
 
