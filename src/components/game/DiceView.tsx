@@ -296,16 +296,21 @@ function RollButton({
   onRoll: () => void;
   showButton: boolean;
 }) {
+  const [introDone, setIntroDone] = useState(false);
+
   const label =
     rollsUsed === 0
       ? `ROLL 1 of ${rollsPerTurn}`
       : `ROLL ${Math.min(rollsUsed + 1, rollsPerTurn)} of ${rollsPerTurn}`;
 
+  const animating = showButton && !introDone;
+
   return (
     <button
       onClick={canRoll ? onRoll : undefined}
       disabled={!canRoll}
-      className={`flex items-center justify-center rounded-full ${showButton ? "animate-scale-in" : ""}`}
+      className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
+      onAnimationEnd={() => setIntroDone(true)}
       style={{
         width: "100%",
         height: "100%",
@@ -316,7 +321,6 @@ function RollButton({
         fontWeight: 500,
         color: "#ffffff",
         background: "transparent",
-        transition: "opacity 200ms",
         cursor: canRoll ? "pointer" : "default",
         transform: showButton ? undefined : "scale(0)",
       }}

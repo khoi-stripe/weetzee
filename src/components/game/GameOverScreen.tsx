@@ -71,7 +71,7 @@ export function GameOverScreen({ players }: { players: Player[] }) {
 
         <button
           onClick={() => router.push("/")}
-          className="flex items-center justify-center rounded-full"
+          className="flex items-center justify-center rounded-full pressable"
           style={{
             width: 109.67,
             height: 109.67,

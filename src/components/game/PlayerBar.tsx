@@ -23,14 +23,13 @@ export function PlayerBar({
       onClick={onClick}
     >
       <div
-        className="flex overflow-hidden"
+        className={`flex overflow-hidden ${onClick ? "pressable" : ""}`}
         style={{
           border: "1px solid #ffffff",
           borderRadius: 4,
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 14,
           fontWeight: 500,
-          cursor: onClick ? "pointer" : "default",
         }}
       >
         {players.map((player, i) => {

@@ -48,7 +48,7 @@ export default function SetupPage() {
         {/* Start button — circular, 109.67px, opacity-50 until pressed */}
         <button
           onClick={startGame}
-          className="flex items-center justify-center rounded-full shrink-0"
+          className="flex items-center justify-center rounded-full shrink-0 pressable"
           style={{
             width: 109.67,
             height: 109.67,
@@ -58,13 +58,9 @@ export default function SetupPage() {
             fontSize: 14,
             fontWeight: 500,
             color: "#ffffff",
-            opacity: 0.5,
+            opacity: 1,
             cursor: "pointer",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")}
-          onTouchStart={(e) => (e.currentTarget.style.opacity = "1")}
-          onTouchEnd={(e) => (e.currentTarget.style.opacity = "0.5")}
         >
           Start
         </button>

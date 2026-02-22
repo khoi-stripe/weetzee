@@ -48,7 +48,7 @@ export function Die({
       className={[
         "relative rounded-[4px] select-none",
         "w-full aspect-square",
-        onClick && !disabled ? "cursor-pointer active:scale-95 transition-transform" : "",
+        onClick && !disabled ? "pressable" : "",
         rolling ? "animate-roll-loop" : "",
       ].join(" ")}
       style={{

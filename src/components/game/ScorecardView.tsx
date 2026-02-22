@@ -134,6 +134,7 @@ function ScoreRow({
 
   return (
     <tr
+      className={isScoreable ? "pressable" : ""}
       onClick={isScoreable ? onScore : undefined}
       style={{ cursor: isScoreable ? "pointer" : "default" }}
     >
@@ -335,7 +336,7 @@ function MiniDiceStrip({
       <button
         onClick={canRoll ? onRoll : undefined}
         disabled={!canRoll}
-        className="flex-1 min-w-0 flex items-center justify-center rounded-full aspect-square"
+        className="flex-1 min-w-0 flex items-center justify-center rounded-full aspect-square pressable"
         style={{
           border: "1px solid #ffffff",
           background: "transparent",

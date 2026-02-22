@@ -15,7 +15,7 @@ export function Header({ showBack = true }: { showBack?: boolean }) {
         {showBack && (
           <button
             onClick={() => router.push("/")}
-            className="absolute flex items-center justify-center"
+            className="absolute flex items-center justify-center pressable"
             style={{
               left: 16,
               top: 10,
@@ -48,7 +48,7 @@ export function Header({ showBack = true }: { showBack?: boolean }) {
         </p>
         <button
           onClick={() => setShowRules(true)}
-          className="absolute flex items-center justify-center"
+          className="absolute flex items-center justify-center pressable"
           style={{
             right: 16,
             top: 10,
@@ -101,7 +101,7 @@ function RulesModal({ onClose }: { onClose: () => void }) {
         </p>
         <button
           onClick={onClose}
-          className="absolute flex items-center justify-center"
+          className="absolute flex items-center justify-center pressable"
           style={{
             right: 16,
             top: 10,
