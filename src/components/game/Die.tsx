@@ -15,7 +15,7 @@ const PIP_LAYOUTS: Record<number, [number, number][]> = {
 };
 
 const KISMET_PIP_COLORS: Record<string, string> = {
-  black: "#ffffff",
+  white: "#ffffff",
   red: "#ef4444",
   green: "#22c55e",
 };

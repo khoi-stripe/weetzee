@@ -1,8 +1,8 @@
 import type { Ruleset, ScoreCategory } from "../types";
 import { counts, sum, hasNOfAKind, isLargeStraight, isFullHouse, computeTotal } from "./classic";
 
-export function pipColor(value: number): "black" | "red" | "green" {
-  if (value <= 2) return "black";
+export function pipColor(value: number): "white" | "red" | "green" {
+  if (value <= 2) return "white";
   if (value <= 4) return "red";
   return "green";
 }

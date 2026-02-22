@@ -244,7 +244,7 @@ function KismetRules() {
   return (
     <>
       <Section title="Colored pips">
-        <RuleRow name="1, 2" desc="Black" />
+        <RuleRow name="1, 2" desc="White" />
         <RuleRow name="3, 4" desc="Red" />
         <RuleRow name="5, 6" desc="Green" />
       </Section>
