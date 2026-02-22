@@ -7,6 +7,9 @@ import { Die } from "@/components/game/Die";
 import { ALL_RULESETS } from "@/lib/rulesets";
 import { playTap } from "@/lib/sounds";
 
+const ITEM_COUNT = ALL_RULESETS.length + 1;
+const TITLE_RESERVE = 48;
+
 function computeLayout(
   w: number,
   h: number,
@@ -30,7 +33,7 @@ function RulesetContent() {
   const [rulesetId, setRulesetId] = useState("classic");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [layout, setLayout] = useState({ cols: 2, rows: 2, cellSize: 0 });
+  const [layout, setLayout] = useState({ cols: 2, rows: 3, cellSize: 0 });
   const GAP = 16;
 
   useEffect(() => {
@@ -38,7 +41,12 @@ function RulesetContent() {
     if (!el) return;
     function measure() {
       const { width, height } = el!.getBoundingClientRect();
-      setLayout(computeLayout(width, height, ALL_RULESETS.length, GAP));
+      setLayout(computeLayout(
+        width - GAP * 2,
+        height - GAP * 2 - TITLE_RESERVE,
+        ITEM_COUNT,
+        GAP
+      ));
     }
     measure();
     const ro = new ResizeObserver(measure);
@@ -50,6 +58,10 @@ function RulesetContent() {
     playTap();
     router.push(`/game?players=${playerCount}&ruleset=${rulesetId}`);
   }
+
+  const gridW = layout.cellSize > 0
+    ? layout.cols * layout.cellSize + (layout.cols - 1) * GAP
+    : undefined;
 
   return (
     <div
@@ -63,36 +75,33 @@ function RulesetContent() {
       <Header showBack={true} backLabel="Back" showAllRulesets />
 
       <div
-        className="flex flex-col flex-1 min-h-0 items-center justify-center gap-4"
-        style={{ padding: 16 }}
+        ref={containerRef}
+        className="flex flex-col flex-1 min-h-0 items-center justify-center"
+        style={{ padding: GAP, gap: GAP }}
       >
         <p
+          className="shrink-0"
           style={{
-
             fontSize: 16,
             fontWeight: 400,
             color: "#ffffff",
             textAlign: "center",
+            width: gridW,
           }}
         >
-          Choose a ruleset
+          Choose ruleset
         </p>
 
         <div
-          ref={containerRef}
           style={{
-            flex: 1,
-            minHeight: 0,
-            width: "100%",
             display: "grid",
             gridTemplateColumns: layout.cellSize > 0
               ? `repeat(${layout.cols}, ${layout.cellSize}px)`
               : "repeat(2, 1fr)",
             gridTemplateRows: layout.cellSize > 0
               ? `repeat(${layout.rows}, ${layout.cellSize}px)`
-              : "repeat(2, 1fr)",
+              : "repeat(3, 1fr)",
             gap: GAP,
-            placeContent: "center",
           }}
         >
           {ALL_RULESETS.map((r) => {
@@ -114,27 +123,25 @@ function RulesetContent() {
               </div>
             );
           })}
+          <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
+            <button
+              onClick={startGame}
+              className="flex items-center justify-center rounded-full pressable"
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "1px solid #ffffff",
+                background: "transparent",
+                fontSize: "8cqi",
+                fontWeight: 500,
+                color: "#ffffff",
+                cursor: "pointer",
+              }}
+            >
+              Start
+            </button>
+          </div>
         </div>
-
-        <button
-          onClick={startGame}
-          className="flex items-center justify-center rounded-full shrink-0 pressable"
-          style={{
-            width: 109.67,
-            height: 109.67,
-            border: "1px solid #ffffff",
-            background: "transparent",
-
-            fontSize: 14,
-            fontWeight: 500,
-            color: "#ffffff",
-            opacity: 1,
-            cursor: "pointer",
-            marginTop: 8,
-          }}
-        >
-          Start
-        </button>
       </div>
     </div>
   );
