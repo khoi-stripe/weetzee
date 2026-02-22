@@ -189,7 +189,7 @@ export function ScorecardView({
             </colgroup>
             <thead>
               <tr>
-                <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#1a1a1a" }}>{""}</Th>
+                <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>{""}</Th>
                 {players.map((p) => (
                   <Th key={p.id} style={{ position: "sticky", top: 0, zIndex: 2, color: p.color }}>
                     {p.name}
@@ -242,8 +242,8 @@ export function ScorecardView({
           style={{
             position: "absolute",
             bottom: 38,
-            left: 0,
-            right: 0,
+            left: 1,
+            right: 1,
             height: 40,
             background: "linear-gradient(to bottom, transparent, #000000)",
             pointerEvents: "none",
@@ -480,7 +480,7 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
         style={{
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
-          background: "#1a1a1a",
+          background: "#000000",
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 14,
           fontWeight: 600,
