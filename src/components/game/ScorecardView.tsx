@@ -254,31 +254,29 @@ export function ScorecardView({
         />
       </div>
 
-      <div className="flex-1" />
-
-      {selectedCategoryId && !locked && (
-        <button
-          onClick={() => {
-            saveScroll();
-            onScoreCategory(selectedCategoryId);
-            setSelectedCategoryId(null);
-          }}
-          className="shrink-0 w-full pressable"
-          style={{
-            padding: "12px 0",
-            border: "1px solid #ffffff",
-            borderRadius: 4,
-            background: "#ffffff",
-
-            fontSize: 14,
-            fontWeight: 500,
-            color: "#000000",
-            cursor: "pointer",
-          }}
-        >
-          Done
-        </button>
-      )}
+      <button
+        onClick={selectedCategoryId && !locked ? () => {
+          saveScroll();
+          onScoreCategory(selectedCategoryId);
+          setSelectedCategoryId(null);
+        } : undefined}
+        className="shrink-0 w-full pressable"
+        style={{
+          padding: "12px 0",
+          border: "1px solid #ffffff",
+          borderRadius: 4,
+          background: "#ffffff",
+          fontSize: 14,
+          fontWeight: 500,
+          color: "#000000",
+          cursor: "pointer",
+          opacity: selectedCategoryId && !locked ? 1 : 0,
+          pointerEvents: selectedCategoryId && !locked ? "auto" : "none",
+          transition: "opacity 150ms",
+        }}
+      >
+        Done
+      </button>
 
       {/* Interactive mini dice strip + roll button */}
       <MiniDiceStrip
