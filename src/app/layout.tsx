@@ -27,7 +27,7 @@ export default function RootLayout({
       <body>
         <svg className="absolute w-0 h-0" aria-hidden="true">
           <defs>
-            <filter id="wavy">
+            <filter id="wavy" x="-15%" y="-15%" width="130%" height="130%">
               <feTurbulence
                 type="turbulence"
                 baseFrequency="0.01"
