@@ -10,6 +10,7 @@ import { ALL_RULESETS } from "@/lib/rulesets";
 export function Header({
   showBack = true,
   backLabel = "Exit",
+  rulesetId,
   rulesetName,
   showAllRulesets = false,
   rollBankingEnabled,
@@ -19,6 +20,7 @@ export function Header({
 }: {
   showBack?: boolean;
   backLabel?: string;
+  rulesetId?: string;
   rulesetName?: string;
   showAllRulesets?: boolean;
   rollBankingEnabled?: boolean;
@@ -101,6 +103,7 @@ export function Header({
         <RulesModal
           onClose={() => setShowRules(false)}
           onChangeRuleset={() => { setShowRules(false); setShowExitConfirm(true); }}
+          rulesetId={rulesetId}
           rulesetName={rulesetName}
           showAllRulesets={showAllRulesets}
           rollBankingEnabled={rollBankingEnabled}
@@ -324,6 +327,7 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
 function RulesModal({
   onClose,
   onChangeRuleset,
+  rulesetId,
   rulesetName,
   showAllRulesets = false,
   rollBankingEnabled,
@@ -333,6 +337,7 @@ function RulesModal({
 }: {
   onClose: () => void;
   onChangeRuleset?: () => void;
+  rulesetId?: string;
   rulesetName?: string;
   showAllRulesets?: boolean;
   rollBankingEnabled?: boolean;
@@ -445,6 +450,14 @@ function RulesModal({
           ALL_RULESETS.map((r) => (
             <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
           ))
+        ) : rulesetId === "kismet" ? (
+          <KismetRules />
+        ) : rulesetId === "race-to-bottom" ? (
+          <RaceToBottomRules />
+        ) : rulesetId === "a-little-help" ? (
+          <ALittleHelpRules />
+        ) : rulesetId === "everything-in-order" ? (
+          <EverythingInOrderRules />
         ) : (
           <ClassicRules />
         )}

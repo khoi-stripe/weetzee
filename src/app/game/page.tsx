@@ -24,6 +24,7 @@ function GameContent() {
       style={{ height: "100%", background: "#000000", overflow: "hidden" }}
     >
       <Header
+        rulesetId={state.ruleset.id}
         rulesetName={state.ruleset.name}
         rollBankingEnabled={state.rollBankingEnabled}
         onToggleRollBanking={game.toggleRollBanking}
