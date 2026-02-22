@@ -49,11 +49,9 @@ export function ScorecardView({
   const currentPlayer = players[currentPlayerIndex];
   const diceValues = dice.map((d) => d.value);
 
-  const availableScores = getAvailableScores(
-    diceValues,
-    ruleset,
-    currentPlayer.scores
-  );
+  const availableScores = rollsUsed > 0
+    ? getAvailableScores(diceValues, ruleset, currentPlayer.scores)
+    : {};
 
   const categories = ruleset.categories.filter((c) => c.id !== "bonus");
 

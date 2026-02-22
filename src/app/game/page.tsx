@@ -30,6 +30,7 @@ function GameContent() {
         onToggleRollBanking={game.toggleRollBanking}
         multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
         onToggleMultipleWeetzees={game.toggleMultipleWeetzees}
+        onEndGame={game.endGame}
       />
       <GameView game={game} />
     </div>

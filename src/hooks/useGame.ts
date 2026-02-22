@@ -51,7 +51,11 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     if (didRestore.current) return;
     didRestore.current = true;
     const saved = loadState(playerCount, rulesetId);
-    if (saved) dispatch({ type: "RESTORE", state: saved });
+    if (saved && !saved.gameOver) {
+      dispatch({ type: "RESTORE", state: saved });
+    } else {
+      clearState();
+    }
   }, [playerCount, rulesetId]);
 
   useEffect(() => {
@@ -87,7 +91,11 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
   }
 
-  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees };
+  function endGame() {
+    clearState();
+  }
+
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, endGame };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

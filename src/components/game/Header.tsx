@@ -18,6 +18,7 @@ export function Header({
   onToggleRollBanking,
   multipleWeetzeesEnabled,
   onToggleMultipleWeetzees,
+  onEndGame,
 }: {
   showBack?: boolean;
   backLabel?: string;
@@ -28,6 +29,7 @@ export function Header({
   onToggleRollBanking?: () => void;
   multipleWeetzeesEnabled?: boolean;
   onToggleMultipleWeetzees?: () => void;
+  onEndGame?: () => void;
 }) {
   const router = useRouter();
   const [showRules, setShowRules] = useState(false);
@@ -153,7 +155,7 @@ export function Header({
                 Cancel
               </button>
               <button
-                onClick={() => { playTap(); router.push("/"); }}
+                onClick={() => { playTap(); onEndGame?.(); router.push("/"); }}
                 className="flex items-center justify-center rounded-full pressable"
                 style={{
                   width: 100,
