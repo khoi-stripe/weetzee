@@ -109,6 +109,7 @@ export const YAHTZEE_RULESET: Ruleset = {
   winCondition: "highest",
   getBonus: getBonusScore,
   getTotal: getFullTotal,
+  fiveOfAKindId: "weetzee",
 };
 
 // Upper section category IDs for bonus calculation

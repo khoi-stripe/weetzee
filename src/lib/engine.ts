@@ -159,9 +159,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       const score = category.evaluate(diceValues) ?? 0;
 
+      const fiveId = state.ruleset.fiveOfAKindId ?? "weetzee";
       const isWeetzee = hasAllSame(diceValues);
-      const alreadyScoredWeetzee = currentPlayer.scores["weetzee"] !== undefined && currentPlayer.scores["weetzee"] !== null;
-      const earnExtraWeetzee = state.multipleWeetzeesEnabled && isWeetzee && alreadyScoredWeetzee && (currentPlayer.scores["weetzee"] ?? 0) > 0;
+      const alreadyScoredWeetzee = currentPlayer.scores[fiveId] !== undefined && currentPlayer.scores[fiveId] !== null;
+      const earnExtraWeetzee = state.multipleWeetzeesEnabled && isWeetzee && alreadyScoredWeetzee && (currentPlayer.scores[fiveId] ?? 0) > 0;
 
       const updatedPlayers = state.players.map((p, i) =>
         i === state.currentPlayerIndex

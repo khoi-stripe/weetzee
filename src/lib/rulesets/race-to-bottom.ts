@@ -22,4 +22,5 @@ export const RACE_TO_BOTTOM_RULESET: Ruleset = {
   winCondition: "lowest",
   getBonus: getRaceBonus,
   getTotal: (scores, extraWeetzees = 0) => getRaceTotal(scores) + getRaceBonus(scores),
+  fiveOfAKindId: "weetzee",
 };

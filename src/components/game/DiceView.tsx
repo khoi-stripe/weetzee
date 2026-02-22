@@ -6,23 +6,16 @@ import type { Die as DieType } from "@/lib/types";
 
 // ===== Layout computation =====
 
-const CANDIDATE_LAYOUTS: [number, number][] = [
-  [2, 3],
-  [3, 2],
-  [1, 6],
-  [6, 1],
-];
-
 function computeLayout(
   w: number,
   h: number,
   itemCount: number,
   gap: number
 ): { cols: number; rows: number; cellSize: number } {
-  let best = { cols: 2, rows: 3, cellSize: 0 };
+  let best = { cols: 1, rows: itemCount, cellSize: 0 };
 
-  for (const [cols, rows] of CANDIDATE_LAYOUTS) {
-    if (cols * rows < itemCount) continue;
+  for (let cols = 1; cols <= itemCount; cols++) {
+    const rows = Math.ceil(itemCount / cols);
     const cellW = (w - gap * (cols - 1)) / cols;
     const cellH = (h - gap * (rows - 1)) / rows;
     const cellSize = Math.floor(Math.min(cellW, cellH));
@@ -278,6 +271,7 @@ export function DiceView({
           canRoll={canRoll}
           onRoll={onRoll}
           showButton={showButton}
+          cellSize={layout.cellSize}
         />
       </div>
     </div>
@@ -292,12 +286,14 @@ function RollButton({
   canRoll,
   onRoll,
   showButton,
+  cellSize,
 }: {
   rollsUsed: number;
   rollsPerTurn: number;
   canRoll: boolean;
   onRoll: () => void;
   showButton: boolean;
+  cellSize: number;
 }) {
   const [introDone, setIntroDone] = useState(false);
 
@@ -320,7 +316,7 @@ function RollButton({
         border: "1px solid #ffffff",
         opacity: canRoll ? 1 : 0.35,
         fontFamily: '"IBM Plex Mono", monospace',
-        fontSize: 14,
+        fontSize: cellSize > 80 ? 14 : cellSize > 60 ? 11 : 9,
         fontWeight: 500,
         color: "#ffffff",
         background: "transparent",

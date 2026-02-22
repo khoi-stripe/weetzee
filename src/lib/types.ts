@@ -18,6 +18,7 @@ export interface Ruleset {
   winCondition: "highest" | "lowest";
   getBonus?: (scores: Record<string, number | null>) => number;
   getTotal?: (scores: Record<string, number | null>, extraWeetzees?: number) => number;
+  fiveOfAKindId?: string;
   pipColors?: boolean;
 }
 

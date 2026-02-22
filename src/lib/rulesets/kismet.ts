@@ -146,5 +146,6 @@ export const KISMET_RULESET: Ruleset = {
   winCondition: "highest",
   getBonus: getKismetBonus,
   getTotal: getKismetTotal,
+  fiveOfAKindId: "kismet",
   pipColors: true,
 };

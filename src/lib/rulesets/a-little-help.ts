@@ -1,8 +1,21 @@
 import type { Ruleset, ScoreCategory } from "../types";
 import {
-  sum, hasNOfAKind, isSmallStraight, isLargeStraight, isFullHouse,
+  counts, sum, hasNOfAKind, isSmallStraight,
   UPPER_SECTION_IDS, UPPER_BONUS_THRESHOLD, UPPER_BONUS_VALUE, EXTRA_WEETZEE_VALUE,
 } from "./yahtzee";
+
+function isFullHouse6(dice: number[]): boolean {
+  const vals = Object.values(counts(dice)).sort((a, b) => a - b);
+  const distinct = vals.length;
+  if (distinct !== 2) return false;
+  return vals[0] >= 2 && vals[1] >= 3;
+}
+
+function isLargeStraight6(dice: number[]): boolean {
+  const unique = new Set(dice);
+  const runs = [[1, 2, 3, 4, 5], [2, 3, 4, 5, 6]];
+  return runs.some((run) => run.every((n) => unique.has(n)));
+}
 
 const UPPER_SECTION_6: ScoreCategory[] = [1, 2, 3, 4, 5, 6].map((face) => ({
   id: `upper_${face}`,
@@ -33,13 +46,13 @@ const LOWER_SECTION_6: ScoreCategory[] = [
   {
     id: "lg_straight",
     name: "Lg. straight",
-    evaluate: (dice) => (isLargeStraight(dice) ? 40 : null),
+    evaluate: (dice) => (isLargeStraight6(dice) ? 40 : null),
     maxScore: 40,
   },
   {
     id: "full_house",
     name: "Full house",
-    evaluate: (dice) => (isFullHouse(dice) ? 25 : null),
+    evaluate: (dice) => (isFullHouse6(dice) ? 25 : null),
     maxScore: 25,
   },
   {
@@ -84,4 +97,5 @@ export const A_LITTLE_HELP_RULESET: Ruleset = {
   winCondition: "highest",
   getBonus: getBonus6,
   getTotal: getTotal6,
+  fiveOfAKindId: "weetzee",
 };
