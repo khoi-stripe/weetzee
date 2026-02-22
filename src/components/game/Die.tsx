@@ -74,6 +74,7 @@ export function Die({
         borderRadius: rolling ? undefined : 4,
         border: `1px solid ${borderColor}`,
         background: bg,
+        containerType: "inline-size",
       }}
     >
       {label ? (
@@ -81,7 +82,7 @@ export function Die({
           className="absolute inset-0 flex items-center justify-center"
           style={{
 
-            fontSize: size === "sm" ? 8 : 14,
+            fontSize: "10cqi",
             fontWeight: 500,
             color: held ? "#000000" : "#ffffff",
             transform: "rotate(-45deg)",
