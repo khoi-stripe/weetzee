@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Die } from "./Die";
 import type { Die as DieType, Player } from "@/lib/types";
 import type { ScoreCategory } from "@/lib/types";
@@ -62,14 +62,36 @@ export function ScorecardView({
     setSelectedCategoryId(null);
   }, [turn, currentPlayerIndex]);
 
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const th = el.querySelectorAll("thead th")[currentPlayerIndex + 1];
+    if (!th) return;
+
+    const containerRect = el.getBoundingClientRect();
+    const thRect = th.getBoundingClientRect();
+    const stickyColWidth = 141;
+    const visibleLeft = containerRect.left + stickyColWidth;
+    const visibleRight = containerRect.right;
+
+    if (thRect.left < visibleLeft) {
+      el.scrollTo({ left: el.scrollLeft + (thRect.left - visibleLeft), behavior: "smooth" });
+    } else if (thRect.right > visibleRight) {
+      el.scrollTo({ left: el.scrollLeft + (thRect.right - visibleRight), behavior: "smooth" });
+    }
+  }, [currentPlayerIndex]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
+  const savedScroll = useRef<{ top: number; left: number } | null>(null);
   const [showFade, setShowFade] = useState(false);
+  const [scrolledX, setScrolledX] = useState(false);
 
   const checkFade = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 2;
     setShowFade(el.scrollHeight > el.clientHeight && !atBottom);
+    setScrolledX(el.scrollLeft > 0);
   }, []);
 
   const scrollLock = useRef<{ axis: "x" | "y" | null; startX: number; startY: number; scrollX: number; scrollY: number }>({
@@ -129,6 +151,19 @@ export function ScorecardView({
     };
   }, [checkFade]);
 
+  useLayoutEffect(() => {
+    if (savedScroll.current && scrollRef.current) {
+      scrollRef.current.scrollTop = savedScroll.current.top;
+      scrollRef.current.scrollLeft = savedScroll.current.left;
+      savedScroll.current = null;
+    }
+  });
+
+  function saveScroll() {
+    const el = scrollRef.current;
+    if (el) savedScroll.current = { top: el.scrollTop, left: el.scrollLeft };
+  }
+
   return (
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: "0 16px 16px", gap: 16 }}>
       {/* Scrollable table with fade */}
@@ -152,11 +187,11 @@ export function ScorecardView({
                 <col key={p.id} />
               ))}
             </colgroup>
-            <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
+            <thead>
               <tr>
-                <Th>{""}</Th>
+                <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#1a1a1a" }}>{""}</Th>
                 {players.map((p) => (
-                  <Th key={p.id} style={{ color: p.color }}>
+                  <Th key={p.id} style={{ position: "sticky", top: 0, zIndex: 2, color: p.color }}>
                     {p.name}
                   </Th>
                 ))}
@@ -172,7 +207,10 @@ export function ScorecardView({
                   availableScore={availableScores[cat.id]}
                   selected={cat.id === selectedCategoryId}
                   onScore={() => {
-                    if (!locked) setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id);
+                    if (!locked) {
+                      saveScroll();
+                      setSelectedCategoryId(cat.id === selectedCategoryId ? null : cat.id);
+                    }
                   }}
                   justScored={cat.id === justScoredCategoryId}
                   justScoredPlayerIndex={justScoredPlayerIndex ?? null}
@@ -181,11 +219,25 @@ export function ScorecardView({
               <BonusRow players={players} ruleset={ruleset} />
               {multipleWeetzeesEnabled && <WeetzeeBonusRow players={players} />}
             </tbody>
-            <tfoot style={{ position: "sticky", bottom: 0, zIndex: 1 }}>
+            <tfoot>
               <TotalRow players={players} ruleset={ruleset} />
             </tfoot>
           </table>
         </div>
+        <div
+          style={{
+            position: "absolute",
+            top: 1,
+            bottom: 1,
+            left: 141,
+            width: 1,
+            background: "#ffffff",
+            pointerEvents: "none",
+            zIndex: 4,
+            opacity: scrolledX ? 1 : 0,
+            transition: "opacity 200ms",
+          }}
+        />
         <div
           style={{
             position: "absolute",
@@ -206,6 +258,7 @@ export function ScorecardView({
       {selectedCategoryId && !locked && (
         <button
           onClick={() => {
+            saveScroll();
             onScoreCategory(selectedCategoryId);
             setSelectedCategoryId(null);
           }}
@@ -275,12 +328,15 @@ function ScoreRow({
           padding: "8px 16px",
           borderBottom: "1px solid #ffffff",
           borderRight: "1px solid #ffffff",
-          background: selected ? "#ffffff" : "#000000",
+          background: selected ? "#ffffff" : "#1a1a1a",
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 14,
           color: selected ? "#000000" : "#ffffff",
           fontWeight: selected ? 500 : 400,
           transition: "background 150ms, color 150ms",
+          position: "sticky",
+          left: 0,
+          zIndex: 1,
         }}
       >
         {category.name}
@@ -339,10 +395,13 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
         style={{
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
-          background: "#000000",
+          background: "#1a1a1a",
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 14,
           color: "#ffffff",
+          position: "sticky",
+          left: 0,
+          zIndex: 1,
         }}
       >
         Bonus
@@ -378,10 +437,13 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
         style={{
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
-          background: "#000000",
+          background: "#1a1a1a",
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 14,
           color: "#ffffff",
+          position: "sticky",
+          left: 0,
+          zIndex: 1,
         }}
       >
         Weetzee+
@@ -418,12 +480,16 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
         style={{
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
-          background: "#ffffff",
+          background: "#1a1a1a",
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 14,
           fontWeight: 600,
-          color: "#000000",
+          color: "#ffffff",
           boxShadow: "inset 0 1px 0 #ffffff",
+          position: "sticky",
+          left: 0,
+          bottom: 0,
+          zIndex: 3,
         }}
       >
         Total
@@ -442,6 +508,9 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
               fontSize: 14,
               fontWeight: 600,
               color: "#000000",
+              position: "sticky",
+              bottom: 0,
+              zIndex: 2,
             }}
           >
             {total}
