@@ -20,6 +20,7 @@ export interface Ruleset {
   getTotal?: (scores: Record<string, number | null>, extraWeetzees?: number) => number;
   fiveOfAKindId?: string;
   pipColors?: boolean;
+  orderedScoring?: boolean;
 }
 
 // ===== Player =====

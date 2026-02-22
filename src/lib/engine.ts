@@ -69,12 +69,23 @@ export function getAvailableScores(
   playerScores: Record<string, number | null>
 ): Record<string, number> {
   const result: Record<string, number> = {};
+
+  const fiveId = ruleset.fiveOfAKindId ?? "weetzee";
+  let foundNextOrdered = false;
+
   for (const cat of ruleset.categories) {
     if (cat.id === "bonus") continue;
-    if (playerScores[cat.id] === undefined || playerScores[cat.id] === null) {
-      const score = cat.evaluate(dice);
-      result[cat.id] = score ?? 0;
+    const unscored = playerScores[cat.id] === undefined || playerScores[cat.id] === null;
+    if (!unscored) continue;
+
+    if (ruleset.orderedScoring) {
+      const isWild = cat.id === fiveId;
+      if (!isWild && foundNextOrdered) continue;
+      if (!isWild) foundNextOrdered = true;
     }
+
+    const score = cat.evaluate(dice);
+    result[cat.id] = score ?? 0;
   }
   return result;
 }

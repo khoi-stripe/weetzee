@@ -265,6 +265,34 @@ function KismetRules() {
   );
 }
 
+function EverythingInOrderRules() {
+  return (
+    <>
+      <Section title="Constraint">
+        <p>You must score categories from top to bottom — no skipping ahead.</p>
+        <p style={{ marginTop: 8, color: "#999999" }}>
+          Exception: Weetzee may be scored at any time.
+        </p>
+      </Section>
+      <Section title="Upper section">
+        <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
+        <p style={{ marginTop: 8, color: "#999999" }}>
+          Bonus: Score 35 extra points if upper section totals 63 or more.
+        </p>
+      </Section>
+      <Section title="Lower section">
+        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
+        <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
+        <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
+        <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
+        <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
+        <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
+        <RuleRow name="Weetzee" desc="50 pts — all five dice the same" />
+      </Section>
+    </>
+  );
+}
+
 function GameRulesBlock({ id, name, diceCount, description }: { id: string; name: string; diceCount: number; description: string }) {
   return (
     <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
@@ -287,6 +315,7 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
       {id === "race-to-bottom" && <RaceToBottomRules />}
       {id === "a-little-help" && <ALittleHelpRules />}
       {id === "kismet" && <KismetRules />}
+      {id === "everything-in-order" && <EverythingInOrderRules />}
     </div>
   );
 }

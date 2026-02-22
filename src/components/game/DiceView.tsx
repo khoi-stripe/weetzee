@@ -51,12 +51,12 @@ const CYCLE_STAGGER_PER_DIE = 60;
 
 const BLEEP_NOTES = [440, 523, 587, 659, 698, 784, 880, 988, 1047];
 
-let _audioCtx: AudioContext | null = null;
 function getAudioCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  if (!_audioCtx) _audioCtx = new AudioContext();
-  if (_audioCtx.state === "suspended") _audioCtx.resume();
-  return _audioCtx;
+  const w = window as unknown as { __weetzeeAudioCtx?: AudioContext };
+  if (!w.__weetzeeAudioCtx) w.__weetzeeAudioCtx = new AudioContext();
+  if (w.__weetzeeAudioCtx.state === "suspended") w.__weetzeeAudioCtx.resume();
+  return w.__weetzeeAudioCtx;
 }
 
 function playBleep(freq?: number, duration = 0.04, volume = 0.08) {
@@ -351,7 +351,7 @@ function RollButton({
 
   return (
     <button
-      onClick={canRoll ? onRoll : undefined}
+      onClick={canRoll ? () => { getAudioCtx(); onRoll(); } : undefined}
       disabled={!canRoll}
       className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
       onAnimationEnd={() => setIntroDone(true)}

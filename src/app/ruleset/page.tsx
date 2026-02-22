@@ -8,6 +8,8 @@ import { ALL_RULESETS } from "@/lib/rulesets";
 
 const CANDIDATE_LAYOUTS: [number, number][] = [
   [2, 2],
+  [3, 2],
+  [2, 3],
   [1, 4],
   [4, 1],
 ];
