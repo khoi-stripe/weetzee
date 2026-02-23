@@ -9,7 +9,7 @@ import { GameOverScreen } from "@/components/game/GameOverScreen";
 
 function GameContent() {
   const params = useSearchParams();
-  const playerCount = Math.min(Math.max(parseInt(params.get("players") ?? "2"), 1), 6);
+  const playerCount = Math.min(Math.max(parseInt(params.get("players") ?? "2", 10), 1), 6);
   const rulesetId = params.get("ruleset") ?? "classic";
   const game = useGame(playerCount, rulesetId);
   const { state } = game;

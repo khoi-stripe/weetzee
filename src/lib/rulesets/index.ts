@@ -1,5 +1,5 @@
 import type { Ruleset } from "../types";
-import { CLASSIC_RULESET, getFullTotal, getBonusScore, EXTRA_WEETZEE_VALUE } from "./classic";
+import { CLASSIC_RULESET, getFullTotal, getBonusScore } from "./classic";
 import { KEEP_YOUR_HEAD_DOWN_RULESET } from "./keep-your-head-down";
 import { A_LITTLE_HELP_RULESET } from "./a-little-help";
 import { KISMET_RULESET } from "./kismet";

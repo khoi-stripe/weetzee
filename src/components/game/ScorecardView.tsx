@@ -102,6 +102,9 @@ export function ScorecardView({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [pendingTarget, setPendingTarget] = useState<{ catId: string; target: number; sum: number; penalty: number } | null>(null);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const savedScroll = useRef<{ top: number; left: number } | null>(null);
+
   useEffect(() => {
     setSelectedCategoryId(null);
     setPendingTarget(null);
@@ -125,9 +128,6 @@ export function ScorecardView({
       el.scrollTo({ left: el.scrollLeft + (thRect.right - visibleRight), behavior: "smooth" });
     }
   }, [currentPlayerIndex]);
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const savedScroll = useRef<{ top: number; left: number } | null>(null);
   const [showFade, setShowFade] = useState(false);
   const [scrolledX, setScrolledX] = useState(false);
 
@@ -239,7 +239,7 @@ export function ScorecardView({
               onSelect={(id) => {
                 if (!locked && selectableScores[id] !== undefined) {
                   playSelect();
-                  const target = parseInt(categories.find((c) => c.id === id)?.name ?? "0");
+                  const target = parseInt(categories.find((c) => c.id === id)?.name ?? "0", 10);
                   const penalty = computeTargetPenalty(currentDiceSum, target);
                   setPendingTarget({ catId: id, target, sum: currentDiceSum, penalty });
                 }
@@ -409,12 +409,6 @@ export function ScorecardView({
 
 // ===== Target Table (Keep Your Head Down) =====
 
-function penaltyColor(penalty: number): string {
-  if (penalty < 0) return "#34c759";
-  if (penalty <= 9) return "#ffcc00";
-  return "#ff453a";
-}
-
 function penaltyLabel(penalty: number): string {
   if (penalty < 0) return `${penalty}`;
   return `+${penalty}`;
@@ -491,13 +485,12 @@ function TargetTable({
       </thead>
       <tbody>
         {categories.map((cat) => {
-          const targetNum = parseInt(cat.name);
+          const targetNum = parseInt(cat.name, 10);
           const penalty = canScore ? selectableScores[cat.id] : undefined;
           const isSelectable = penalty !== undefined;
           const isBest = cat.id === bestCategoryId;
           const isSelected = cat.id === selectedCategoryId;
           const isJustScored = cat.id === justScoredCategoryId;
-          const isExact = canScore && currentDiceSum === targetNum;
 
           return (
             <tr
@@ -607,7 +600,6 @@ function TargetConfirmModal({
 }) {
   const diff = Math.abs(sum - target);
   const exact = diff === 0;
-  const color = penaltyColor(penalty);
 
   return (
     <div

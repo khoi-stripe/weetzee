@@ -29,7 +29,7 @@ export function useInstallPrompt() {
     const dismissedAt = localStorage.getItem("pwa-install-dismissed");
     if (dismissedAt) {
       const daysSince =
-        (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
+        (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60 * 24);
       if (daysSince < 7) setDismissed(true);
     }
 
