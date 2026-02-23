@@ -64,6 +64,8 @@ export function ScorecardView({
     ? rollsUsed > 0
     : ruleset.forcedRolls ? allRollsUsed : rollsUsed > 0;
 
+  const categories = ruleset.categories.filter((c) => c.id !== "bonus");
+
   const rawScores = canScore
     ? getAvailableScores(diceValues, ruleset, currentPlayer.scores)
     : {};
@@ -95,8 +97,6 @@ export function ScorecardView({
             score > best[1] ? [id, score] : best
           )[0]
         : null);
-
-  const categories = ruleset.categories.filter((c) => c.id !== "bonus");
 
   const locked = justScoredCategoryId != null;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
