@@ -15,7 +15,8 @@ import { playTap, playTurnChange } from "@/lib/sounds";
 
 export function GameView({ game }: { game: UseGameReturn }) {
   const { state, roll, toggleHold, scoreCategory, setView } = game;
-  const [activePanel, setActivePanel] = useState<0 | 1>(0);
+  const defaultPanel = state.ruleset.targetAssignment ? 1 : 0;
+  const [activePanel, setActivePanel] = useState<0 | 1>(defaultPanel as 0 | 1);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const touchStartY = useRef<number | null>(null);
@@ -58,7 +59,8 @@ export function GameView({ game }: { game: UseGameReturn }) {
     const effectiveMax = getEffectiveRollsPerTurn(state);
     const usedAllRolls = state.rollsUsed >= effectiveMax;
     const allHeld = state.ruleset.lockedHolds && state.dice.filter((d) => d.held).length >= state.dice.length;
-    const shouldAutoTransition = usedAllRolls || (allHeld && state.rollsUsed > 0);
+    const targetModeRolled = state.ruleset.targetAssignment && state.rollsUsed > 0;
+    const shouldAutoTransition = usedAllRolls || (allHeld && state.rollsUsed > 0) || targetModeRolled;
 
     if (shouldAutoTransition && activePanel === 0) {
       autoTransitionTimer.current = setTimeout(() => {
@@ -361,17 +363,19 @@ function ContentStrip({
     const nextPlayer = state.players[nextPlayerIndex];
     const isSinglePlayer = state.players.length === 1;
 
+    const returnPanel = state.ruleset.targetAssignment ? 1 : 0;
+
     scoreTimer.current = setTimeout(() => {
       scoreCategory(id);
       scoreTimer.current = null;
 
       if (isSinglePlayer) {
-        setTimeout(() => snapTo(0), 320);
+        setTimeout(() => snapTo(returnPanel as 0 | 1), 320);
       } else {
         onShowInterstitial(nextPlayer);
         setTimeout(() => {
           onShowInterstitial(null);
-          snapTo(0);
+          snapTo(returnPanel as 0 | 1);
         }, 2000);
       }
     }, 500);

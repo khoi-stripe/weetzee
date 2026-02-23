@@ -47,7 +47,7 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     rollsUsed: 0,
     lockedDiceIds: [],
     turn: 1,
-    view: "rolling",
+    view: ruleset.targetAssignment ? "scorecard" : "rolling",
     gameOver: false,
     rollBankingEnabled: false,
     multipleWeetzeesEnabled: false,
@@ -139,7 +139,7 @@ function advanceTurn(state: GameState): GameState {
     rollsUsed: 0,
     lockedDiceIds: [],
     turn: nextTurn,
-    view: "rolling",
+    view: state.ruleset.targetAssignment ? "scorecard" : "rolling",
   };
 }
 
