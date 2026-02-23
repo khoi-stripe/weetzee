@@ -24,6 +24,9 @@ export interface Ruleset {
   forcedRolls?: boolean;
   highestScoreOnly?: boolean;
   alwaysAvailableId?: string;
+  lockedHolds?: boolean;
+  dieValueMap?: Record<number, number>;
+  targetAssignment?: boolean;
 }
 
 // ===== Player =====
@@ -64,6 +67,7 @@ export interface GameState {
   currentPlayerIndex: number;
   dice: Die[];
   rollsUsed: number;
+  lockedDiceIds: number[];
   turn: number;
   view: GameView;
   gameOver: boolean;

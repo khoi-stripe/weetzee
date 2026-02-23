@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Die } from "./Die";
 import type { Die as DieType, Player } from "@/lib/types";
 import type { ScoreCategory } from "@/lib/types";
-import { getAvailableScores } from "@/lib/engine";
+import { getAvailableScores, getMappedDiceSum } from "@/lib/engine";
 import { getRulesetBonus, getRulesetTotal } from "@/lib/rulesets";
 import { EXTRA_WEETZEE_VALUE } from "@/lib/rulesets/classic";
+import { computeTargetPenalty } from "@/lib/rulesets/keep-your-head-down";
 import { rollValue } from "@/lib/engine";
 import { playSelect, playDeselect, playConfirm, playTap } from "@/lib/sounds";
 import type { Ruleset } from "@/lib/types";
@@ -32,6 +34,7 @@ export function ScorecardView({
   multipleWeetzeesEnabled,
   hideMiniDice = false,
   landscapeHeader = false,
+  lockedDiceIds = [],
 }: {
   players: Player[];
   currentPlayerIndex: number;
@@ -49,18 +52,24 @@ export function ScorecardView({
   multipleWeetzeesEnabled?: boolean;
   hideMiniDice?: boolean;
   landscapeHeader?: boolean;
+  lockedDiceIds?: number[];
 }) {
   const currentPlayer = players[currentPlayerIndex];
   const diceValues = dice.map((d) => d.value);
 
+  const isTargetMode = !!ruleset.targetAssignment;
+
   const allRollsUsed = rollsUsed >= rollsPerTurn;
-  const canScore = ruleset.forcedRolls ? allRollsUsed : rollsUsed > 0;
+  const canScore = isTargetMode
+    ? rollsUsed > 0
+    : ruleset.forcedRolls ? allRollsUsed : rollsUsed > 0;
 
   const rawScores = canScore
     ? getAvailableScores(diceValues, ruleset, currentPlayer.scores)
     : {};
 
   const selectableScores = (() => {
+    if (isTargetMode) return rawScores;
     if (!ruleset.highestScoreOnly || Object.keys(rawScores).length === 0) return rawScores;
     const maxScore = Math.max(...Object.values(rawScores));
     const filtered: Record<string, number> = {};
@@ -70,19 +79,27 @@ export function ScorecardView({
     return filtered;
   })();
 
-  const bestCategoryId = Object.keys(selectableScores).length > 0
-    ? Object.entries(selectableScores).reduce((best, [id, score]) =>
-        score > best[1] ? [id, score] : best
-      )[0]
-    : null;
+  const bestCategoryId = isTargetMode
+    ? (Object.keys(selectableScores).length > 0
+        ? Object.entries(selectableScores).reduce((best, [id, score]) =>
+            score < best[1] ? [id, score] : best
+          )[0]
+        : null)
+    : (Object.keys(selectableScores).length > 0
+        ? Object.entries(selectableScores).reduce((best, [id, score]) =>
+            score > best[1] ? [id, score] : best
+          )[0]
+        : null);
 
   const categories = ruleset.categories.filter((c) => c.id !== "bonus");
 
   const locked = justScoredCategoryId != null;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [pendingTarget, setPendingTarget] = useState<{ catId: string; target: number; sum: number; penalty: number } | null>(null);
 
   useEffect(() => {
     setSelectedCategoryId(null);
+    setPendingTarget(null);
   }, [turn, currentPlayerIndex]);
 
   useEffect(() => {
@@ -187,8 +204,11 @@ export function ScorecardView({
     if (el) savedScroll.current = { top: el.scrollTop, left: el.scrollLeft };
   }
 
+  const currentDiceSum = isTargetMode ? getMappedDiceSum(diceValues, ruleset.dieValueMap) : 0;
+
   return (
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: landscapeHeader ? "16px 16px 16px" : "0 16px 16px", gap: 16 }}>
+
       {/* Scrollable table with fade */}
       <div className="relative min-h-0">
         <div
@@ -196,76 +216,102 @@ export function ScorecardView({
           className="min-h-0 overflow-y-auto overflow-x-auto rounded scrollbar-visible"
           style={{ border: "1px solid #ffffff", maxHeight: "100%" }}
         >
-          <table
-            className="border-collapse"
-            style={{
-              tableLayout: "fixed",
-              minWidth: players.length > 3 ? `${140 + players.length * 64}px` : "100%",
-              width: "100%",
-            }}
-          >
-            <colgroup>
-              <col style={{ width: 140 }} />
-              {players.map((p) => (
-                <col key={p.id} />
-              ))}
-            </colgroup>
-            <thead>
-              <tr>
-                <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>{""}</Th>
-                {players.map((p, i) => {
-                  const isActive = landscapeHeader && i === currentPlayerIndex;
+          {isTargetMode ? (
+            <TargetTable
+              categories={categories}
+              players={players}
+              currentPlayerIndex={currentPlayerIndex}
+              currentDiceSum={currentDiceSum}
+              canScore={canScore}
+              selectableScores={selectableScores}
+              bestCategoryId={bestCategoryId}
+              selectedCategoryId={null}
+              locked={locked}
+              landscapeHeader={landscapeHeader}
+              justScoredCategoryId={justScoredCategoryId ?? null}
+              justScoredPlayerIndex={justScoredPlayerIndex ?? null}
+              ruleset={ruleset}
+              onSelect={(id) => {
+                if (!locked && selectableScores[id] !== undefined) {
+                  playSelect();
+                  const target = parseInt(categories.find((c) => c.id === id)?.name ?? "0");
+                  const penalty = computeTargetPenalty(currentDiceSum, target);
+                  setPendingTarget({ catId: id, target, sum: currentDiceSum, penalty });
+                }
+              }}
+            />
+          ) : (
+            <table
+              className="border-collapse"
+              style={{
+                tableLayout: "fixed",
+                minWidth: players.length > 3 ? `${140 + players.length * 64}px` : "100%",
+                width: "100%",
+              }}
+            >
+              <colgroup>
+                <col style={{ width: 140 }} />
+                {players.map((p) => (
+                  <col key={p.id} />
+                ))}
+              </colgroup>
+              <thead>
+                <tr>
+                  <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>{""}</Th>
+                  {players.map((p, i) => {
+                    const isActive = landscapeHeader && i === currentPlayerIndex;
+                    return (
+                      <Th
+                        key={p.id}
+                        style={{
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 2,
+                          color: isActive ? "#000000" : p.color,
+                          background: isActive ? p.color : "#000000",
+                          fontWeight: isActive ? 500 : 400,
+                        }}
+                      >
+                        {p.name}
+                      </Th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((cat) => {
+                  const isSelectable = selectableScores[cat.id] !== undefined;
                   return (
-                    <Th
-                      key={p.id}
-                      style={{
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 2,
-                        color: isActive ? "#000000" : p.color,
-                        background: isActive ? p.color : "#000000",
-                        fontWeight: isActive ? 500 : 400,
+                    <ScoreRow
+                      key={cat.id}
+                      category={cat}
+                      players={players}
+                      currentPlayerIndex={currentPlayerIndex}
+                      availableScore={rawScores[cat.id]}
+                      isSelectable={isSelectable}
+                      isBestChoice={cat.id === bestCategoryId}
+                      selected={cat.id === selectedCategoryId}
+                      onScore={() => {
+                        if (!locked && isSelectable) {
+                          saveScroll();
+                          const deselecting = cat.id === selectedCategoryId;
+                          setSelectedCategoryId(deselecting ? null : cat.id);
+                          if (deselecting) playDeselect(); else playSelect();
+                        }
                       }}
-                    >
-                      {p.name}
-                    </Th>
+                      justScored={cat.id === justScoredCategoryId}
+                      justScoredPlayerIndex={justScoredPlayerIndex ?? null}
+                    />
                   );
                 })}
-              </tr>
-            </thead>
-            <tbody>
-              {categories.map((cat) => {
-                const isSelectable = selectableScores[cat.id] !== undefined;
-                return (
-                  <ScoreRow
-                    key={cat.id}
-                    category={cat}
-                    players={players}
-                    currentPlayerIndex={currentPlayerIndex}
-                    availableScore={rawScores[cat.id]}
-                    isSelectable={isSelectable}
-                    isBestChoice={cat.id === bestCategoryId}
-                    selected={cat.id === selectedCategoryId}
-                    onScore={() => {
-                      if (!locked && isSelectable) {
-                        saveScroll();
-                        const deselecting = cat.id === selectedCategoryId;
-                        setSelectedCategoryId(deselecting ? null : cat.id);
-                        if (deselecting) playDeselect(); else playSelect();
-                      }
-                    }}
-                    justScored={cat.id === justScoredCategoryId}
-                    justScoredPlayerIndex={justScoredPlayerIndex ?? null}
-                  />
-                );
-              })}
-              <BonusRow players={players} ruleset={ruleset} />
-              {multipleWeetzeesEnabled && <WeetzeeBonusRow players={players} />}
-            </tbody>
-            <tfoot>
-              <TotalRow players={players} ruleset={ruleset} />
-            </tfoot>
-          </table>
+                <BonusRow players={players} ruleset={ruleset} />
+                {multipleWeetzeesEnabled && <WeetzeeBonusRow players={players} />}
+              </tbody>
+              <tfoot>
+                <TotalRow players={players} ruleset={ruleset} />
+              </tfoot>
+            </table>
+          )}
         </div>
         <div
           style={{
@@ -296,30 +342,49 @@ export function ScorecardView({
         />
       </div>
 
-      <button
-        onClick={selectedCategoryId && !locked ? () => {
-          saveScroll();
-          playConfirm();
-          onScoreCategory(selectedCategoryId);
-          setSelectedCategoryId(null);
-        } : undefined}
-        className="shrink-0 w-full pressable"
-        style={{
-          padding: "12px 0",
-          border: "1px solid #ffffff",
-          borderRadius: 4,
-          background: "#ffffff",
-          fontSize: 14,
-          fontWeight: 500,
-          color: "#000000",
-          cursor: "pointer",
-          opacity: selectedCategoryId && !locked ? 1 : 0,
-          pointerEvents: selectedCategoryId && !locked ? "auto" : "none",
-          transition: "opacity 150ms",
-        }}
-      >
-        Done
-      </button>
+      {!isTargetMode && (
+        <button
+          onClick={selectedCategoryId && !locked ? () => {
+            saveScroll();
+            playConfirm();
+            onScoreCategory(selectedCategoryId);
+            setSelectedCategoryId(null);
+          } : undefined}
+          className="shrink-0 w-full pressable"
+          style={{
+            padding: "12px 0",
+            border: "1px solid #ffffff",
+            borderRadius: 4,
+            background: "#ffffff",
+            fontSize: 14,
+            fontWeight: 500,
+            color: "#000000",
+            cursor: "pointer",
+            opacity: selectedCategoryId && !locked ? 1 : 0,
+            pointerEvents: selectedCategoryId && !locked ? "auto" : "none",
+            transition: "opacity 150ms",
+          }}
+        >
+          Done
+        </button>
+      )}
+
+      {pendingTarget && createPortal(
+        <TargetConfirmModal
+          sum={pendingTarget.sum}
+          target={pendingTarget.target}
+          penalty={pendingTarget.penalty}
+          playerColor={playerColor}
+          onCancel={() => { playDeselect(); setPendingTarget(null); }}
+          onConfirm={() => {
+            saveScroll();
+            playConfirm();
+            onScoreCategory(pendingTarget.catId);
+            setPendingTarget(null);
+          }}
+        />,
+        document.body,
+      )}
 
       {!hideMiniDice && (
         <MiniDiceStrip
@@ -330,8 +395,332 @@ export function ScorecardView({
           coloredPips={!!ruleset.pipColors}
           onRoll={onRoll}
           onToggleHold={onToggleHold}
+          lockedHolds={!!ruleset.lockedHolds}
+          dieValueMap={ruleset.dieValueMap}
+          lockedDiceIds={lockedDiceIds}
         />
       )}
+    </div>
+  );
+}
+
+// ===== Target Table (Keep Your Head Down) =====
+
+function penaltyColor(penalty: number): string {
+  if (penalty < 0) return "#34c759";
+  if (penalty <= 9) return "#ffcc00";
+  return "#ff453a";
+}
+
+function penaltyLabel(penalty: number): string {
+  if (penalty < 0) return `${penalty}`;
+  return `+${penalty}`;
+}
+
+function TargetTable({
+  categories,
+  players,
+  currentPlayerIndex,
+  currentDiceSum,
+  canScore,
+  selectableScores,
+  bestCategoryId,
+  selectedCategoryId,
+  locked,
+  landscapeHeader,
+  justScoredCategoryId,
+  justScoredPlayerIndex,
+  ruleset,
+  onSelect,
+}: {
+  categories: ScoreCategory[];
+  players: Player[];
+  currentPlayerIndex: number;
+  currentDiceSum: number;
+  canScore: boolean;
+  selectableScores: Record<string, number>;
+  bestCategoryId: string | null;
+  selectedCategoryId: string | null;
+  locked: boolean;
+  landscapeHeader: boolean;
+  justScoredCategoryId: string | null;
+  justScoredPlayerIndex: number | null;
+  ruleset: Ruleset;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <table
+      className="border-collapse"
+      style={{
+        tableLayout: "fixed",
+        minWidth: players.length > 3 ? `${80 + players.length * 64}px` : "100%",
+        width: "100%",
+      }}
+    >
+      <colgroup>
+        <col style={{ width: 80 }} />
+        {players.map((p) => (
+          <col key={p.id} />
+        ))}
+      </colgroup>
+      <thead>
+        <tr>
+          <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>Target</Th>
+          {players.map((p, i) => {
+            const isActive = landscapeHeader && i === currentPlayerIndex;
+            return (
+              <Th
+                key={p.id}
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 2,
+                  color: isActive ? "#000000" : p.color,
+                  background: isActive ? p.color : "#000000",
+                  fontWeight: isActive ? 500 : 400,
+                }}
+              >
+                {p.name}
+              </Th>
+            );
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        {categories.map((cat) => {
+          const targetNum = parseInt(cat.name);
+          const penalty = canScore ? selectableScores[cat.id] : undefined;
+          const isSelectable = penalty !== undefined;
+          const isBest = cat.id === bestCategoryId;
+          const isSelected = cat.id === selectedCategoryId;
+          const isJustScored = cat.id === justScoredCategoryId;
+          const isExact = canScore && currentDiceSum === targetNum;
+
+          return (
+            <tr
+              key={cat.id}
+              onClick={isSelectable && !locked ? () => onSelect(cat.id) : undefined}
+              style={{ cursor: isSelectable && !locked ? "pointer" : "default" }}
+            >
+              <td
+                style={{
+                  padding: "8px 16px",
+                  borderBottom: "1px solid #ffffff",
+                  borderRight: "1px solid #ffffff",
+                  background: "#1a1a1a",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  position: "sticky",
+                  left: 0,
+                  zIndex: 1,
+                }}
+              >
+                {cat.name}
+              </td>
+              {players.map((player, i) => {
+                const isCurrent = i === currentPlayerIndex;
+                const scored = player.scores[cat.id];
+                const isJustScoredCell = isJustScored && i === justScoredPlayerIndex;
+                const isSelectedCell = isSelected && isCurrent;
+                const showPreview = isCurrent && scored === undefined && isSelectable && !isJustScored && !isSelected;
+
+                const bg = isSelectedCell
+                  ? player.color
+                  : isJustScoredCell
+                    ? player.color
+                    : showPreview && isBest
+                      ? `${player.color}33`
+                      : "#000000";
+
+                const displayPenalty = isSelectedCell ? penalty : showPreview ? penalty : scored;
+
+                return (
+                  <td
+                    key={player.id}
+                    style={{
+                      padding: "8px 16px",
+                      borderBottom: "1px solid #ffffff",
+                      borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
+                      background: bg,
+                      fontSize: 14,
+                      fontWeight: isSelectedCell || isJustScoredCell ? 500 : 400,
+                      color: isSelectedCell || isJustScoredCell
+                        ? "#000000"
+                        : showPreview
+                          ? player.color
+                          : scored !== undefined && scored !== null
+                            ? "#ffffff"
+                            : "#333333",
+                      transition: "background 150ms, color 150ms",
+                    }}
+                  >
+                    {isSelectedCell ? (
+                      penaltyLabel(penalty!)
+                    ) : showPreview ? (
+                      <span
+                        className={`pressable${isBest ? " shimmer-fast" : ""}`}
+                        style={{ display: "inline-block" }}
+                      >
+                        {penaltyLabel(penalty!)}
+                      </span>
+                    ) : isJustScoredCell && penalty !== undefined ? (
+                      penaltyLabel(penalty)
+                    ) : scored !== undefined && scored !== null ? (
+                      penaltyLabel(scored)
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        })}
+      </tbody>
+      <tfoot>
+        <TotalRow players={players} ruleset={ruleset} />
+      </tfoot>
+    </table>
+  );
+}
+
+// ===== Target Confirm Modal =====
+
+function TargetConfirmModal({
+  sum,
+  target,
+  penalty,
+  playerColor,
+  onCancel,
+  onConfirm,
+}: {
+  sum: number;
+  target: number;
+  penalty: number;
+  playerColor: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const diff = Math.abs(sum - target);
+  const exact = diff === 0;
+  const color = penaltyColor(penalty);
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center"
+      style={{
+        zIndex: 200,
+        background: "rgba(0, 0, 0, 0.85)",
+        animation: "interstitial-in 200ms ease forwards",
+        padding: 16,
+      }}
+    >
+      <div
+        className="flex flex-col items-center"
+        style={{ gap: 24, width: "100%", padding: 16 }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "calc(100dvh - 100px - 24px - 32px)",
+            aspectRatio: "1 / 1",
+          }}
+        >
+          <div
+            className="w-full h-full flex flex-col justify-center"
+            style={{
+              background: playerColor,
+              borderRadius: 4,
+              border: `1px solid ${playerColor}`,
+              color: "#000000",
+              padding: "10%",
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            {sum >= target ? (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Rolled</span>
+                  <span>{sum}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingBottom: 8, borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
+                  <span>Target</span>
+                  <span>−{target}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Target</span>
+                  <span>{target}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingBottom: 8, borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
+                  <span>Rolled</span>
+                  <span>−{sum}</span>
+                </div>
+              </>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+              <span>Difference</span>
+              <span>{diff}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingBottom: 8, borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
+              <span>Penalty</span>
+              <span>×3</span>
+            </div>
+            <div
+              style={{
+                marginTop: 12,
+                paddingTop: 12,
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 20,
+                fontWeight: 600,
+              }}
+            >
+              <span>{exact ? "Exact match!" : "Score"}</span>
+              <span>{penaltyLabel(penalty)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-6 justify-center">
+          <button
+            onClick={onCancel}
+            className="flex items-center justify-center rounded-full pressable"
+            style={{
+              width: 100,
+              height: 100,
+              border: "1px solid #ffffff",
+              background: "transparent",
+              fontSize: 14,
+              fontWeight: 500,
+              color: "#ffffff",
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex items-center justify-center rounded-full pressable"
+            style={{
+              width: 100,
+              height: 100,
+              border: "1px solid #ffffff",
+              background: "#ffffff",
+              fontSize: 14,
+              fontWeight: 500,
+              color: "#000000",
+              cursor: "pointer",
+            }}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -590,6 +979,9 @@ function MiniDiceStrip({
   coloredPips = false,
   onRoll,
   onToggleHold,
+  lockedHolds = false,
+  dieValueMap,
+  lockedDiceIds = [],
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -598,8 +990,15 @@ function MiniDiceStrip({
   coloredPips?: boolean;
   onRoll: () => void;
   onToggleHold: (id: number) => void;
+  lockedHolds?: boolean;
+  dieValueMap?: Record<number, number>;
+  lockedDiceIds?: number[];
 }) {
-  const canRoll = rollsUsed < rollsPerTurn;
+  const heldCount = dice.filter((d) => d.held).length;
+  const allHeld = heldCount >= dice.length;
+  const newHolds = heldCount - lockedDiceIds.length;
+  const needsNewHold = lockedHolds && rollsUsed > 0 && newHolds <= 0;
+  const canRoll = rollsUsed < rollsPerTurn && !allHeld && !needsNewHold;
   const canHold = rollsUsed > 0;
 
   const rollLabel = rollsUsed === 0
@@ -674,11 +1073,13 @@ function MiniDiceStrip({
             held={die.held}
             heldColor={playerColor}
             coloredPips={coloredPips}
-            onClick={canHold ? () => { playTap(); onToggleHold(die.id); } : undefined}
-            disabled={!canHold}
+            onClick={canHold && !lockedDiceIds.includes(die.id) ? () => { playTap(); onToggleHold(die.id); } : undefined}
+            disabled={!canHold || lockedDiceIds.includes(die.id)}
+            locked={lockedDiceIds.includes(die.id)}
             rolling={rollingDice.has(i)}
             flash={flashDice.has(i)}
             label={rollsUsed === 0 ? "Roll" : undefined}
+            dieValueMap={dieValueMap}
           />
         </div>
       ))}

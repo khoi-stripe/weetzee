@@ -45,6 +45,7 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     currentPlayerIndex: 0,
     dice: makeDice(ruleset.diceCount),
     rollsUsed: 0,
+    lockedDiceIds: [],
     turn: 1,
     view: "rolling",
     gameOver: false,
@@ -59,6 +60,17 @@ export function getEffectiveRollsPerTurn(state: GameState): number {
   if (!state.rollBankingEnabled) return state.ruleset.rollsPerTurn;
   const player = state.players[state.currentPlayerIndex];
   return state.ruleset.rollsPerTurn + player.bankedRolls;
+}
+
+// ===== Die Value Helpers =====
+
+export function getMappedDieValue(face: number, dieValueMap?: Record<number, number>): number {
+  if (!dieValueMap) return face;
+  return dieValueMap[face] ?? face;
+}
+
+export function getMappedDiceSum(dice: number[], dieValueMap?: Record<number, number>): number {
+  return dice.reduce((sum, face) => sum + getMappedDieValue(face, dieValueMap), 0);
 }
 
 // ===== Score Helpers =====
@@ -125,6 +137,7 @@ function advanceTurn(state: GameState): GameState {
     currentPlayerIndex: nextPlayerIndex,
     dice: newDice,
     rollsUsed: 0,
+    lockedDiceIds: [],
     turn: nextTurn,
     view: "rolling",
   };
@@ -137,6 +150,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case "ROLL": {
       const effectiveMax = getEffectiveRollsPerTurn(state);
       if (state.rollsUsed >= effectiveMax) return state;
+
+      if (state.ruleset.lockedHolds) {
+        const currentHeldCount = state.dice.filter((d) => d.held).length;
+        if (currentHeldCount >= state.ruleset.diceCount) return state;
+        const newHolds = currentHeldCount - state.lockedDiceIds.length;
+        if (state.rollsUsed > 0 && newHolds <= 0) return state;
+      }
+
+      const newLockedIds = state.ruleset.lockedHolds
+        ? state.dice.filter((d) => d.held).map((d) => d.id)
+        : [];
+
       const newDice = rollDice(state.dice);
       const newRollsUsed = state.rollsUsed + 1;
 
@@ -144,12 +169,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         dice: newDice,
         rollsUsed: newRollsUsed,
+        lockedDiceIds: newLockedIds,
       };
     }
 
     case "TOGGLE_HOLD": {
-      // Can only hold after at least one roll, and before all rolls are used
       if (state.rollsUsed === 0) return state;
+      const die = state.dice.find((d) => d.id === action.dieId);
+      if (!die) return state;
+      if (state.ruleset.lockedHolds && die.held && state.lockedDiceIds.includes(die.id)) return state;
       return {
         ...state,
         dice: state.dice.map((d) =>
@@ -161,6 +189,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case "SCORE_CATEGORY": {
       const currentPlayer = state.players[state.currentPlayerIndex];
       if (currentPlayer.scores[action.categoryId] !== undefined) return state;
+      if (state.rollsUsed === 0) return state;
 
       const effectiveMax = getEffectiveRollsPerTurn(state);
       if (state.ruleset.forcedRolls && state.rollsUsed < effectiveMax) return state;
@@ -176,7 +205,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const fiveId = state.ruleset.fiveOfAKindId ?? "weetzee";
       const isWeetzee = hasAllSame(diceValues);
       const alreadyScoredWeetzee = currentPlayer.scores[fiveId] !== undefined && currentPlayer.scores[fiveId] !== null;
-      const earnExtraWeetzee = state.multipleWeetzeesEnabled && isWeetzee && alreadyScoredWeetzee && (currentPlayer.scores[fiveId] ?? 0) > 0;
+      const earnExtraWeetzee = !state.ruleset.targetAssignment && state.multipleWeetzeesEnabled && isWeetzee && alreadyScoredWeetzee && (currentPlayer.scores[fiveId] ?? 0) > 0;
 
       const updatedPlayers = state.players.map((p, i) =>
         i === state.currentPlayerIndex

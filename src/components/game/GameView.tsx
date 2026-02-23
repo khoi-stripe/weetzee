@@ -57,8 +57,10 @@ export function GameView({ game }: { game: UseGameReturn }) {
 
     const effectiveMax = getEffectiveRollsPerTurn(state);
     const usedAllRolls = state.rollsUsed >= effectiveMax;
+    const allHeld = state.ruleset.lockedHolds && state.dice.filter((d) => d.held).length >= state.dice.length;
+    const shouldAutoTransition = usedAllRolls || (allHeld && state.rollsUsed > 0);
 
-    if (usedAllRolls && activePanel === 0) {
+    if (shouldAutoTransition && activePanel === 0) {
       autoTransitionTimer.current = setTimeout(() => {
         snapTo(1);
       }, 1500);
@@ -70,7 +72,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.rollsUsed, state.ruleset.rollsPerTurn, state.rollBankingEnabled, isLandscape]);
+  }, [state.rollsUsed, state.ruleset.rollsPerTurn, state.rollBankingEnabled, isLandscape, state.dice]);
 
   function snapTo(panel: 0 | 1) {
     setIsDragging(false);
@@ -255,6 +257,9 @@ function LandscapeLayout({
           onRoll={roll}
           onToggleHold={toggleHold}
           alignTop
+          lockedHolds={!!state.ruleset.lockedHolds}
+          dieValueMap={state.ruleset.dieValueMap}
+          lockedDiceIds={state.lockedDiceIds}
         />
       </div>
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
@@ -275,6 +280,7 @@ function LandscapeLayout({
           multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
           hideMiniDice
           landscapeHeader
+          lockedDiceIds={state.lockedDiceIds}
         />
       </div>
     </div>
@@ -391,6 +397,9 @@ function ContentStrip({
           coloredPips={!!state.ruleset.pipColors}
           onRoll={roll}
           onToggleHold={toggleHold}
+          lockedHolds={!!state.ruleset.lockedHolds}
+          dieValueMap={state.ruleset.dieValueMap}
+          lockedDiceIds={state.lockedDiceIds}
         />
       </div>
 
@@ -421,6 +430,7 @@ function ContentStrip({
           justScoredCategoryId={null}
           justScoredPlayerIndex={null}
           multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
+          lockedDiceIds={state.lockedDiceIds}
         />
       </div>
     </div>

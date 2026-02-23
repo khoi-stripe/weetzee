@@ -1,22 +1,49 @@
-import type { Ruleset } from "../types";
-import { CLASSIC_RULESET } from "./classic";
+import type { Ruleset, ScoreCategory } from "../types";
+
+const DIE_VALUE_MAP: Record<number, number> = { 3: 0 };
+
+function dieValue(face: number): number {
+  return DIE_VALUE_MAP[face] ?? face;
+}
+
+function diceSum(dice: number[]): number {
+  return dice.reduce((sum, face) => sum + dieValue(face), 0);
+}
+
+export function computeTargetPenalty(sum: number, target: number): number {
+  const diff = Math.abs(sum - target);
+  if (diff === 0) return -3;
+  return diff * 3;
+}
+
+function makeTargetCategories(min: number, max: number): ScoreCategory[] {
+  const cats: ScoreCategory[] = [];
+  for (let t = min; t <= max; t++) {
+    cats.push({
+      id: `target_${t}`,
+      name: `${t}`,
+      evaluate: (dice) => computeTargetPenalty(diceSum(dice), t),
+      maxScore: -3,
+    });
+  }
+  return cats;
+}
 
 export const KEEP_YOUR_HEAD_DOWN_RULESET: Ruleset = {
   id: "keep-your-head-down",
   name: "Keep Your Head Down",
-  description: "Lowest score wins",
+  description: "Hit the targets",
   diceCount: 5,
-  rollsPerTurn: 3,
-  categories: CLASSIC_RULESET.categories,
+  rollsPerTurn: 5,
+  categories: makeTargetCategories(10, 20),
   winCondition: "lowest",
   getBonus: () => 0,
   getTotal: (scores) => {
-    return Object.entries(scores)
-      .filter(([id]) => id !== "bonus")
-      .reduce((sum, [, v]) => sum + (v ?? 0), 0);
+    return Object.values(scores)
+      .filter((v): v is number => v !== null && v !== undefined)
+      .reduce((sum, v) => sum + v, 0);
   },
-  fiveOfAKindId: "weetzee",
-  forcedRolls: true,
-  highestScoreOnly: true,
-  alwaysAvailableId: "chance",
+  lockedHolds: true,
+  dieValueMap: DIE_VALUE_MAP,
+  targetAssignment: true,
 };

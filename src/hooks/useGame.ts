@@ -43,7 +43,7 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
     if (saved.rulesetId !== rulesetId || saved.players.length !== playerCount) return null;
     const ruleset = getRuleset(saved.rulesetId);
     const { rulesetId: _, ...rest } = saved;
-    return { ...rest, ruleset };
+    return { ...rest, ruleset, lockedDiceIds: rest.lockedDiceIds ?? [] };
   } catch {
     return null;
   }
@@ -74,7 +74,7 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     } else {
       clearState();
       const prefs = loadPrefs();
-      if (prefs.rollBankingEnabled && !ruleset.forcedRolls) dispatch({ type: "TOGGLE_ROLL_BANKING" });
+      if (prefs.rollBankingEnabled && !ruleset.forcedRolls && !ruleset.targetAssignment) dispatch({ type: "TOGGLE_ROLL_BANKING" });
       if (prefs.multipleWeetzeesEnabled) dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
     }
   }, [playerCount, rulesetId]);

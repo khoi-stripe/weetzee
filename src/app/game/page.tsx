@@ -27,9 +27,9 @@ function GameContent() {
         rulesetId={state.ruleset.id}
         rulesetName={state.ruleset.name}
         rollBankingEnabled={state.rollBankingEnabled}
-        onToggleRollBanking={state.ruleset.forcedRolls ? undefined : game.toggleRollBanking}
+        onToggleRollBanking={state.ruleset.forcedRolls || state.ruleset.targetAssignment ? undefined : game.toggleRollBanking}
         multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
-        onToggleMultipleWeetzees={game.toggleMultipleWeetzees}
+        onToggleMultipleWeetzees={state.ruleset.targetAssignment ? undefined : game.toggleMultipleWeetzees}
         onEndGame={game.endGame}
       />
       <GameView game={game} />

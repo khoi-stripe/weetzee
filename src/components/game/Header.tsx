@@ -224,8 +224,7 @@ function KeepYourHeadDownRules() {
       <Section title="Scoring">
         <p>After rolling, choose an unused target to assign your total against.</p>
         <RuleRow name="Exact match" desc="−3 pts (reward)" />
-        <RuleRow name="Off by 1–2" desc="+5 pts" />
-        <RuleRow name="Off by 3+" desc="+10 pts" />
+        <RuleRow name="Any miss" desc="difference × 3 pts" />
       </Section>
       <Section title="Strategy">
         <p style={{ color: "#999999" }}>Threes are worth 0 — great for low targets, but they make high targets harder to reach. Locking dice early gives you more rolls but less control.</p>

@@ -29,6 +29,7 @@ function kismetPipColor(value: number): string {
 export function Die({
   value,
   held = false,
+  locked = false,
   heldColor = "#ffffff",
   size = "full",
   onClick,
@@ -37,9 +38,11 @@ export function Die({
   flash = false,
   label,
   coloredPips = false,
+  dieValueMap,
 }: {
   value: number;
   held?: boolean;
+  locked?: boolean;
   heldColor?: string;
   size?: "full" | "sm";
   onClick?: () => void;
@@ -48,7 +51,9 @@ export function Die({
   flash?: boolean;
   label?: string;
   coloredPips?: boolean;
+  dieValueMap?: Record<number, number>;
 }) {
+  const mappedValue = dieValueMap?.[value];
   const pips = PIP_LAYOUTS[value] ?? [];
   const pipSize = size === "sm" ? "16%" : "17%";
 
@@ -58,7 +63,7 @@ export function Die({
   const heldFill = kismetColor ?? heldColor;
 
   const borderColor = held ? heldFill : strokeColor;
-  const bg = held ? heldFill : "#000000";
+  const bg = locked ? `${heldFill}99` : held ? heldFill : "#000000";
   const pipColor = held ? "#000000" : strokeColor;
 
   return (
@@ -93,6 +98,18 @@ export function Die({
         >
           {label}
         </div>
+      ) : mappedValue !== undefined ? (
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: pipSize,
+            height: pipSize,
+            left: `calc(50% - ${pipSize} / 2)`,
+            top: `calc(50% - ${pipSize} / 2)`,
+            background: "transparent",
+            boxShadow: `inset 0 0 0 4px ${pipColor}`,
+          }}
+        />
       ) : (
         pips.map(([x, y], i) => (
           <div
