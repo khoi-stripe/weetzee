@@ -57,6 +57,12 @@ export function ScorecardView({
     ? getAvailableScores(diceValues, ruleset, currentPlayer.scores)
     : {};
 
+  const bestCategoryId = Object.keys(availableScores).length > 0
+    ? Object.entries(availableScores).reduce((best, [id, score]) =>
+        score > best[1] ? [id, score] : best
+      )[0]
+    : null;
+
   const categories = ruleset.categories.filter((c) => c.id !== "bonus");
 
   const locked = justScoredCategoryId != null;
@@ -222,6 +228,7 @@ export function ScorecardView({
                   players={players}
                   currentPlayerIndex={currentPlayerIndex}
                   availableScore={availableScores[cat.id]}
+                  isBestChoice={cat.id === bestCategoryId}
                   selected={cat.id === selectedCategoryId}
                   onScore={() => {
                     if (!locked) {
@@ -319,6 +326,7 @@ function ScoreRow({
   players,
   currentPlayerIndex,
   availableScore,
+  isBestChoice = false,
   selected = false,
   onScore,
   justScored,
@@ -328,6 +336,7 @@ function ScoreRow({
   players: Player[];
   currentPlayerIndex: number;
   availableScore: number | undefined;
+  isBestChoice?: boolean;
   selected?: boolean;
   onScore: () => void;
   justScored: boolean;
@@ -392,7 +401,7 @@ function ScoreRow({
             {isSelectedCell ? (
               availableScore
             ) : showPreview ? (
-              <span className="pressable" style={{ display: "inline-block" }}>
+              <span className={`pressable${isBestChoice ? " shimmer" : ""}`} style={{ display: "inline-block" }}>
                 {availableScore}
               </span>
             ) : (
