@@ -7,10 +7,10 @@ import { EVERYTHING_IN_ORDER_RULESET } from "./everything-in-order";
 
 export const ALL_RULESETS: Ruleset[] = [
   CLASSIC_RULESET,
-  KEEP_YOUR_HEAD_DOWN_RULESET,
-  A_LITTLE_HELP_RULESET,
   KISMET_RULESET,
+  KEEP_YOUR_HEAD_DOWN_RULESET,
   EVERYTHING_IN_ORDER_RULESET,
+  A_LITTLE_HELP_RULESET,
 ];
 
 export function getRuleset(id: string): Ruleset {

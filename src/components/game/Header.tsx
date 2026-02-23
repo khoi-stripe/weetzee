@@ -204,16 +204,31 @@ function ClassicRules() {
 function KeepYourHeadDownRules() {
   return (
     <>
-      <Section title="How it works">
-        <p>Same categories as Classic, but lowest total wins.</p>
-        <p style={{ marginTop: 8 }}>You must roll all 3 times every turn — no stopping early.</p>
-        <p style={{ marginTop: 8 }}>After your final roll, you must score the highest available category. If multiple categories tie for the highest, you choose among them.</p>
+      <Section title="Goal">
+        <p>Lowest total score wins. Each round, try to hit a number target as closely as possible.</p>
       </Section>
-      <Section title="Strategy">
-        <p style={{ color: "#999999" }}>Your only move is choosing which dice to hold between rolls. Try to break up good combos — scatter sets, disrupt straights, avoid matching faces.</p>
+      <Section title="Targets">
+        <p>11 rounds with targets <b>10–20</b>. Each target is used once.</p>
+      </Section>
+      <Section title="Dice">
+        <p>5 dice. Face <b>3 = 0 points</b>; all others score at face value (1, 2, 4, 5, 6).</p>
+        <p style={{ marginTop: 8, color: "#999999" }}>The sum of all 5 dice determines your score each round.</p>
+      </Section>
+      <Section title="Rolling">
+        <RuleRow name="Roll all 5" desc="Start each round by rolling all dice" />
+        <RuleRow name="Lock & roll" desc="Lock at least 1 die, then roll the rest" />
+        <RuleRow name="Locks are permanent" desc="Once locked, a die stays locked" />
+        <RuleRow name="Stop anytime" desc="After any roll, you can stop and score" />
+        <p style={{ marginTop: 8, color: "#999999" }}>Maximum 5 rolls per round (lock 1 die per roll).</p>
       </Section>
       <Section title="Scoring">
-        <p style={{ color: "#999999" }}>No upper section bonus. No penalty for zeros. Just the raw total of all scored categories — lowest wins.</p>
+        <p>After rolling, choose an unused target to assign your total against.</p>
+        <RuleRow name="Exact match" desc="−3 pts (reward)" />
+        <RuleRow name="Off by 1–2" desc="+5 pts" />
+        <RuleRow name="Off by 3+" desc="+10 pts" />
+      </Section>
+      <Section title="Strategy">
+        <p style={{ color: "#999999" }}>Threes are worth 0 — great for low targets, but they make high targets harder to reach. Locking dice early gives you more rolls but less control.</p>
       </Section>
     </>
   );
@@ -347,6 +362,8 @@ function RulesModal({
   onToggleMultipleWeetzees?: () => void;
 }) {
   const router = useRouter();
+  const isAbout = !rulesetId && !showAllRulesets;
+
   return (
     <div
       className="fixed inset-0 flex flex-col"
@@ -369,7 +386,7 @@ function RulesModal({
 
           }}
         >
-          Rules
+          {isAbout ? "About" : "Rules"}
         </p>
         <button
           onClick={() => { playTap(); onClose(); }}
@@ -386,7 +403,7 @@ function RulesModal({
             color: "#ffffff",
             lineHeight: 1,
           }}
-          aria-label="Close rules"
+          aria-label="Close"
         >
           ×
         </button>
@@ -406,113 +423,165 @@ function RulesModal({
           width: "100%",
         }}
       >
-        {rulesetName && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginTop: 16,
-              padding: "12px 0",
-              borderBottom: "1px solid #333333",
-            }}
-          >
-            <div>
-              <span style={{ color: "#999999", fontSize: 12 }}>Playing</span>
-              <span style={{ color: "#ffffff", fontWeight: 500, marginLeft: 8, fontSize: 14 }}>
-                {rulesetName}
-              </span>
-            </div>
-            <button
-              onClick={() => { playTap(); (onChangeRuleset ?? (() => router.push("/")))(); }}
-              className="pressable"
-              style={{
-                background: "none",
-                border: "1px solid #666666",
-                borderRadius: 4,
-                padding: "4px 10px",
-  
-                fontSize: 12,
-                color: "#999999",
-                cursor: "pointer",
-              }}
-            >
-              Change
-            </button>
-          </div>
-        )}
-
-        <Section title="How to play">
-          Roll your dice, then optionally hold any and re-roll the rest — up to 3 rolls per turn.
-          After rolling, choose a scoring category. You may place a zero in any unused category if
-          your roll doesn&apos;t qualify.
-        </Section>
-
-        {showAllRulesets ? (
-          ALL_RULESETS.map((r) => (
-            <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
-          ))
-        ) : rulesetId === "kismet" ? (
-          <KismetRules />
-        ) : rulesetId === "keep-your-head-down" ? (
-          <KeepYourHeadDownRules />
-        ) : rulesetId === "a-little-help" ? (
-          <ALittleHelpRules />
-        ) : rulesetId === "everything-in-order" ? (
-          <EverythingInOrderRules />
+        {isAbout ? (
+          <AboutContent />
         ) : (
-          <ClassicRules />
-        )}
-
-        {(onToggleRollBanking || onToggleMultipleWeetzees) && (
-          <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
-            <h3
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#ffffff",
-                marginBottom: 12,
-  
-              }}
-            >
-              House rules
-            </h3>
-            {onToggleRollBanking && (
-              <ToggleRow
-                label="Roll banking"
-                desc="Bank unused rolls for future turns (max 3)"
-                enabled={!!rollBankingEnabled}
-                onToggle={onToggleRollBanking}
-              />
+          <>
+            {rulesetName && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 16,
+                  padding: "12px 0",
+                  borderBottom: "1px solid #333333",
+                }}
+              >
+                <div>
+                  <span style={{ color: "#999999", fontSize: 12 }}>Playing</span>
+                  <span style={{ color: "#ffffff", fontWeight: 500, marginLeft: 8, fontSize: 14 }}>
+                    {rulesetName}
+                  </span>
+                </div>
+                <button
+                  onClick={() => { playTap(); (onChangeRuleset ?? (() => router.push("/")))(); }}
+                  className="pressable"
+                  style={{
+                    background: "none",
+                    border: "1px solid #666666",
+                    borderRadius: 4,
+                    padding: "4px 10px",
+    
+                    fontSize: 12,
+                    color: "#999999",
+                    cursor: "pointer",
+                  }}
+                >
+                  Change
+                </button>
+              </div>
             )}
-            {onToggleMultipleWeetzees && (
-              <ToggleRow
-                label="Multiple Weetzees"
-                desc="Score extra Weetzees for 100 pts each"
-                enabled={!!multipleWeetzeesEnabled}
-                onToggle={onToggleMultipleWeetzees}
-              />
-            )}
-          </div>
-        )}
 
-        <InstallSection />
+            <Section title="How to play">
+              Roll your dice, then optionally hold any and re-roll the rest — up to 3 rolls per turn.
+              After rolling, choose a scoring category. You may place a zero in any unused category if
+              your roll doesn&apos;t qualify.
+            </Section>
+
+            {showAllRulesets ? (
+              ALL_RULESETS.map((r) => (
+                <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
+              ))
+            ) : rulesetId === "kismet" ? (
+              <KismetRules />
+            ) : rulesetId === "keep-your-head-down" ? (
+              <KeepYourHeadDownRules />
+            ) : rulesetId === "a-little-help" ? (
+              <ALittleHelpRules />
+            ) : rulesetId === "everything-in-order" ? (
+              <EverythingInOrderRules />
+            ) : (
+              <ClassicRules />
+            )}
+
+            {(onToggleRollBanking || onToggleMultipleWeetzees) && (
+              <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+                <h3
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "#ffffff",
+                    marginBottom: 12,
+    
+                  }}
+                >
+                  House rules
+                </h3>
+                {onToggleRollBanking && (
+                  <ToggleRow
+                    label="Roll banking"
+                    desc="Bank unused rolls for future turns (max 3)"
+                    enabled={!!rollBankingEnabled}
+                    onToggle={onToggleRollBanking}
+                  />
+                )}
+                {onToggleMultipleWeetzees && (
+                  <ToggleRow
+                    label="Multiple Weetzees"
+                    desc="Score extra Weetzees for 100 pts each"
+                    enabled={!!multipleWeetzeesEnabled}
+                    onToggle={onToggleMultipleWeetzees}
+                  />
+                )}
+              </div>
+            )}
+
+            <InstallSection />
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function InstallSection() {
-  const [show, setShow] = useState(false);
+function AboutContent() {
+  return (
+    <>
+      <Section title="What is Weetzee?">
+        <p>
+          Weetzee is a free dice game you can play right from your phone — no app store needed.
+          Pass the phone with friends or play solo.
+        </p>
+      </Section>
+
+      <Section title="How it works">
+        <p>
+          Pick how many players, choose a ruleset, and start rolling.
+          Each turn you get up to 3 rolls — hold the dice you like and re-roll the rest, then pick a
+          scoring category. Play through all categories and the highest score wins.
+        </p>
+      </Section>
+
+      <Section title="Rulesets">
+        {ALL_RULESETS.map((r) => (
+          <div key={r.id} style={{ marginTop: 10 }}>
+            <span style={{ color: "#ffffff", fontWeight: 500 }}>{r.name}</span>
+            <span style={{ color: "#999999" }}>
+              {r.id === "classic" && " — The standard game. 5 dice, 13 categories, highest score wins."}
+              {r.id === "keep-your-head-down" && " — Same categories, but lowest score wins. You must use all 3 rolls and score your highest available category."}
+              {r.id === "a-little-help" && " — Classic rules with 6 dice instead of 5. A little easier to land those combos."}
+              {r.id === "kismet" && " — Dice have colored pips. New color-based categories like flushes and same-color full houses."}
+              {r.id === "everything-in-order" && " — Classic scoring, but you must fill categories from top to bottom. No skipping ahead."}
+            </span>
+          </div>
+        ))}
+      </Section>
+
+      <InstallSection alwaysShow />
+    </>
+  );
+}
+
+function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
+  const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
+  const [standalone, setStandalone] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      setStandalone(true);
+      return;
+    }
     const ua = navigator.userAgent;
     const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if (ios) setShow(true);
+    if (ios) { setPlatform("ios"); return; }
+    if (/Android/.test(ua)) { setPlatform("android"); return; }
   }, []);
 
-  if (!show) return null;
+  if (standalone) return null;
+  if (!platform && !alwaysShow) return null;
+
+  const showIos = platform === "ios" || (!platform && alwaysShow);
 
   return (
     <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
@@ -525,22 +594,33 @@ function InstallSection() {
 
         }}
       >
-        Install on your device
+        Add to home screen
       </h3>
       <p style={{ lineHeight: 1.7 }}>
-        Play Weetzee like a real app — no browser, works offline.
+        Play Weetzee like a real app — full screen, no browser bar.
       </p>
-      <div style={{ marginTop: 12, color: "#ffffff" }}>
-        <p style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          1. Tap the <Share size={14} style={{ flexShrink: 0 }} /> share button
-        </p>
-        <p style={{ marginTop: 8 }}>
-          2. Scroll down and tap <span style={{ fontWeight: 500 }}>&quot;Add to Home Screen&quot;</span>
-        </p>
-        <p style={{ marginTop: 8 }}>
-          3. Tap <span style={{ fontWeight: 500 }}>&quot;Add&quot;</span>
-        </p>
-      </div>
+      {showIos ? (
+        <div style={{ marginTop: 12, color: "#ffffff" }}>
+          <p style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            1. Tap the <Share size={14} style={{ flexShrink: 0 }} /> share button in Safari
+          </p>
+          <p style={{ marginTop: 8 }}>
+            2. Scroll down and tap <span style={{ fontWeight: 500 }}>&quot;Add to Home Screen&quot;</span>
+          </p>
+          <p style={{ marginTop: 8 }}>
+            3. Tap <span style={{ fontWeight: 500 }}>&quot;Add&quot;</span>
+          </p>
+        </div>
+      ) : (
+        <div style={{ marginTop: 12, color: "#ffffff" }}>
+          <p>
+            1. Tap the <span style={{ fontWeight: 500 }}>⋮</span> menu in your browser
+          </p>
+          <p style={{ marginTop: 8 }}>
+            2. Tap <span style={{ fontWeight: 500 }}>&quot;Add to Home screen&quot;</span> or <span style={{ fontWeight: 500 }}>&quot;Install app&quot;</span>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
