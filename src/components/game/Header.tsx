@@ -52,16 +52,15 @@ export function Header({
             onClick={handleBack}
             className="absolute flex items-center justify-center pressable"
             style={{
-              left: 16,
-              top: 10,
-              height: 28,
+              left: 4,
+              top: 2,
+              padding: "8px 12px",
 
               fontSize: 14,
               fontWeight: 500,
               color: "#ffffff",
               background: "none",
               border: "none",
-              padding: 0,
             }}
             aria-label={backLabel}
           >
@@ -85,9 +84,9 @@ export function Header({
           onClick={() => { playTap(); setShowRules(true); }}
           className="absolute flex items-center justify-center pressable"
           style={{
-            right: 16,
-            top: 10,
-            height: 28,
+            right: 4,
+            top: 2,
+            padding: "8px 12px",
             background: "none",
             border: "none",
 
@@ -95,7 +94,6 @@ export function Header({
             fontWeight: 500,
             fontStyle: "normal",
             color: "#ffffff",
-            padding: 0,
           }}
           aria-label="Game rules"
         >
@@ -377,17 +375,15 @@ function RulesModal({
           onClick={() => { playTap(); onClose(); }}
           className="absolute flex items-center justify-center pressable"
           style={{
-            right: 16,
-            top: 10,
-            width: 28,
-            height: 28,
+            right: 4,
+            top: 2,
+            padding: "8px 12px",
             background: "none",
             border: "none",
 
             fontSize: 20,
             fontWeight: 400,
             color: "#ffffff",
-            padding: 0,
             lineHeight: 1,
           }}
           aria-label="Close rules"

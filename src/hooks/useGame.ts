@@ -74,7 +74,7 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     } else {
       clearState();
       const prefs = loadPrefs();
-      if (prefs.rollBankingEnabled) dispatch({ type: "TOGGLE_ROLL_BANKING" });
+      if (prefs.rollBankingEnabled && !ruleset.forcedRolls) dispatch({ type: "TOGGLE_ROLL_BANKING" });
       if (prefs.multipleWeetzeesEnabled) dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
     }
   }, [playerCount, rulesetId]);

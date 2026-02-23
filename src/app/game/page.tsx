@@ -27,7 +27,7 @@ function GameContent() {
         rulesetId={state.ruleset.id}
         rulesetName={state.ruleset.name}
         rollBankingEnabled={state.rollBankingEnabled}
-        onToggleRollBanking={game.toggleRollBanking}
+        onToggleRollBanking={state.ruleset.forcedRolls ? undefined : game.toggleRollBanking}
         multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
         onToggleMultipleWeetzees={game.toggleMultipleWeetzees}
         onEndGame={game.endGame}
