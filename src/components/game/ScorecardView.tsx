@@ -968,7 +968,7 @@ function TotalRow({
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               boxShadow: "inset 0 1px 0 #ffffff",
               background: player.color,
-
+              opacity: currentPlayerIndex !== undefined && i !== currentPlayerIndex ? 0.35 : 1,
               fontSize: 14,
               fontWeight: 600,
               color: "#000000",
