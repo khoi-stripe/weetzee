@@ -57,6 +57,9 @@ export function DiceView({
   onToggleHold,
   alignTop = false,
   dieValueMap,
+  farkleMode = false,
+  setAsideDiceIds = [],
+  farkled = false,
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -67,16 +70,20 @@ export function DiceView({
   onToggleHold: (id: number) => void;
   alignTop?: boolean;
   dieValueMap?: Record<number, number>;
+  farkleMode?: boolean;
+  setAsideDiceIds?: number[];
+  farkled?: boolean;
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
-  const canRoll = rollsUsed < rollsPerTurn && !allHeld;
-  const canHold = rollsUsed > 0;
+  const canRoll = farkleMode ? false : (rollsUsed < rollsPerTurn && !allHeld);
+  const canHold = farkleMode ? (rollsUsed > 0 && !farkled) : rollsUsed > 0;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState({ cols: 2, rows: 3, cellSize: 0 });
   const GAP = 16;
-  const ITEM_COUNT = dice.length + 1;
+  const showRollButton = !farkleMode;
+  const ITEM_COUNT = dice.length + (showRollButton ? 1 : 0);
 
   // --- Intro fade-in ---
   const staggerOrder = useRef<number[]>(shuffle(dice.map((_, i) => i)));
@@ -246,40 +253,47 @@ export function DiceView({
         padding: GAP,
       }}
     >
-      {dice.map((die, i) => (
-        <div
-          key={die.id}
-          className={visibleDice.has(i) ? "animate-spin-in" : ""}
-          style={{
-            width: layout.cellSize || "100%",
-            height: layout.cellSize || "100%",
-            opacity: visibleDice.has(i) ? undefined : 0,
-          }}
-        >
-          <Die
-            value={displayValues[i] ?? die.value}
-            held={die.held}
-            heldColor={playerColor}
-            coloredPips={coloredPips}
-            onClick={canHold ? () => { playTap(); onToggleHold(die.id); } : undefined}
-            disabled={!canHold}
-            label={rollsUsed === 0 ? "Roll me" : undefined}
-            rolling={rollingDice.has(i)}
-            flash={flashDice.has(i)}
-            dieValueMap={dieValueMap}
+      {dice.map((die, i) => {
+        const isSetAside = farkleMode && setAsideDiceIds.includes(die.id);
+        const dieCanHold = canHold && !isSetAside;
+        return (
+          <div
+            key={die.id}
+            className={visibleDice.has(i) ? "animate-spin-in" : ""}
+            style={{
+              width: layout.cellSize || "100%",
+              height: layout.cellSize || "100%",
+              opacity: isSetAside ? 0.3 : (visibleDice.has(i) ? undefined : 0),
+              transition: "opacity 300ms",
+            }}
+          >
+            <Die
+              value={displayValues[i] ?? die.value}
+              held={die.held}
+              heldColor={playerColor}
+              coloredPips={coloredPips}
+              onClick={dieCanHold ? () => { playTap(); onToggleHold(die.id); } : undefined}
+              disabled={!dieCanHold}
+              label={!farkleMode && rollsUsed === 0 ? "Roll me" : undefined}
+              rolling={rollingDice.has(i)}
+              flash={flashDice.has(i)}
+              dieValueMap={dieValueMap}
+            />
+          </div>
+        );
+      })}
+      {showRollButton && (
+        <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
+          <RollButton
+            rollsUsed={rollsUsed}
+            rollsPerTurn={rollsPerTurn}
+            canRoll={canRoll}
+            onRoll={onRoll}
+            showButton={showButton}
+            allHeld={allHeld}
           />
         </div>
-      ))}
-      <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
-        <RollButton
-          rollsUsed={rollsUsed}
-          rollsPerTurn={rollsPerTurn}
-          canRoll={canRoll}
-          onRoll={onRoll}
-          showButton={showButton}
-          allHeld={allHeld}
-        />
-      </div>
+      )}
     </div>
   );
 }

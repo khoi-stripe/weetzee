@@ -313,7 +313,13 @@ export function ScorecardView({
                 {multipleWeetzeesEnabled && <WeetzeeBonusRow players={players} />}
               </tbody>
               <tfoot>
-                <TotalRow players={players} ruleset={ruleset} />
+                <TotalRow
+                  players={players}
+                  ruleset={ruleset}
+                  currentPlayerIndex={currentPlayerIndex}
+                  previewCategoryId={selectedCategoryId}
+                  previewScore={selectedCategoryId ? rawScores[selectedCategoryId] : undefined}
+                />
               </tfoot>
             </table>
           )}
@@ -913,7 +919,19 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
 
 // ===== Total Row =====
 
-function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset }) {
+function TotalRow({
+  players,
+  ruleset,
+  currentPlayerIndex,
+  previewCategoryId,
+  previewScore,
+}: {
+  players: Player[];
+  ruleset: Ruleset;
+  currentPlayerIndex?: number;
+  previewCategoryId?: string | null;
+  previewScore?: number;
+}) {
   return (
     <tr>
       <td
@@ -935,7 +953,11 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
         Total
       </td>
       {players.map((player, i) => {
-        const total = getRulesetTotal(ruleset, player.scores, player.extraWeetzees);
+        const isPreviewing = i === currentPlayerIndex && previewCategoryId && previewScore !== undefined;
+        const scores = isPreviewing
+          ? { ...player.scores, [previewCategoryId]: previewScore }
+          : player.scores;
+        const total = getRulesetTotal(ruleset, scores, player.extraWeetzees);
         return (
           <td
             key={player.id}
@@ -944,7 +966,7 @@ function TotalRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               boxShadow: "inset 0 1px 0 #ffffff",
               background: player.color,
-  
+
               fontSize: 14,
               fontWeight: 600,
               color: "#000000",

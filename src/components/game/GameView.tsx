@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DiceView } from "./DiceView";
 import { ScorecardView } from "./ScorecardView";
 import { PlayerBar } from "./PlayerBar";
+import { FarkleView } from "./FarkleView";
 import type { UseGameReturn } from "@/hooks/useGame";
 import type { Player } from "@/lib/types";
 import { getEffectiveRollsPerTurn } from "@/lib/engine";
@@ -15,6 +16,11 @@ import { playTap, playTurnChange } from "@/lib/sounds";
 
 export function GameView({ game }: { game: UseGameReturn }) {
   const { state, roll, toggleHold, scoreCategory, setView } = game;
+
+  if (state.ruleset.farkle) {
+    return <FarkleView game={game} />;
+  }
+
   const defaultPanel = state.ruleset.targetAssignment ? 1 : 0;
   const [activePanel, setActivePanel] = useState<0 | 1>(defaultPanel as 0 | 1);
   const [isDragging, setIsDragging] = useState(false);

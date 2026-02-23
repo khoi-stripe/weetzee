@@ -4,10 +4,10 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/game/Header";
 import { Die } from "@/components/game/Die";
-import { ALL_RULESETS } from "@/lib/rulesets";
+import { VISIBLE_RULESETS } from "@/lib/rulesets";
 import { playTap } from "@/lib/sounds";
 
-const ITEM_COUNT = ALL_RULESETS.length + 1;
+const ITEM_COUNT = VISIBLE_RULESETS.length + 1;
 const TITLE_RESERVE = 48;
 
 function computeLayout(
@@ -104,7 +104,7 @@ function RulesetContent() {
             gap: GAP,
           }}
         >
-          {ALL_RULESETS.map((r) => {
+          {VISIBLE_RULESETS.map((r, i) => {
             const selected = r.id === rulesetId;
             return (
               <div
@@ -115,7 +115,7 @@ function RulesetContent() {
                 }}
               >
                 <Die
-                  value={ALL_RULESETS.indexOf(r) + 1}
+                  value={i + 1}
                   held={selected}
                   label={r.name}
                   onClick={() => { playTap(); setRulesetId(r.id); }}

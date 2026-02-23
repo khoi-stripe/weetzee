@@ -44,7 +44,17 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
     if (saved.rulesetId !== rulesetId || saved.players.length !== playerCount) return null;
     const ruleset = getRuleset(saved.rulesetId);
     const { rulesetId: _, ...rest } = saved;
-    return { ...rest, ruleset, sequentialTargetsEnabled: rest.sequentialTargetsEnabled ?? false };
+    return {
+      ...rest,
+      ruleset,
+      sequentialTargetsEnabled: rest.sequentialTargetsEnabled ?? false,
+      turnScore: rest.turnScore ?? 0,
+      setAsideDiceIds: rest.setAsideDiceIds ?? [],
+      farkled: rest.farkled ?? false,
+      mustSetAside: rest.mustSetAside ?? false,
+      finalRound: rest.finalRound ?? false,
+      finalRoundTriggeredBy: rest.finalRoundTriggeredBy ?? -1,
+    };
   } catch {
     return null;
   }
@@ -133,11 +143,19 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     });
   }
 
+  function setAside() {
+    dispatch({ type: "SET_ASIDE" });
+  }
+
+  function bank() {
+    dispatch({ type: "BANK" });
+  }
+
   function endGame() {
     clearState();
   }
 
-  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, endGame };
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, setAside, bank, endGame };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

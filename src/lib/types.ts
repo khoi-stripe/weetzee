@@ -26,6 +26,8 @@ export interface Ruleset {
   alwaysAvailableId?: string;
   dieValueMap?: Record<number, number>;
   targetAssignment?: boolean;
+  farkle?: boolean;
+  winThreshold?: number;
 }
 
 // ===== Player =====
@@ -72,6 +74,12 @@ export interface GameState {
   rollBankingEnabled: boolean;
   multipleWeetzeesEnabled: boolean;
   sequentialTargetsEnabled: boolean;
+  turnScore: number;
+  setAsideDiceIds: number[];
+  farkled: boolean;
+  mustSetAside: boolean;
+  finalRound: boolean;
+  finalRoundTriggeredBy: number;
 }
 
 // ===== Actions =====
@@ -84,4 +92,6 @@ export type GameAction =
   | { type: "TOGGLE_ROLL_BANKING" }
   | { type: "TOGGLE_MULTIPLE_WEETZEES" }
   | { type: "TOGGLE_SEQUENTIAL_TARGETS" }
+  | { type: "SET_ASIDE" }
+  | { type: "BANK" }
   | { type: "RESTORE"; state: GameState };

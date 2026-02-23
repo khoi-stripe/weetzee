@@ -27,9 +27,9 @@ function GameContent() {
         rulesetId={state.ruleset.id}
         rulesetName={state.ruleset.name}
         rollBankingEnabled={state.rollBankingEnabled}
-        onToggleRollBanking={state.ruleset.forcedRolls || state.ruleset.targetAssignment ? undefined : game.toggleRollBanking}
+        onToggleRollBanking={state.ruleset.forcedRolls || state.ruleset.targetAssignment || state.ruleset.farkle ? undefined : game.toggleRollBanking}
         multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
-        onToggleMultipleWeetzees={state.ruleset.targetAssignment ? undefined : game.toggleMultipleWeetzees}
+        onToggleMultipleWeetzees={state.ruleset.targetAssignment || state.ruleset.farkle ? undefined : game.toggleMultipleWeetzees}
         sequentialTargetsEnabled={state.sequentialTargetsEnabled}
         onToggleSequentialTargets={state.ruleset.targetAssignment ? game.toggleSequentialTargets : undefined}
         onEndGame={game.endGame}

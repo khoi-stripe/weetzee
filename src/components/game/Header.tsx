@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Share } from "lucide-react";
-import { ALL_RULESETS } from "@/lib/rulesets";
+import { VISIBLE_RULESETS } from "@/lib/rulesets";
 import { playTap, playToggle } from "@/lib/sounds";
 
 // ===== Header =====
@@ -317,6 +317,40 @@ function EverythingInOrderRules() {
   );
 }
 
+function FarkleRules() {
+  return (
+    <>
+      <Section title="Goal">
+        <p>First player to reach <b>10,000 points</b> triggers the final round. Everyone else gets one more turn to beat them.</p>
+      </Section>
+      <Section title="Rolling">
+        <RuleRow name="Roll all 6" desc="Start each turn by rolling all dice" />
+        <RuleRow name="Set aside" desc="Select scoring dice to keep, then roll the rest" />
+        <RuleRow name="Bank" desc="Stop anytime and add your turn score to your total" />
+        <RuleRow name="Farkle" desc="If a roll produces no scoring dice, you lose all points for that turn" />
+        <RuleRow name="Hot dice" desc="If all 6 dice are set aside, roll all 6 again and keep going" />
+      </Section>
+      <Section title="Scoring">
+        <RuleRow name="Single 1" desc="100 pts" />
+        <RuleRow name="Single 5" desc="50 pts" />
+        <RuleRow name="Three 1s" desc="1,000 pts" />
+        <RuleRow name="Three 2s–6s" desc="Face × 100 pts" />
+        <RuleRow name="Four of a kind" desc="1,000 pts" />
+        <RuleRow name="Five of a kind" desc="2,000 pts" />
+        <RuleRow name="Six of a kind" desc="3,000 pts" />
+        <RuleRow name="1-2-3-4-5-6" desc="2,500 pts" />
+        <RuleRow name="Three pairs" desc="1,500 pts" />
+      </Section>
+      <Section title="Strategy">
+        <p style={{ color: "#999999" }}>
+          Set aside high-scoring dice, then decide whether to push your luck
+          or bank what you have. A farkle wipes your entire turn.
+        </p>
+      </Section>
+    </>
+  );
+}
+
 function GameRulesBlock({ id, name, diceCount, description }: { id: string; name: string; diceCount: number; description: string }) {
   return (
     <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
@@ -332,7 +366,8 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
         {name}
       </h2>
       <p style={{ color: "#999999", fontSize: 12, marginBottom: 8 }}>
-        {description} — {diceCount} dice, 3 rolls per turn
+        {description} — {diceCount} dice
+        {id === "farkle" ? "" : ", 3 rolls per turn"}
         {id === "keep-your-head-down" ? ", lowest score wins" : ", highest score wins"}
       </p>
       {id === "classic" && <ClassicRules />}
@@ -340,6 +375,7 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
       {id === "a-little-help" && <ALittleHelpRules />}
       {id === "kismet" && <KismetRules />}
       {id === "everything-in-order" && <EverythingInOrderRules />}
+      {id === "farkle" && <FarkleRules />}
     </div>
   );
 }
@@ -471,14 +507,16 @@ function RulesModal({
               </div>
             )}
 
-            <Section title="How to play">
-              Roll your dice, then optionally hold any and re-roll the rest — up to 3 rolls per turn.
-              After rolling, choose a scoring category. You may place a zero in any unused category if
-              your roll doesn&apos;t qualify.
-            </Section>
+            {rulesetId !== "farkle" && (
+              <Section title="How to play">
+                Roll your dice, then optionally hold any and re-roll the rest — up to 3 rolls per turn.
+                After rolling, choose a scoring category. You may place a zero in any unused category if
+                your roll doesn&apos;t qualify.
+              </Section>
+            )}
 
             {showAllRulesets ? (
-              ALL_RULESETS.map((r) => (
+              VISIBLE_RULESETS.map((r) => (
                 <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
               ))
             ) : rulesetId === "kismet" ? (
@@ -489,6 +527,8 @@ function RulesModal({
               <ALittleHelpRules />
             ) : rulesetId === "everything-in-order" ? (
               <EverythingInOrderRules />
+            ) : rulesetId === "farkle" ? (
+              <FarkleRules />
             ) : (
               <ClassicRules />
             )}
@@ -560,7 +600,7 @@ function AboutContent() {
       </Section>
 
       <Section title="Rulesets">
-        {ALL_RULESETS.map((r) => (
+        {VISIBLE_RULESETS.map((r) => (
           <div key={r.id} style={{ marginTop: 10 }}>
             <span style={{ color: "#ffffff", fontWeight: 500 }}>{r.name}</span>
             <span style={{ color: "#999999" }}>
@@ -569,6 +609,7 @@ function AboutContent() {
               {r.id === "a-little-help" && " — Classic rules with 6 dice instead of 5. A little easier to land those combos."}
               {r.id === "kismet" && " — Dice have colored pips. New color-based categories like flushes and same-color full houses."}
               {r.id === "everything-in-order" && " — Classic scoring, but you must fill categories from top to bottom. No skipping ahead."}
+              {r.id === "farkle" && " — Push your luck! Set aside scoring dice and keep rolling, or bank your points. First to 10,000 wins."}
             </span>
           </div>
         ))}

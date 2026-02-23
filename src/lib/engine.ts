@@ -1,5 +1,6 @@
 import type { Die, GameState, GameAction, Player, Ruleset } from "./types";
 import { PLAYER_COLORS } from "./types";
+import { hasScoring, scoreDice, isValidSelection } from "./rulesets/farkle";
 
 // ===== Dice Helpers =====
 
@@ -51,6 +52,12 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     rollBankingEnabled: false,
     multipleWeetzeesEnabled: false,
     sequentialTargetsEnabled: false,
+    turnScore: 0,
+    setAsideDiceIds: [],
+    farkled: false,
+    mustSetAside: false,
+    finalRound: false,
+    finalRoundTriggeredBy: -1,
   };
 }
 
@@ -131,7 +138,7 @@ function advanceTurn(state: GameState): GameState {
     );
   }
 
-  return {
+  const next: GameState = {
     ...state,
     players,
     currentPlayerIndex: nextPlayerIndex,
@@ -139,7 +146,17 @@ function advanceTurn(state: GameState): GameState {
     rollsUsed: 0,
     turn: nextTurn,
     view: state.ruleset.targetAssignment ? "scorecard" : "rolling",
+    turnScore: 0,
+    setAsideDiceIds: [],
+    farkled: false,
+    mustSetAside: false,
   };
+
+  if (state.finalRound && nextPlayerIndex === state.finalRoundTriggeredBy) {
+    return { ...next, gameOver: true };
+  }
+
+  return next;
 }
 
 // ===== Reducer =====
@@ -147,6 +164,40 @@ function advanceTurn(state: GameState): GameState {
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case "ROLL": {
+      if (state.ruleset.farkle) {
+        const activeDice = state.dice.filter(d => !state.setAsideDiceIds.includes(d.id));
+        const diceToRoll = activeDice.length === 0 ? state.dice : activeDice;
+
+        const allIds = diceToRoll.map(d => d.id);
+        const newDice = state.dice.map(d => {
+          if (allIds.includes(d.id)) return { ...d, value: rollValue(), held: false };
+          return d;
+        });
+
+        const rolledValues = newDice.filter(d => allIds.includes(d.id)).map(d => d.value);
+        const isFarkle = !hasScoring(rolledValues);
+
+        if (isFarkle) {
+          return {
+            ...state,
+            dice: newDice,
+            rollsUsed: state.rollsUsed + 1,
+            farkled: true,
+            mustSetAside: false,
+            setAsideDiceIds: activeDice.length === 0 ? [] : state.setAsideDiceIds,
+          };
+        }
+
+        return {
+          ...state,
+          dice: newDice,
+          rollsUsed: state.rollsUsed + 1,
+          farkled: false,
+          mustSetAside: true,
+          setAsideDiceIds: activeDice.length === 0 ? [] : state.setAsideDiceIds,
+        };
+      }
+
       const effectiveMax = getEffectiveRollsPerTurn(state);
       if (state.rollsUsed >= effectiveMax) return state;
 
@@ -164,6 +215,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.rollsUsed === 0) return state;
       const die = state.dice.find((d) => d.id === action.dieId);
       if (!die) return state;
+
+      if (state.ruleset.farkle) {
+        if (state.setAsideDiceIds.includes(action.dieId)) return state;
+        if (state.farkled) return state;
+      }
+
       return {
         ...state,
         dice: state.dice.map((d) =>
@@ -226,6 +283,54 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "TOGGLE_SEQUENTIAL_TARGETS": {
       return { ...state, sequentialTargetsEnabled: !state.sequentialTargetsEnabled };
+    }
+
+    case "SET_ASIDE": {
+      if (!state.ruleset.farkle || state.farkled) return state;
+      const heldDice = state.dice.filter(d => d.held && !state.setAsideDiceIds.includes(d.id));
+      if (heldDice.length === 0) return state;
+
+      const selectedValues = heldDice.map(d => d.value);
+      if (!isValidSelection(selectedValues)) return state;
+
+      const score = scoreDice(selectedValues);
+      const newSetAside = [...state.setAsideDiceIds, ...heldDice.map(d => d.id)];
+      const allSetAside = newSetAside.length === state.ruleset.diceCount;
+
+      return {
+        ...state,
+        turnScore: state.turnScore + score,
+        setAsideDiceIds: allSetAside ? [] : newSetAside,
+        dice: state.dice.map(d => heldDice.some(h => h.id === d.id) ? { ...d, held: false } : d),
+        mustSetAside: false,
+      };
+    }
+
+    case "BANK": {
+      if (!state.ruleset.farkle) return state;
+      if (state.farkled) return advanceTurn(state);
+
+      const currentPlayer = state.players[state.currentPlayerIndex];
+      const prevTotal = (currentPlayer.scores["total"] as number) ?? 0;
+      const newTotal = prevTotal + state.turnScore;
+
+      const updatedPlayers = state.players.map((p, i) =>
+        i === state.currentPlayerIndex
+          ? { ...p, scores: { ...p.scores, total: newTotal } }
+          : p
+      );
+
+      let nextState = { ...state, players: updatedPlayers };
+
+      if (!state.finalRound && state.ruleset.winThreshold && newTotal >= state.ruleset.winThreshold) {
+        nextState = {
+          ...nextState,
+          finalRound: true,
+          finalRoundTriggeredBy: state.currentPlayerIndex,
+        };
+      }
+
+      return advanceTurn(nextState);
     }
 
     case "RESTORE": {
