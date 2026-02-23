@@ -7,7 +7,7 @@ import { EVERYTHING_IN_ORDER_RULESET } from "./everything-in-order";
 
 export const ALL_RULESETS: Ruleset[] = [
   CLASSIC_RULESET,
-  RACE_TO_BOTTOM_RULESET,
+  // RACE_TO_BOTTOM_RULESET, // hidden until scoring rules are finalized
   A_LITTLE_HELP_RULESET,
   KISMET_RULESET,
   EVERYTHING_IN_ORDER_RULESET,

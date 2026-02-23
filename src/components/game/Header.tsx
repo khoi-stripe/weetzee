@@ -209,13 +209,19 @@ function RaceToBottomRules() {
       <Section title="Upper section">
         <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
         <p style={{ marginTop: 8, color: "#999999" }}>
-          Bonus: 35 points if upper section totals 63+. (Works against you here!)
+          Scoring 0 on any upper category adds a +10 penalty. No upper bonus.
         </p>
       </Section>
       <Section title="Lower section">
-        <p>Same categories as Classic, but the lowest total wins.</p>
+        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
+        <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
+        <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
+        <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
+        <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
+        <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
+        <RuleRow name="Weetzee" desc="50 pts — all five dice the same" />
         <p style={{ marginTop: 8, color: "#999999" }}>
-          Strategy: try to score 0 in as many categories as possible.
+          Lower combos can only be scored when you actually roll them — no free zeros.
         </p>
       </Section>
     </>
@@ -406,6 +412,9 @@ function RulesModal({
           fontSize: 13,
           lineHeight: 1.6,
           color: "#cccccc",
+          maxWidth: 720,
+          margin: "0 auto",
+          width: "100%",
         }}
       >
         {rulesetName && (

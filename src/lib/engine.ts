@@ -85,6 +85,7 @@ export function getAvailableScores(
     }
 
     const score = cat.evaluate(dice);
+    if (score === null && ruleset.strictLowerSection) continue;
     result[cat.id] = score ?? 0;
   }
   return result;
