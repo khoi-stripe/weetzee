@@ -60,18 +60,18 @@ export function ScorecardView({
     ? getAvailableScores(diceValues, ruleset, currentPlayer.scores)
     : {};
 
-  const availableScores = (() => {
+  const selectableScores = (() => {
     if (!ruleset.highestScoreOnly || Object.keys(rawScores).length === 0) return rawScores;
     const maxScore = Math.max(...Object.values(rawScores));
     const filtered: Record<string, number> = {};
     for (const [id, score] of Object.entries(rawScores)) {
-      if (score === maxScore) filtered[id] = score;
+      if (score === maxScore || id === ruleset.alwaysAvailableId) filtered[id] = score;
     }
     return filtered;
   })();
 
-  const bestCategoryId = Object.keys(availableScores).length > 0
-    ? Object.entries(availableScores).reduce((best, [id, score]) =>
+  const bestCategoryId = Object.keys(selectableScores).length > 0
+    ? Object.entries(selectableScores).reduce((best, [id, score]) =>
         score > best[1] ? [id, score] : best
       )[0]
     : null;
@@ -234,27 +234,31 @@ export function ScorecardView({
               </tr>
             </thead>
             <tbody>
-              {categories.map((cat) => (
-                <ScoreRow
-                  key={cat.id}
-                  category={cat}
-                  players={players}
-                  currentPlayerIndex={currentPlayerIndex}
-                  availableScore={availableScores[cat.id]}
-                  isBestChoice={cat.id === bestCategoryId}
-                  selected={cat.id === selectedCategoryId}
-                  onScore={() => {
-                    if (!locked) {
-                      saveScroll();
-                      const deselecting = cat.id === selectedCategoryId;
-                      setSelectedCategoryId(deselecting ? null : cat.id);
-                      if (deselecting) playDeselect(); else playSelect();
-                    }
-                  }}
-                  justScored={cat.id === justScoredCategoryId}
-                  justScoredPlayerIndex={justScoredPlayerIndex ?? null}
-                />
-              ))}
+              {categories.map((cat) => {
+                const isSelectable = selectableScores[cat.id] !== undefined;
+                return (
+                  <ScoreRow
+                    key={cat.id}
+                    category={cat}
+                    players={players}
+                    currentPlayerIndex={currentPlayerIndex}
+                    availableScore={rawScores[cat.id]}
+                    isSelectable={isSelectable}
+                    isBestChoice={cat.id === bestCategoryId}
+                    selected={cat.id === selectedCategoryId}
+                    onScore={() => {
+                      if (!locked && isSelectable) {
+                        saveScroll();
+                        const deselecting = cat.id === selectedCategoryId;
+                        setSelectedCategoryId(deselecting ? null : cat.id);
+                        if (deselecting) playDeselect(); else playSelect();
+                      }
+                    }}
+                    justScored={cat.id === justScoredCategoryId}
+                    justScoredPlayerIndex={justScoredPlayerIndex ?? null}
+                  />
+                );
+              })}
               <BonusRow players={players} ruleset={ruleset} />
               {multipleWeetzeesEnabled && <WeetzeeBonusRow players={players} />}
             </tbody>
@@ -339,6 +343,7 @@ function ScoreRow({
   players,
   currentPlayerIndex,
   availableScore,
+  isSelectable = true,
   isBestChoice = false,
   selected = false,
   onScore,
@@ -349,6 +354,7 @@ function ScoreRow({
   players: Player[];
   currentPlayerIndex: number;
   availableScore: number | undefined;
+  isSelectable?: boolean;
   isBestChoice?: boolean;
   selected?: boolean;
   onScore: () => void;
@@ -357,7 +363,8 @@ function ScoreRow({
 }) {
   const currentPlayer = players[currentPlayerIndex];
   const alreadyScored = currentPlayer.scores[category.id] !== undefined;
-  const isScoreable = !alreadyScored && availableScore !== undefined && !justScored;
+  const isScoreable = !alreadyScored && availableScore !== undefined && isSelectable && !justScored;
+  const hasPreview = !alreadyScored && availableScore !== undefined && !justScored;
 
   return (
     <tr
@@ -387,12 +394,12 @@ function ScoreRow({
         const isCurrent = i === currentPlayerIndex;
         const isJustScoredCell = justScored && i === justScoredPlayerIndex;
         const isSelectedCell = selected && isCurrent;
-        const showPreview = isCurrent && !alreadyScored && availableScore !== undefined && !justScored && !selected;
+        const showPreview = isCurrent && hasPreview && !selected;
         const bg = isSelectedCell
           ? player.color
           : isJustScoredCell
             ? player.color
-            : showPreview
+            : showPreview && isSelectable
               ? `${player.color}33`
               : "#000000";
 
@@ -407,16 +414,24 @@ function ScoreRow({
   
               fontSize: 14,
               fontWeight: isSelectedCell || isJustScoredCell ? 500 : 400,
-              color: isSelectedCell || isJustScoredCell ? "#000000" : showPreview ? player.color : "#ffffff",
+              color: isSelectedCell || isJustScoredCell
+                ? "#000000"
+                : showPreview
+                  ? isSelectable ? player.color : `${player.color}55`
+                  : "#ffffff",
               transition: "background 150ms, color 150ms",
             }}
           >
             {isSelectedCell ? (
               availableScore
             ) : showPreview ? (
-              <span className={`pressable${isBestChoice ? " shimmer-fast" : ""}`} style={{ display: "inline-block" }}>
-                {availableScore}
-              </span>
+              isSelectable ? (
+                <span className={`pressable${isBestChoice ? " shimmer-fast" : ""}`} style={{ display: "inline-block" }}>
+                  {availableScore}
+                </span>
+              ) : (
+                availableScore
+              )
             ) : (
               scored !== undefined ? scored : isJustScoredCell ? availableScore : ""
             )}
@@ -684,7 +699,7 @@ function MiniDiceStrip({
             padding: 0,
           }}
         >
-          <span className={canRoll ? "shimmer" : ""}>{rollLabel}</span>
+          {rollLabel}
         </button>
       </div>
     </div>

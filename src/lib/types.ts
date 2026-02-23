@@ -23,6 +23,7 @@ export interface Ruleset {
   orderedScoring?: boolean;
   forcedRolls?: boolean;
   highestScoreOnly?: boolean;
+  alwaysAvailableId?: string;
 }
 
 // ===== Player =====

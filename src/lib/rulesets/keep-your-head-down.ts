@@ -18,4 +18,5 @@ export const KEEP_YOUR_HEAD_DOWN_RULESET: Ruleset = {
   fiveOfAKindId: "weetzee",
   forcedRolls: true,
   highestScoreOnly: true,
+  alwaysAvailableId: "chance",
 };
