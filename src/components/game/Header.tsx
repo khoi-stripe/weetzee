@@ -60,7 +60,7 @@ export function Header({
               top: 2,
               padding: "8px 12px",
 
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 500,
               color: "#ffffff",
               background: "none",
@@ -94,7 +94,7 @@ export function Header({
             background: "none",
             border: "none",
 
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: 500,
             fontStyle: "normal",
             color: "#ffffff",
@@ -137,7 +137,7 @@ export function Header({
               padding: 32,
             }}
           >
-            <p style={{ fontSize: 16, fontWeight: 500, color: "#ffffff", marginBottom: 24 }}>
+            <p style={{ fontSize: 13, fontWeight: 500, color: "#ffffff", marginBottom: 24 }}>
               End this game?
             </p>
             <div className="flex gap-6 justify-center">
@@ -150,7 +150,7 @@ export function Header({
                   border: "1px solid #ffffff",
                   background: "transparent",
     
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: 500,
                   color: "#ffffff",
                   cursor: "pointer",
@@ -167,7 +167,7 @@ export function Header({
                   border: "1px solid #ffffff",
                   background: "#ffffff",
     
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: 500,
                   color: "#000000",
                   cursor: "pointer",
@@ -275,12 +275,12 @@ function KismetRules() {
         </p>
       </Section>
       <Section title="Kismet section">
-        <RuleRow name="2 Pair Same Color" desc="Sum of all dice (two pairs sharing a pip color)" />
+        <RuleRow name="2 pair same color" desc="Sum of all dice (two pairs sharing a pip color)" />
         <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
         <RuleRow name="Straight" desc="30 pts — five sequential dice" />
         <RuleRow name="Flush" desc="35 pts — all five dice the same color" />
-        <RuleRow name="Full House" desc="Sum + 15 — three of one + pair of another" />
-        <RuleRow name="Full House SC" desc="Sum + 20 — full house, all same color" />
+        <RuleRow name="Full house" desc="Sum + 15 — three of one + pair of another" />
+        <RuleRow name="Full house same color" desc="Sum + 20 — full house, all same color" />
         <RuleRow name="4 of a kind" desc="Sum + 25 (need 4 matching)" />
         <RuleRow name="Yarborough" desc="Sum of all dice (no requirement)" />
         <RuleRow name="Kismet" desc="Sum + 50 — all five dice the same" />
@@ -335,11 +335,11 @@ function FarkleRules() {
         <RuleRow name="Single 5" desc="50 pts" />
         <RuleRow name="Three 1s" desc="1,000 pts" />
         <RuleRow name="Three 2s–6s" desc="Face × 100 pts" />
-        <RuleRow name="Four of a kind" desc="1,000 pts" />
-        <RuleRow name="Five of a kind" desc="2,000 pts" />
-        <RuleRow name="Six of a kind" desc="3,000 pts" />
+        <RuleRow name="4 of a kind" desc="1,000 pts" />
+        <RuleRow name="5 of a kind" desc="2,000 pts" />
+        <RuleRow name="6 of a kind" desc="3,000 pts" />
         <RuleRow name="1-2-3-4-5-6" desc="2,500 pts" />
-        <RuleRow name="Three pairs" desc="1,500 pts" />
+        <RuleRow name="3 pairs" desc="1,500 pts" />
       </Section>
       <Section title="Strategy">
         <p style={{ color: "#999999" }}>
@@ -356,7 +356,7 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
     <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
       <h2
         style={{
-          fontSize: 16,
+          fontSize: 13,
           fontWeight: 600,
           color: "#ffffff",
           marginBottom: 4,
@@ -423,7 +423,7 @@ function RulesModal({
         <p
           className="absolute font-medium text-white text-center"
           style={{
-            fontSize: 16,
+            fontSize: 13,
             left: "50%",
             transform: "translateX(-50%)",
             top: 13.5,
@@ -484,7 +484,7 @@ function RulesModal({
               >
                 <div>
                   <span style={{ color: "#999999", fontSize: 12 }}>Playing</span>
-                  <span style={{ color: "#ffffff", fontWeight: 500, marginLeft: 8, fontSize: 14 }}>
+                  <span style={{ color: "#ffffff", fontWeight: 500, marginLeft: 8, fontSize: 13 }}>
                     {rulesetName}
                   </span>
                 </div>
@@ -537,7 +537,7 @@ function RulesModal({
               <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
                 <h3
                   style={{
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: 600,
                     color: "#ffffff",
                     marginBottom: 12,
@@ -644,7 +644,7 @@ function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
     <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
       <h3
         style={{
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 600,
           color: "#ffffff",
           marginBottom: 12,
@@ -687,7 +687,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div style={{ marginTop: 24 }}>
       <h3
         style={{
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 600,
           color: "#ffffff",
           marginBottom: 8,

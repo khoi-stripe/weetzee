@@ -46,7 +46,7 @@ export function PlayerBar({
           border: "1px solid #ffffff",
           borderRadius: 4,
 
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 500,
         }}
       >

@@ -13,6 +13,13 @@ import { rollValue } from "@/lib/engine";
 import { playSelect, playDeselect, playConfirm, playTap } from "@/lib/sounds";
 import type { Ruleset } from "@/lib/types";
 
+function dimHex(hex: string, t: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgb(${Math.round(r * t)},${Math.round(g * t)},${Math.round(b * t)})`;
+}
+
 // ===== ScorecardView =====
 // Scorecard table + mini dice strip at bottom.
 // No longer includes its own PlayerBar — that's now shared in GameView.
@@ -367,7 +374,7 @@ export function ScorecardView({
             border: "1px solid #ffffff",
             borderRadius: 4,
             background: "#ffffff",
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: 500,
             color: "#000000",
             cursor: "pointer",
@@ -510,7 +517,7 @@ function TargetTable({
                   borderBottom: "1px solid #ffffff",
                   borderRight: "1px solid #ffffff",
                   background: "#1a1a1a",
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: 500,
                   color: "#ffffff",
                   position: "sticky",
@@ -545,7 +552,7 @@ function TargetTable({
                       borderBottom: "1px solid #ffffff",
                       borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
                       background: bg,
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: isSelectedCell || isJustScoredCell ? 500 : 400,
                       color: isSelectedCell || isJustScoredCell
                         ? "#000000"
@@ -637,7 +644,7 @@ function TargetConfirmModal({
               border: `1px solid ${playerColor}`,
               color: "#000000",
               padding: "10%",
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 500,
             }}
           >
@@ -697,7 +704,7 @@ function TargetConfirmModal({
               height: 100,
               border: "1px solid #ffffff",
               background: "transparent",
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 500,
               color: "#ffffff",
               cursor: "pointer",
@@ -713,7 +720,7 @@ function TargetConfirmModal({
               height: 100,
               border: "1px solid #ffffff",
               background: "#ffffff",
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 500,
               color: "#000000",
               cursor: "pointer",
@@ -769,7 +776,7 @@ function ScoreRow({
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
 
-          fontSize: 14,
+          fontSize: 13,
           color: "#ffffff",
           fontWeight: 400,
           transition: "background 150ms, color 150ms",
@@ -803,7 +810,7 @@ function ScoreRow({
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: bg,
   
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: isSelectedCell || isJustScoredCell ? 500 : 400,
               color: isSelectedCell || isJustScoredCell
                 ? "#000000"
@@ -845,7 +852,7 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
 
-          fontSize: 14,
+          fontSize: 13,
           color: "#ffffff",
           position: "sticky",
           left: 0,
@@ -864,7 +871,7 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: "#000000",
   
-              fontSize: 14,
+              fontSize: 13,
               color: bonus > 0 ? player.color : "#ffffff",
             }}
           >
@@ -887,7 +894,7 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
 
-          fontSize: 14,
+          fontSize: 13,
           color: "#ffffff",
           position: "sticky",
           left: 0,
@@ -907,7 +914,7 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: "#000000",
   
-              fontSize: 14,
+              fontSize: 13,
               color: count > 0 ? player.color : "#ffffff",
             }}
           >
@@ -942,7 +949,7 @@ function TotalRow({
           borderRight: "1px solid #ffffff",
           background: "#000000",
 
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 600,
           color: "#ffffff",
           boxShadow: "inset 0 1px 0 #ffffff",
@@ -960,6 +967,7 @@ function TotalRow({
           ? { ...player.scores, [previewCategoryId]: previewScore }
           : player.scores;
         const total = getRulesetTotal(ruleset, scores, player.extraWeetzees);
+        const inactive = currentPlayerIndex !== undefined && i !== currentPlayerIndex;
         return (
           <td
             key={player.id}
@@ -967,9 +975,8 @@ function TotalRow({
               padding: "8px 16px",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               boxShadow: "inset 0 1px 0 #ffffff",
-              background: player.color,
-              opacity: currentPlayerIndex !== undefined && i !== currentPlayerIndex ? 0.35 : 1,
-              fontSize: 14,
+              background: inactive ? dimHex(player.color, 0.4) : player.color,
+              fontSize: 13,
               fontWeight: 600,
               color: "#000000",
               position: "sticky",
@@ -1135,7 +1142,7 @@ function Th({
         borderRight: "1px solid #ffffff",
         background: "#000000",
 
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: 400,
         color: "#ffffff",
         textAlign: "left",

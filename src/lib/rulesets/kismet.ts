@@ -45,7 +45,7 @@ const BASIC_SECTION: ScoreCategory[] = [1, 2, 3, 4, 5, 6].map((face) => ({
 const KISMET_SECTION: ScoreCategory[] = [
   {
     id: "two_pair_same_color",
-    name: "2 Pair Same Color",
+    name: "2 pair same color",
     evaluate: (dice) => (hasTwoPairSameColor(dice) ? sum(dice) : null),
     maxScore: 30,
   },
@@ -69,13 +69,13 @@ const KISMET_SECTION: ScoreCategory[] = [
   },
   {
     id: "full_house",
-    name: "Full House",
+    name: "Full house",
     evaluate: (dice) => (isFullHouse(dice) ? sum(dice) + 15 : null),
     maxScore: 45,
   },
   {
     id: "full_house_same_color",
-    name: "Full House SC",
+    name: "Full house same color",
     evaluate: (dice) => (isFullHouseSameColor(dice) ? sum(dice) + 20 : null),
     maxScore: 50,
   },

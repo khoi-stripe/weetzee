@@ -106,7 +106,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
             {state.turnScore + (selectionValid ? selectionScore : 0)}
           </span>
           {selectionValid && selectionScore > 0 && (
-            <span style={{ color: currentPlayer.color, fontSize: 14, fontWeight: 500 }}>
+            <span style={{ color: currentPlayer.color, fontSize: 13, fontWeight: 500 }}>
               +{selectionScore}
             </span>
           )}

@@ -51,7 +51,7 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
               gap: 8,
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 500 }}>
+            <span style={{ fontSize: 13, fontWeight: 500 }}>
               {winner.name} wins!
             </span>
             <span style={{ fontSize: 48, fontWeight: 700 }}>
@@ -69,7 +69,7 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
             border: "1px solid #ffffff",
             background: "transparent",
 
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: 500,
             color: "#ffffff",
             cursor: "pointer",

@@ -334,13 +334,13 @@ function RollButton({
 }) {
   const [introDone, setIntroDone] = useState(false);
 
+  const rollsRemaining = rollsPerTurn - rollsUsed;
+
   let label: string;
-  if (rollsUsed === 0) {
-    label = "ROLL";
-  } else if (allHeld || rollsUsed >= rollsPerTurn) {
-    label = "SCORE ▸";
+  if (allHeld || rollsUsed >= rollsPerTurn) {
+    label = "SCORE";
   } else {
-    label = "ROLL";
+    label = rollsUsed === 0 ? "ROLL" : `ROLL (${rollsRemaining})`;
   }
 
   const animating = showButton && !introDone;
