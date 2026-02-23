@@ -1,13 +1,13 @@
 import type { Ruleset } from "../types";
 import { CLASSIC_RULESET, getFullTotal, getBonusScore, EXTRA_WEETZEE_VALUE } from "./classic";
-import { RACE_TO_BOTTOM_RULESET } from "./race-to-bottom";
+import { KEEP_YOUR_HEAD_DOWN_RULESET } from "./keep-your-head-down";
 import { A_LITTLE_HELP_RULESET } from "./a-little-help";
 import { KISMET_RULESET } from "./kismet";
 import { EVERYTHING_IN_ORDER_RULESET } from "./everything-in-order";
 
 export const ALL_RULESETS: Ruleset[] = [
   CLASSIC_RULESET,
-  // RACE_TO_BOTTOM_RULESET, // hidden until scoring rules are finalized
+  KEEP_YOUR_HEAD_DOWN_RULESET,
   A_LITTLE_HELP_RULESET,
   KISMET_RULESET,
   EVERYTHING_IN_ORDER_RULESET,

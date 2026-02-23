@@ -53,9 +53,22 @@ export function ScorecardView({
   const currentPlayer = players[currentPlayerIndex];
   const diceValues = dice.map((d) => d.value);
 
-  const availableScores = rollsUsed > 0
+  const allRollsUsed = rollsUsed >= rollsPerTurn;
+  const canScore = ruleset.forcedRolls ? allRollsUsed : rollsUsed > 0;
+
+  const rawScores = canScore
     ? getAvailableScores(diceValues, ruleset, currentPlayer.scores)
     : {};
+
+  const availableScores = (() => {
+    if (!ruleset.highestScoreOnly || Object.keys(rawScores).length === 0) return rawScores;
+    const maxScore = Math.max(...Object.values(rawScores));
+    const filtered: Record<string, number> = {};
+    for (const [id, score] of Object.entries(rawScores)) {
+      if (score === maxScore) filtered[id] = score;
+    }
+    return filtered;
+  })();
 
   const bestCategoryId = Object.keys(availableScores).length > 0
     ? Object.entries(availableScores).reduce((best, [id, score]) =>

@@ -85,7 +85,6 @@ export function getAvailableScores(
     }
 
     const score = cat.evaluate(dice);
-    if (score === null && ruleset.strictLowerSection) continue;
     result[cat.id] = score ?? 0;
   }
   return result;
@@ -162,6 +161,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case "SCORE_CATEGORY": {
       const currentPlayer = state.players[state.currentPlayerIndex];
       if (currentPlayer.scores[action.categoryId] !== undefined) return state;
+
+      const effectiveMax = getEffectiveRollsPerTurn(state);
+      if (state.ruleset.forcedRolls && state.rollsUsed < effectiveMax) return state;
 
       const diceValues = state.dice.map((d) => d.value);
       const category = state.ruleset.categories.find(

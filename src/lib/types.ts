@@ -21,7 +21,8 @@ export interface Ruleset {
   fiveOfAKindId?: string;
   pipColors?: boolean;
   orderedScoring?: boolean;
-  strictLowerSection?: boolean;
+  forcedRolls?: boolean;
+  highestScoreOnly?: boolean;
 }
 
 // ===== Player =====

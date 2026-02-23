@@ -203,26 +203,19 @@ function ClassicRules() {
   );
 }
 
-function RaceToBottomRules() {
+function KeepYourHeadDownRules() {
   return (
     <>
-      <Section title="Upper section">
-        <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
-        <p style={{ marginTop: 8, color: "#999999" }}>
-          Scoring 0 on any upper category adds a +10 penalty. No upper bonus.
-        </p>
+      <Section title="How it works">
+        <p>Same categories as Classic, but lowest total wins.</p>
+        <p style={{ marginTop: 8 }}>You must roll all 3 times every turn — no stopping early.</p>
+        <p style={{ marginTop: 8 }}>After your final roll, you must score the highest available category. If multiple categories tie for the highest, you choose among them.</p>
       </Section>
-      <Section title="Lower section">
-        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
-        <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
-        <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
-        <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
-        <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
-        <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
-        <RuleRow name="Weetzee" desc="50 pts — all five dice the same" />
-        <p style={{ marginTop: 8, color: "#999999" }}>
-          Lower combos can only be scored when you actually roll them — no free zeros.
-        </p>
+      <Section title="Strategy">
+        <p style={{ color: "#999999" }}>Your only move is choosing which dice to hold between rolls. Try to break up good combos — scatter sets, disrupt straights, avoid matching faces.</p>
+      </Section>
+      <Section title="Scoring">
+        <p style={{ color: "#999999" }}>No upper section bonus. No penalty for zeros. Just the raw total of all scored categories — lowest wins.</p>
       </Section>
     </>
   );
@@ -323,10 +316,10 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
       </h2>
       <p style={{ color: "#999999", fontSize: 12, marginBottom: 8 }}>
         {description} — {diceCount} dice, 3 rolls per turn
-        {id === "race-to-bottom" ? ", lowest score wins" : ", highest score wins"}
+        {id === "keep-your-head-down" ? ", lowest score wins" : ", highest score wins"}
       </p>
       {id === "classic" && <ClassicRules />}
-      {id === "race-to-bottom" && <RaceToBottomRules />}
+      {id === "keep-your-head-down" && <KeepYourHeadDownRules />}
       {id === "a-little-help" && <ALittleHelpRules />}
       {id === "kismet" && <KismetRules />}
       {id === "everything-in-order" && <EverythingInOrderRules />}
@@ -465,8 +458,8 @@ function RulesModal({
           ))
         ) : rulesetId === "kismet" ? (
           <KismetRules />
-        ) : rulesetId === "race-to-bottom" ? (
-          <RaceToBottomRules />
+        ) : rulesetId === "keep-your-head-down" ? (
+          <KeepYourHeadDownRules />
         ) : rulesetId === "a-little-help" ? (
           <ALittleHelpRules />
         ) : rulesetId === "everything-in-order" ? (
