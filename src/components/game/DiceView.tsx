@@ -60,6 +60,7 @@ export function DiceView({
   farkleMode = false,
   setAsideDiceIds = [],
   farkled = false,
+  hugged = false,
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -73,6 +74,7 @@ export function DiceView({
   farkleMode?: boolean;
   setAsideDiceIds?: number[];
   farkled?: boolean;
+  hugged?: boolean;
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
@@ -225,22 +227,37 @@ export function DiceView({
     if (!el) return;
 
     function measure() {
-      const { width, height } = el!.getBoundingClientRect();
-      setLayout(computeLayout(width - GAP * 2, height - GAP * 2, ITEM_COUNT, GAP));
+      if (hugged) {
+        const parent = el!.parentElement;
+        if (!parent) return;
+        const { height } = parent.getBoundingClientRect();
+        const h = height - GAP * 2;
+        setLayout(computeLayout(h, h, ITEM_COUNT, GAP));
+      } else {
+        const { width, height } = el!.getBoundingClientRect();
+        setLayout(computeLayout(width - GAP * 2, height - GAP * 2, ITEM_COUNT, GAP));
+      }
     }
 
     measure();
+    const target = hugged ? el!.parentElement! : el;
     const ro = new ResizeObserver(measure);
-    ro.observe(el);
+    ro.observe(target);
     return () => ro.disconnect();
-  }, [ITEM_COUNT]);
+  }, [ITEM_COUNT, hugged]);
+
+  const huggedWidth = layout.cellSize > 0
+    ? layout.cols * layout.cellSize + (layout.cols - 1) * GAP + GAP * 2
+    : undefined;
 
   return (
     <div
       ref={containerRef}
       style={{
-        flex: 1,
+        flex: hugged ? "none" : 1,
         minHeight: 0,
+        width: hugged ? huggedWidth : undefined,
+        height: hugged ? "100%" : undefined,
         display: "grid",
         gridTemplateColumns: layout.cellSize > 0
           ? `repeat(${layout.cols}, ${layout.cellSize}px)`

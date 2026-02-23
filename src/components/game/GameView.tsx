@@ -254,8 +254,9 @@ function LandscapeLayout({
   }
 
   return (
-    <div className="flex flex-row w-full h-full">
-      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+    <div className="flex flex-row w-full h-full p-8">
+
+      <div className="shrink-0 flex flex-col overflow-hidden" style={{ height: "100%" }}>
         <DiceView
           dice={state.dice}
           rollsUsed={state.rollsUsed}
@@ -266,6 +267,7 @@ function LandscapeLayout({
           onToggleHold={toggleHold}
           alignTop
           dieValueMap={state.ruleset.dieValueMap}
+          hugged
         />
       </div>
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">

@@ -212,7 +212,7 @@ export function ScorecardView({
   const currentDiceSum = isTargetMode ? getMappedDiceSum(diceValues, ruleset.dieValueMap) : 0;
 
   return (
-    <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: landscapeHeader ? "16px 16px 16px" : "0 16px 16px", gap: 16 }}>
+    <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: landscapeHeader ? "16px" : "0 16px 16px", gap: 16 }}>
 
       {/* Scrollable table with fade */}
       <div className="relative min-h-0">
@@ -527,19 +527,19 @@ function TargetTable({
                 const isSelectedCell = isSelected && isCurrent;
                 const showPreview = isCurrent && scored === undefined && isSelectable && !isJustScored && !isSelected;
 
+                const isPulsing = showPreview && isBest;
                 const bg = isSelectedCell
                   ? player.color
                   : isJustScoredCell
                     ? player.color
-                    : showPreview && isBest
-                      ? `${player.color}33`
-                      : "#000000";
+                    : "#000000";
 
                 const displayPenalty = isSelectedCell ? penalty : showPreview ? penalty : scored;
 
                 return (
                   <td
                     key={player.id}
+                    className={isPulsing ? "pulse-bg" : undefined}
                     style={{
                       padding: "8px 16px",
                       borderBottom: "1px solid #ffffff",
@@ -555,13 +555,14 @@ function TargetTable({
                             ? "#ffffff"
                             : "#333333",
                       transition: "background 150ms, color 150ms",
+                      ...isPulsing ? { "--pulse-color": player.color } as React.CSSProperties : {},
                     }}
                   >
                     {isSelectedCell ? (
                       penaltyLabel(penalty!)
                     ) : showPreview ? (
                       <span
-                        className={`pressable${isBest ? " shimmer-fast" : ""}`}
+                        className="pressable"
                         style={{ display: "inline-block" }}
                       >
                         {penaltyLabel(penalty!)}
@@ -785,17 +786,17 @@ function ScoreRow({
         const isJustScoredCell = justScored && i === justScoredPlayerIndex;
         const isSelectedCell = selected && isCurrent;
         const showPreview = isCurrent && hasPreview && !selected;
+        const isPulsing = showPreview && isBestChoice;
         const bg = isSelectedCell
           ? player.color
           : isJustScoredCell
             ? player.color
-            : showPreview && isSelectable
-              ? `${player.color}33`
-              : "#000000";
+            : "#000000";
 
         return (
           <td
             key={player.id}
+            className={isPulsing ? "pulse-bg" : undefined}
             style={{
               padding: "8px 16px",
               borderBottom: "1px solid #ffffff",
@@ -810,13 +811,14 @@ function ScoreRow({
                   ? isSelectable ? player.color : `${player.color}55`
                   : "#ffffff",
               transition: "background 150ms, color 150ms",
+              ...isPulsing ? { "--pulse-color": player.color } as React.CSSProperties : {},
             }}
           >
             {isSelectedCell ? (
               availableScore
             ) : showPreview ? (
               isSelectable ? (
-                <span className={`pressable${isBestChoice ? " shimmer-fast" : ""}`} style={{ display: "inline-block" }}>
+                <span className="pressable" style={{ display: "inline-block" }}>
                   {availableScore}
                 </span>
               ) : (
