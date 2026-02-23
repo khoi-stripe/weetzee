@@ -45,12 +45,12 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     currentPlayerIndex: 0,
     dice: makeDice(ruleset.diceCount),
     rollsUsed: 0,
-    lockedDiceIds: [],
     turn: 1,
     view: ruleset.targetAssignment ? "scorecard" : "rolling",
     gameOver: false,
     rollBankingEnabled: false,
     multipleWeetzeesEnabled: false,
+    sequentialTargetsEnabled: false,
   };
 }
 
@@ -137,7 +137,6 @@ function advanceTurn(state: GameState): GameState {
     currentPlayerIndex: nextPlayerIndex,
     dice: newDice,
     rollsUsed: 0,
-    lockedDiceIds: [],
     turn: nextTurn,
     view: state.ruleset.targetAssignment ? "scorecard" : "rolling",
   };
@@ -151,17 +150,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const effectiveMax = getEffectiveRollsPerTurn(state);
       if (state.rollsUsed >= effectiveMax) return state;
 
-      if (state.ruleset.lockedHolds) {
-        const currentHeldCount = state.dice.filter((d) => d.held).length;
-        if (currentHeldCount >= state.ruleset.diceCount) return state;
-        const newHolds = currentHeldCount - state.lockedDiceIds.length;
-        if (state.rollsUsed > 0 && newHolds <= 0) return state;
-      }
-
-      const newLockedIds = state.ruleset.lockedHolds
-        ? state.dice.filter((d) => d.held).map((d) => d.id)
-        : [];
-
       const newDice = rollDice(state.dice);
       const newRollsUsed = state.rollsUsed + 1;
 
@@ -169,7 +157,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         dice: newDice,
         rollsUsed: newRollsUsed,
-        lockedDiceIds: newLockedIds,
       };
     }
 
@@ -177,7 +164,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.rollsUsed === 0) return state;
       const die = state.dice.find((d) => d.id === action.dieId);
       if (!die) return state;
-      if (state.ruleset.lockedHolds && die.held && state.lockedDiceIds.includes(die.id)) return state;
       return {
         ...state,
         dice: state.dice.map((d) =>
@@ -236,6 +222,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "TOGGLE_MULTIPLE_WEETZEES": {
       return { ...state, multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled };
+    }
+
+    case "TOGGLE_SEQUENTIAL_TARGETS": {
+      return { ...state, sequentialTargetsEnabled: !state.sequentialTargetsEnabled };
     }
 
     case "RESTORE": {

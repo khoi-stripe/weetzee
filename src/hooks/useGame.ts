@@ -11,6 +11,7 @@ const PREFS_KEY = "weetzee-prefs";
 type HouseRulesPrefs = {
   rollBankingEnabled: boolean;
   multipleWeetzeesEnabled: boolean;
+  sequentialTargetsEnabled: boolean;
 };
 
 function savePrefs(prefs: HouseRulesPrefs) {
@@ -22,7 +23,7 @@ function loadPrefs(): HouseRulesPrefs {
     const raw = localStorage.getItem(PREFS_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { rollBankingEnabled: false, multipleWeetzeesEnabled: false };
+  return { rollBankingEnabled: false, multipleWeetzeesEnabled: false, sequentialTargetsEnabled: false };
 }
 
 type SerializableState = Omit<GameState, "ruleset"> & { rulesetId: string };
@@ -43,7 +44,7 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
     if (saved.rulesetId !== rulesetId || saved.players.length !== playerCount) return null;
     const ruleset = getRuleset(saved.rulesetId);
     const { rulesetId: _, ...rest } = saved;
-    return { ...rest, ruleset, lockedDiceIds: rest.lockedDiceIds ?? [] };
+    return { ...rest, ruleset, sequentialTargetsEnabled: rest.sequentialTargetsEnabled ?? false };
   } catch {
     return null;
   }
@@ -76,6 +77,7 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
       const prefs = loadPrefs();
       if (prefs.rollBankingEnabled && !ruleset.forcedRolls && !ruleset.targetAssignment) dispatch({ type: "TOGGLE_ROLL_BANKING" });
       if (prefs.multipleWeetzeesEnabled) dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
+      if (prefs.sequentialTargetsEnabled && ruleset.targetAssignment) dispatch({ type: "TOGGLE_SEQUENTIAL_TARGETS" });
     }
   }, [playerCount, rulesetId]);
 
@@ -109,6 +111,7 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     savePrefs({
       rollBankingEnabled: !state.rollBankingEnabled,
       multipleWeetzeesEnabled: state.multipleWeetzeesEnabled,
+      sequentialTargetsEnabled: state.sequentialTargetsEnabled,
     });
   }
 
@@ -117,6 +120,16 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     savePrefs({
       rollBankingEnabled: state.rollBankingEnabled,
       multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled,
+      sequentialTargetsEnabled: state.sequentialTargetsEnabled,
+    });
+  }
+
+  function toggleSequentialTargets() {
+    dispatch({ type: "TOGGLE_SEQUENTIAL_TARGETS" });
+    savePrefs({
+      rollBankingEnabled: state.rollBankingEnabled,
+      multipleWeetzeesEnabled: state.multipleWeetzeesEnabled,
+      sequentialTargetsEnabled: !state.sequentialTargetsEnabled,
     });
   }
 
@@ -124,7 +137,7 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     clearState();
   }
 
-  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, endGame };
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, endGame };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

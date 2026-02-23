@@ -56,9 +56,7 @@ export function DiceView({
   onRoll,
   onToggleHold,
   alignTop = false,
-  lockedHolds = false,
   dieValueMap,
-  lockedDiceIds = [],
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -68,15 +66,11 @@ export function DiceView({
   onRoll: () => void;
   onToggleHold: (id: number) => void;
   alignTop?: boolean;
-  lockedHolds?: boolean;
   dieValueMap?: Record<number, number>;
-  lockedDiceIds?: number[];
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
-  const newHolds = heldCount - lockedDiceIds.length;
-  const needsNewHold = lockedHolds && rollsUsed > 0 && newHolds <= 0;
-  const canRoll = rollsUsed < rollsPerTurn && !allHeld && !needsNewHold;
+  const canRoll = rollsUsed < rollsPerTurn && !allHeld;
   const canHold = rollsUsed > 0;
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -267,9 +261,8 @@ export function DiceView({
             held={die.held}
             heldColor={playerColor}
             coloredPips={coloredPips}
-            onClick={canHold && !lockedDiceIds.includes(die.id) ? () => { playTap(); onToggleHold(die.id); } : undefined}
-            disabled={!canHold || lockedDiceIds.includes(die.id)}
-            locked={lockedDiceIds.includes(die.id)}
+            onClick={canHold ? () => { playTap(); onToggleHold(die.id); } : undefined}
+            disabled={!canHold}
             label={rollsUsed === 0 ? "Roll me" : undefined}
             rolling={rollingDice.has(i)}
             flash={flashDice.has(i)}
@@ -284,7 +277,6 @@ export function DiceView({
           canRoll={canRoll}
           onRoll={onRoll}
           showButton={showButton}
-          needsNewHold={needsNewHold}
           allHeld={allHeld}
         />
       </div>
@@ -300,7 +292,6 @@ function RollButton({
   canRoll,
   onRoll,
   showButton,
-  needsNewHold = false,
   allHeld = false,
 }: {
   rollsUsed: number;
@@ -308,7 +299,6 @@ function RollButton({
   canRoll: boolean;
   onRoll: () => void;
   showButton: boolean;
-  needsNewHold?: boolean;
   allHeld?: boolean;
 }) {
   const [introDone, setIntroDone] = useState(false);
@@ -318,8 +308,6 @@ function RollButton({
     label = "ROLL";
   } else if (allHeld || rollsUsed >= rollsPerTurn) {
     label = "SCORE ▸";
-  } else if (needsNewHold) {
-    label = "LOCK A DIE";
   } else {
     label = "ROLL";
   }

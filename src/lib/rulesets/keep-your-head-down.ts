@@ -34,7 +34,7 @@ export const KEEP_YOUR_HEAD_DOWN_RULESET: Ruleset = {
   name: "Keep Your Head Down",
   description: "Hit the targets",
   diceCount: 5,
-  rollsPerTurn: 5,
+  rollsPerTurn: 3,
   categories: makeTargetCategories(10, 20),
   winCondition: "lowest",
   getBonus: () => 0,
@@ -43,7 +43,6 @@ export const KEEP_YOUR_HEAD_DOWN_RULESET: Ruleset = {
       .filter((v): v is number => v !== null && v !== undefined)
       .reduce((sum, v) => sum + v, 0);
   },
-  lockedHolds: true,
   dieValueMap: DIE_VALUE_MAP,
   targetAssignment: true,
 };

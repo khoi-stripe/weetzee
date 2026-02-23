@@ -24,7 +24,6 @@ export interface Ruleset {
   forcedRolls?: boolean;
   highestScoreOnly?: boolean;
   alwaysAvailableId?: string;
-  lockedHolds?: boolean;
   dieValueMap?: Record<number, number>;
   targetAssignment?: boolean;
 }
@@ -67,12 +66,12 @@ export interface GameState {
   currentPlayerIndex: number;
   dice: Die[];
   rollsUsed: number;
-  lockedDiceIds: number[];
   turn: number;
   view: GameView;
   gameOver: boolean;
   rollBankingEnabled: boolean;
   multipleWeetzeesEnabled: boolean;
+  sequentialTargetsEnabled: boolean;
 }
 
 // ===== Actions =====
@@ -84,4 +83,5 @@ export type GameAction =
   | { type: "SET_VIEW"; view: GameView }
   | { type: "TOGGLE_ROLL_BANKING" }
   | { type: "TOGGLE_MULTIPLE_WEETZEES" }
+  | { type: "TOGGLE_SEQUENTIAL_TARGETS" }
   | { type: "RESTORE"; state: GameState };

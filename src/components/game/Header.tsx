@@ -18,6 +18,8 @@ export function Header({
   onToggleRollBanking,
   multipleWeetzeesEnabled,
   onToggleMultipleWeetzees,
+  sequentialTargetsEnabled,
+  onToggleSequentialTargets,
   onEndGame,
 }: {
   showBack?: boolean;
@@ -29,6 +31,8 @@ export function Header({
   onToggleRollBanking?: () => void;
   multipleWeetzeesEnabled?: boolean;
   onToggleMultipleWeetzees?: () => void;
+  sequentialTargetsEnabled?: boolean;
+  onToggleSequentialTargets?: () => void;
   onEndGame?: () => void;
 }) {
   const router = useRouter();
@@ -112,6 +116,8 @@ export function Header({
           onToggleRollBanking={onToggleRollBanking}
           multipleWeetzeesEnabled={multipleWeetzeesEnabled}
           onToggleMultipleWeetzees={onToggleMultipleWeetzees}
+          sequentialTargetsEnabled={sequentialTargetsEnabled}
+          onToggleSequentialTargets={onToggleSequentialTargets}
         />
       )}
 
@@ -216,10 +222,9 @@ function KeepYourHeadDownRules() {
       </Section>
       <Section title="Rolling">
         <RuleRow name="Roll all 5" desc="Start each round by rolling all dice" />
-        <RuleRow name="Lock & roll" desc="Lock at least 1 die, then roll the rest" />
-        <RuleRow name="Locks are permanent" desc="Once locked, a die stays locked" />
+        <RuleRow name="Hold & re-roll" desc="Hold any dice, then re-roll the rest" />
         <RuleRow name="Stop anytime" desc="After any roll, you can stop and score" />
-        <p style={{ marginTop: 8, color: "#999999" }}>Maximum 5 rolls per round (lock 1 die per roll).</p>
+        <p style={{ marginTop: 8, color: "#999999" }}>Maximum 3 rolls per round.</p>
       </Section>
       <Section title="Scoring">
         <p>After rolling, choose an unused target to assign your total against.</p>
@@ -227,7 +232,7 @@ function KeepYourHeadDownRules() {
         <RuleRow name="Any miss" desc="difference × 3 pts" />
       </Section>
       <Section title="Strategy">
-        <p style={{ color: "#999999" }}>Threes are worth 0 — great for low targets, but they make high targets harder to reach. Locking dice early gives you more rolls but less control.</p>
+        <p style={{ color: "#999999" }}>Threes are worth 0 — great for low targets, but they make high targets harder to reach.</p>
       </Section>
     </>
   );
@@ -349,6 +354,8 @@ function RulesModal({
   onToggleRollBanking,
   multipleWeetzeesEnabled,
   onToggleMultipleWeetzees,
+  sequentialTargetsEnabled,
+  onToggleSequentialTargets,
 }: {
   onClose: () => void;
   onChangeRuleset?: () => void;
@@ -359,6 +366,8 @@ function RulesModal({
   onToggleRollBanking?: () => void;
   multipleWeetzeesEnabled?: boolean;
   onToggleMultipleWeetzees?: () => void;
+  sequentialTargetsEnabled?: boolean;
+  onToggleSequentialTargets?: () => void;
 }) {
   const router = useRouter();
   const isAbout = !rulesetId && !showAllRulesets;
@@ -484,7 +493,7 @@ function RulesModal({
               <ClassicRules />
             )}
 
-            {(onToggleRollBanking || onToggleMultipleWeetzees) && (
+            {(onToggleRollBanking || onToggleMultipleWeetzees || onToggleSequentialTargets) && (
               <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
                 <h3
                   style={{
@@ -511,6 +520,14 @@ function RulesModal({
                     desc="Score extra Weetzees for 100 pts each"
                     enabled={!!multipleWeetzeesEnabled}
                     onToggle={onToggleMultipleWeetzees}
+                  />
+                )}
+                {onToggleSequentialTargets && (
+                  <ToggleRow
+                    label="Sequential targets"
+                    desc="Must score targets in order (10, 11, ... 20)"
+                    enabled={!!sequentialTargetsEnabled}
+                    onToggle={onToggleSequentialTargets}
                   />
                 )}
               </div>

@@ -58,7 +58,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
 
     const effectiveMax = getEffectiveRollsPerTurn(state);
     const usedAllRolls = state.rollsUsed >= effectiveMax;
-    const allHeld = state.ruleset.lockedHolds && state.dice.filter((d) => d.held).length >= state.dice.length;
+    const allHeld = state.dice.filter((d) => d.held).length >= state.dice.length;
     const targetModeRolled = state.ruleset.targetAssignment && state.rollsUsed > 0;
     const shouldAutoTransition = usedAllRolls || (allHeld && state.rollsUsed > 0) || targetModeRolled;
 
@@ -259,9 +259,7 @@ function LandscapeLayout({
           onRoll={roll}
           onToggleHold={toggleHold}
           alignTop
-          lockedHolds={!!state.ruleset.lockedHolds}
           dieValueMap={state.ruleset.dieValueMap}
-          lockedDiceIds={state.lockedDiceIds}
         />
       </div>
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
@@ -282,7 +280,7 @@ function LandscapeLayout({
           multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
           hideMiniDice
           landscapeHeader
-          lockedDiceIds={state.lockedDiceIds}
+          sequentialTargetsEnabled={state.sequentialTargetsEnabled}
         />
       </div>
     </div>
@@ -401,9 +399,7 @@ function ContentStrip({
           coloredPips={!!state.ruleset.pipColors}
           onRoll={roll}
           onToggleHold={toggleHold}
-          lockedHolds={!!state.ruleset.lockedHolds}
           dieValueMap={state.ruleset.dieValueMap}
-          lockedDiceIds={state.lockedDiceIds}
         />
       </div>
 
@@ -434,7 +430,7 @@ function ContentStrip({
           justScoredCategoryId={null}
           justScoredPlayerIndex={null}
           multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
-          lockedDiceIds={state.lockedDiceIds}
+          sequentialTargetsEnabled={state.sequentialTargetsEnabled}
         />
       </div>
     </div>

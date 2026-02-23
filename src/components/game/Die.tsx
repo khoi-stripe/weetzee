@@ -29,7 +29,6 @@ function kismetPipColor(value: number): string {
 export function Die({
   value,
   held = false,
-  locked = false,
   heldColor = "#ffffff",
   size = "full",
   onClick,
@@ -42,7 +41,6 @@ export function Die({
 }: {
   value: number;
   held?: boolean;
-  locked?: boolean;
   heldColor?: string;
   size?: "full" | "sm";
   onClick?: () => void;
@@ -63,7 +61,7 @@ export function Die({
   const heldFill = kismetColor ?? heldColor;
 
   const borderColor = held ? heldFill : strokeColor;
-  const bg = locked ? `${heldFill}99` : held ? heldFill : "#000000";
+  const bg = held ? heldFill : "#000000";
   const pipColor = held ? "#000000" : strokeColor;
 
   return (

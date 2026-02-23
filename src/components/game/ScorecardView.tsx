@@ -34,7 +34,7 @@ export function ScorecardView({
   multipleWeetzeesEnabled,
   hideMiniDice = false,
   landscapeHeader = false,
-  lockedDiceIds = [],
+  sequentialTargetsEnabled = false,
 }: {
   players: Player[];
   currentPlayerIndex: number;
@@ -52,7 +52,7 @@ export function ScorecardView({
   multipleWeetzeesEnabled?: boolean;
   hideMiniDice?: boolean;
   landscapeHeader?: boolean;
-  lockedDiceIds?: number[];
+  sequentialTargetsEnabled?: boolean;
 }) {
   const currentPlayer = players[currentPlayerIndex];
   const diceValues = dice.map((d) => d.value);
@@ -69,7 +69,12 @@ export function ScorecardView({
     : {};
 
   const selectableScores = (() => {
-    if (isTargetMode) return rawScores;
+    if (isTargetMode) {
+      if (!sequentialTargetsEnabled) return rawScores;
+      const nextCat = categories.find((c) => currentPlayer.scores[c.id] === undefined && rawScores[c.id] !== undefined);
+      if (!nextCat) return {};
+      return { [nextCat.id]: rawScores[nextCat.id] };
+    }
     if (!ruleset.highestScoreOnly || Object.keys(rawScores).length === 0) return rawScores;
     const maxScore = Math.max(...Object.values(rawScores));
     const filtered: Record<string, number> = {};
@@ -395,9 +400,7 @@ export function ScorecardView({
           coloredPips={!!ruleset.pipColors}
           onRoll={onRoll}
           onToggleHold={onToggleHold}
-          lockedHolds={!!ruleset.lockedHolds}
           dieValueMap={ruleset.dieValueMap}
-          lockedDiceIds={lockedDiceIds}
         />
       )}
     </div>
@@ -979,9 +982,7 @@ function MiniDiceStrip({
   coloredPips = false,
   onRoll,
   onToggleHold,
-  lockedHolds = false,
   dieValueMap,
-  lockedDiceIds = [],
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -990,15 +991,11 @@ function MiniDiceStrip({
   coloredPips?: boolean;
   onRoll: () => void;
   onToggleHold: (id: number) => void;
-  lockedHolds?: boolean;
   dieValueMap?: Record<number, number>;
-  lockedDiceIds?: number[];
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
-  const newHolds = heldCount - lockedDiceIds.length;
-  const needsNewHold = lockedHolds && rollsUsed > 0 && newHolds <= 0;
-  const canRoll = rollsUsed < rollsPerTurn && !allHeld && !needsNewHold;
+  const canRoll = rollsUsed < rollsPerTurn && !allHeld;
   const canHold = rollsUsed > 0;
 
   const rollLabel = rollsUsed === 0
@@ -1073,9 +1070,8 @@ function MiniDiceStrip({
             held={die.held}
             heldColor={playerColor}
             coloredPips={coloredPips}
-            onClick={canHold && !lockedDiceIds.includes(die.id) ? () => { playTap(); onToggleHold(die.id); } : undefined}
-            disabled={!canHold || lockedDiceIds.includes(die.id)}
-            locked={lockedDiceIds.includes(die.id)}
+            onClick={canHold ? () => { playTap(); onToggleHold(die.id); } : undefined}
+            disabled={!canHold}
             rolling={rollingDice.has(i)}
             flash={flashDice.has(i)}
             label={rollsUsed === 0 ? "Roll" : undefined}

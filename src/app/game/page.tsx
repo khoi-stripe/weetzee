@@ -30,6 +30,8 @@ function GameContent() {
         onToggleRollBanking={state.ruleset.forcedRolls || state.ruleset.targetAssignment ? undefined : game.toggleRollBanking}
         multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
         onToggleMultipleWeetzees={state.ruleset.targetAssignment ? undefined : game.toggleMultipleWeetzees}
+        sequentialTargetsEnabled={state.sequentialTargetsEnabled}
+        onToggleSequentialTargets={state.ruleset.targetAssignment ? game.toggleSequentialTargets : undefined}
         onEndGame={game.endGame}
       />
       <GameView game={game} />
