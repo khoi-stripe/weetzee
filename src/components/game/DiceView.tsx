@@ -322,7 +322,7 @@ function RollButton({
         transform: showButton ? undefined : "scale(0)",
       }}
     >
-      {label}
+      <span className={canRoll ? "shimmer" : ""}>{label}</span>
     </button>
   );
 }

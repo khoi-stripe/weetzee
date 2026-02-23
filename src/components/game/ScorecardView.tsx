@@ -414,7 +414,7 @@ function ScoreRow({
             {isSelectedCell ? (
               availableScore
             ) : showPreview ? (
-              <span className={`pressable${isBestChoice ? " shimmer" : ""}`} style={{ display: "inline-block" }}>
+              <span className={`pressable${isBestChoice ? " shimmer-fast" : ""}`} style={{ display: "inline-block" }}>
                 {availableScore}
               </span>
             ) : (
@@ -684,7 +684,7 @@ function MiniDiceStrip({
             padding: 0,
           }}
         >
-          {rollLabel}
+          <span className={canRoll ? "shimmer" : ""}>{rollLabel}</span>
         </button>
       </div>
     </div>

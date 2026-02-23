@@ -127,7 +127,11 @@ body {
 }
 
 .shimmer {
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+.shimmer-fast {
+  animation: shimmer 2s ease-in-out infinite;
 }
 
 .pressable {
