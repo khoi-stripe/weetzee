@@ -222,11 +222,11 @@ export function ScorecardView({
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: landscapeHeader ? "16px" : "0 16px 16px", gap: 16 }}>
 
       {/* Scrollable table with fade */}
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+      <div className="relative min-h-0 flex-1 rounded overflow-hidden" style={{ border: "1px solid #ffffff" }}>
         <div
           ref={scrollRef}
-          className="min-h-0 overflow-y-auto overflow-x-auto rounded scrollbar-visible"
-          style={{ border: "1px solid #ffffff", maxHeight: "100%" }}
+          className="min-h-0 overflow-y-auto overflow-x-auto scrollbar-visible"
+          style={{ height: "100%" }}
         >
           {isTargetMode ? (
             <TargetTable
@@ -254,8 +254,9 @@ export function ScorecardView({
             />
           ) : (
             <table
-              className="border-collapse"
               style={{
+                borderCollapse: "separate",
+                borderSpacing: 0,
                 tableLayout: "fixed",
                 minWidth: players.length > 3 ? `${140 + players.length * 64}px` : "100%",
                 width: "100%",
@@ -272,6 +273,7 @@ export function ScorecardView({
                   <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>{""}</Th>
                   {players.map((p, i) => {
                     const isActive = landscapeHeader && i === currentPlayerIndex;
+                    const isLast = i === players.length - 1;
                     return (
                       <Th
                         key={p.id}
@@ -282,6 +284,7 @@ export function ScorecardView({
                           color: isActive ? "#000000" : p.color,
                           background: isActive ? p.color : "#000000",
                           fontWeight: isActive ? 500 : 400,
+                          ...(isLast ? { borderRight: "none" } : {}),
                         }}
                       >
                         {p.name}
@@ -348,10 +351,10 @@ export function ScorecardView({
         <div
           style={{
             position: "absolute",
-            bottom: 0,
+            bottom: 1,
             left: 1,
             right: 1,
-            height: 60,
+            height: 48,
             background: "linear-gradient(to bottom, transparent, #000000)",
             pointerEvents: "none",
             opacity: showFade ? 1 : 0,
@@ -461,8 +464,9 @@ function TargetTable({
 }) {
   return (
     <table
-      className="border-collapse"
       style={{
+        borderCollapse: "separate",
+        borderSpacing: 0,
         tableLayout: "fixed",
         minWidth: players.length > 3 ? `${80 + players.length * 64}px` : "100%",
         width: "100%",
@@ -479,6 +483,7 @@ function TargetTable({
           <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>Target</Th>
           {players.map((p, i) => {
             const isActive = landscapeHeader && i === currentPlayerIndex;
+            const isLast = i === players.length - 1;
             return (
               <Th
                 key={p.id}
@@ -489,6 +494,7 @@ function TargetTable({
                   color: isActive ? "#000000" : p.color,
                   background: isActive ? p.color : "#000000",
                   fontWeight: isActive ? 500 : 400,
+                  ...(isLast ? { borderRight: "none" } : {}),
                 }}
               >
                 {p.name}
@@ -950,12 +956,12 @@ function TotalRow({
         style={{
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
+          borderTop: "1px solid #ffffff",
           background: "#000000",
 
           fontSize: 13,
           fontWeight: 600,
           color: "#ffffff",
-          boxShadow: "inset 0 1px 0 #ffffff",
           position: "sticky",
           left: 0,
           bottom: 0,
@@ -977,7 +983,7 @@ function TotalRow({
             style={{
               padding: "8px 16px",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
-              boxShadow: "inset 0 1px 0 #ffffff",
+              borderTop: "1px solid #ffffff",
               background: inactive ? dimHex(player.color, 0.4) : player.color,
               fontSize: 13,
               fontWeight: 600,
@@ -1144,13 +1150,13 @@ function Th({
       style={{
         padding: "8px 16px",
         borderRight: "1px solid #ffffff",
+        borderBottom: "1px solid #ffffff",
         background: "#000000",
 
         fontSize: 13,
         fontWeight: 400,
         color: "#ffffff",
         textAlign: "left",
-        boxShadow: "inset 0 -1px 0 #ffffff",
         ...style,
       }}
     >
