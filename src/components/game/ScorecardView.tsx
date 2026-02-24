@@ -222,11 +222,11 @@ export function ScorecardView({
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: landscapeHeader ? "16px" : "0 16px 16px", gap: 16 }}>
 
       {/* Scrollable table with fade */}
-      <div className="relative min-h-0 flex-1 rounded overflow-hidden" style={{ border: "1px solid #ffffff" }}>
+      <div className="relative min-h-0 flex-1">
         <div
           ref={scrollRef}
-          className="min-h-0 overflow-y-auto overflow-x-auto scrollbar-visible"
-          style={{ height: "100%" }}
+          className="min-h-0 overflow-y-auto overflow-x-auto rounded scrollbar-visible"
+          style={{ border: "1px solid #ffffff", maxHeight: "100%" }}
         >
           {isTargetMode ? (
             <TargetTable
