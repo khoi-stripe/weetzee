@@ -358,7 +358,7 @@ function RollButton({
         outlineOffset: -1,
         opacity: canRoll ? 1 : 0.35,
 
-        fontSize: "8cqi",
+        fontSize: "clamp(13px, 8cqi, 15px)",
         fontWeight: 500,
         color: "#ffffff",
         background: "transparent",

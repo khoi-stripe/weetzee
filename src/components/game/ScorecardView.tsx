@@ -136,14 +136,12 @@ export function ScorecardView({
     }
   }, [currentPlayerIndex]);
   const [showFade, setShowFade] = useState(false);
-  const [scrolledX, setScrolledX] = useState(false);
 
   const checkFade = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 2;
     setShowFade(el.scrollHeight > el.clientHeight && !atBottom);
-    setScrolledX(el.scrollLeft > 0);
   }, []);
 
   const scrollLock = useRef<{ axis: "x" | "y" | null; startX: number; startY: number; scrollX: number; scrollY: number }>({
@@ -222,12 +220,12 @@ export function ScorecardView({
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: landscapeHeader ? "16px" : "0 16px 16px", gap: 16 }}>
 
       {/* Scrollable table with fade */}
-      <div className="relative min-h-0 flex-1">
-        <div
-          ref={scrollRef}
-          className="min-h-0 overflow-y-auto overflow-x-auto rounded scrollbar-visible"
-          style={{ border: "1px solid #ffffff", maxHeight: "100%" }}
-        >
+      <div className="min-h-0 flex-1 flex flex-col">
+        <div className="relative rounded overflow-hidden min-h-0 flex flex-col" style={{ border: "1px solid #ffffff" }}>
+          <div
+            ref={scrollRef}
+            className="overflow-y-auto overflow-x-auto scrollbar-visible flex-auto min-h-0"
+          >
           {isTargetMode ? (
             <TargetTable
               categories={categories}
@@ -337,30 +335,17 @@ export function ScorecardView({
         <div
           style={{
             position: "absolute",
-            top: 1,
-            bottom: 1,
-            left: 141,
-            width: 1,
-            background: "#ffffff",
-            pointerEvents: "none",
-            zIndex: 4,
-            opacity: scrolledX ? 1 : 0,
-            transition: "opacity 200ms",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: 1,
-            left: 1,
-            right: 1,
-            height: 48,
+            bottom: 37,
+            left: 0,
+            right: 0,
+            height: 40,
             background: "linear-gradient(to bottom, transparent, #000000)",
             pointerEvents: "none",
             opacity: showFade ? 1 : 0,
             transition: "opacity 200ms",
           }}
         />
+        </div>
       </div>
 
       {!isTargetMode && (

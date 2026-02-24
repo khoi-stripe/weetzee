@@ -133,7 +133,7 @@ function RulesetContent() {
                 outline: "1px solid #ffffff",
                 outlineOffset: -1,
                 background: "transparent",
-                fontSize: "8cqi",
+                fontSize: "clamp(13px, 8cqi, 15px)",
                 fontWeight: 500,
                 color: "#ffffff",
                 cursor: "pointer",
