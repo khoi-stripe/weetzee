@@ -44,7 +44,7 @@ export function PlayerSelector({
   const containerRef = useRef<HTMLDivElement>(null);
   const ITEM_COUNT = max + 1;
   const [layout, setLayout] = useState({ cols: 1, rows: ITEM_COUNT, cellSize: 0 });
-  const GAP = 32;
+  const GAP = 16;
 
   useEffect(() => {
     const el = containerRef.current;

@@ -34,7 +34,7 @@ function RulesetContent() {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState({ cols: 2, rows: 3, cellSize: 0 });
-  const GAP = 32;
+  const GAP = 16;
 
   useEffect(() => {
     const el = containerRef.current;
