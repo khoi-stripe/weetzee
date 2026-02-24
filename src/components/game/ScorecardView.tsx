@@ -348,10 +348,10 @@ export function ScorecardView({
         <div
           style={{
             position: "absolute",
-            bottom: 38,
+            bottom: 0,
             left: 1,
             right: 1,
-            height: 40,
+            height: 60,
             background: "linear-gradient(to bottom, transparent, #000000)",
             pointerEvents: "none",
             opacity: showFade ? 1 : 0,

@@ -28,6 +28,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
   const touchStartY = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLandscape, setIsLandscape] = useState(false);
+  const userPrefersScorecard = useRef(defaultPanel === 1);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -45,6 +46,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
   // Sync state.view → activePanel (for manual SET_VIEW calls)
   useEffect(() => {
     const target = state.view === "scorecard" ? 1 : 0;
+    if (target === 0 && userPrefersScorecard.current) return;
     if (target !== activePanel) {
       setActivePanel(target as 0 | 1);
     }
@@ -70,7 +72,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
 
     if (shouldAutoTransition && activePanel === 0) {
       autoTransitionTimer.current = setTimeout(() => {
-        snapTo(1);
+        snapTo(1, true);
       }, 1500);
     }
 
@@ -82,11 +84,14 @@ export function GameView({ game }: { game: UseGameReturn }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.rollsUsed, state.ruleset.rollsPerTurn, state.rollBankingEnabled, isLandscape, state.dice]);
 
-  function snapTo(panel: 0 | 1) {
+  function snapTo(panel: 0 | 1, isAuto = false) {
     setIsDragging(false);
     setDragOffset(0);
     setActivePanel(panel);
     setView(panel === 1 ? "scorecard" : "rolling");
+    if (!isAuto) {
+      userPrefersScorecard.current = panel === 1;
+    }
   }
 
   // ===== Touch handlers (portrait only) =====
@@ -196,6 +201,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
           scoreCategory={scoreCategory}
           snapTo={snapTo}
           onShowInterstitial={showInterstitial}
+          userPrefersScorecard={userPrefersScorecard}
         />
       )}
       {interstitialPlayer && (
@@ -311,6 +317,7 @@ function ContentStrip({
   scoreCategory,
   snapTo,
   onShowInterstitial,
+  userPrefersScorecard,
 }: {
   activePanel: 0 | 1;
   isDragging: boolean;
@@ -322,6 +329,7 @@ function ContentStrip({
   scoreCategory: (id: string) => void;
   snapTo: (panel: 0 | 1) => void;
   onShowInterstitial: (player: Player | null) => void;
+  userPrefersScorecard: React.RefObject<boolean>;
 }) {
   const stripRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -369,7 +377,7 @@ function ContentStrip({
     const nextPlayer = state.players[nextPlayerIndex];
     const isSinglePlayer = state.players.length === 1;
 
-    const returnPanel = state.ruleset.targetAssignment ? 1 : 0;
+    const returnPanel = state.ruleset.targetAssignment || userPrefersScorecard.current ? 1 : 0;
 
     scoreTimer.current = setTimeout(() => {
       scoreCategory(id);
