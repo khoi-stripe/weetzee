@@ -371,7 +371,8 @@ export function ScorecardView({
           className="shrink-0 w-full pressable"
           style={{
             padding: "12px 0",
-            border: "1px solid #ffffff",
+            outline: "1px solid #ffffff",
+            outlineOffset: -1,
             borderRadius: 4,
             background: "#ffffff",
             fontSize: 13,
@@ -702,7 +703,8 @@ function TargetConfirmModal({
             style={{
               width: 100,
               height: 100,
-              border: "1px solid #ffffff",
+              outline: "1px solid #ffffff",
+              outlineOffset: -1,
               background: "transparent",
               fontSize: 13,
               fontWeight: 500,
@@ -718,7 +720,8 @@ function TargetConfirmModal({
             style={{
               width: 100,
               height: 100,
-              border: "1px solid #ffffff",
+              outline: "1px solid #ffffff",
+              outlineOffset: -1,
               background: "#ffffff",
               fontSize: 13,
               fontWeight: 500,
@@ -1108,7 +1111,8 @@ function MiniDiceStrip({
           disabled={!canRoll}
           className="w-full h-full flex items-center justify-center rounded-full pressable"
           style={{
-            border: "1px solid #ffffff",
+            outline: "1px solid #ffffff",
+            outlineOffset: -1,
             background: "transparent",
             fontSize: "clamp(9px, 18cqi, 14px)",
             fontWeight: 500,

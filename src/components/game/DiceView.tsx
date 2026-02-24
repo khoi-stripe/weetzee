@@ -354,7 +354,8 @@ function RollButton({
       style={{
         width: "100%",
         height: "100%",
-        border: "1px solid #ffffff",
+        outline: "1px solid #ffffff",
+        outlineOffset: -1,
         opacity: canRoll ? 1 : 0.35,
 
         fontSize: "8cqi",

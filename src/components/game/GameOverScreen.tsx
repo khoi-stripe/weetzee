@@ -66,7 +66,8 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
           style={{
             width: 109.67,
             height: 109.67,
-            border: "1px solid #ffffff",
+            outline: "1px solid #ffffff",
+            outlineOffset: -1,
             background: "transparent",
 
             fontSize: 13,

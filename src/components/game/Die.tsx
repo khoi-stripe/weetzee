@@ -75,7 +75,8 @@ export function Die({
       ].join(" ")}
       style={{
         borderRadius: rolling ? undefined : 4,
-        border: `1px solid ${borderColor}`,
+        outline: `1px solid ${borderColor}`,
+        outlineOffset: -1,
         background: bg,
         containerType: "inline-size",
       }}

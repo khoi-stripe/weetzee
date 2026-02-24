@@ -43,7 +43,8 @@ export function PlayerBar({
         ref={barRef}
         className={`flex overflow-hidden ${onClick ? "pressable" : ""}`}
         style={{
-          border: "1px solid #ffffff",
+          outline: "1px solid #ffffff",
+          outlineOffset: -1,
           borderRadius: 4,
 
           fontSize: 13,

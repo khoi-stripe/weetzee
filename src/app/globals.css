@@ -45,6 +45,14 @@ body {
   color: #ffffff;
   font-family: "IBM Plex Mono", monospace;
   -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Persistent thin scrollbar */
@@ -148,9 +156,9 @@ body {
 .pressable {
   transition: transform 550ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
+  touch-action: manipulation;
 }
+
 .pressable:active {
   transform: scale(0.85);
   transition: transform 800ms cubic-bezier(0.23, 1, 0.32, 1);

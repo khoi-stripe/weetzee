@@ -228,7 +228,8 @@ function ActionButton({
       style={{
         padding: "10px 20px",
         borderRadius: 999,
-        border: `1px solid ${color}`,
+        outline: `1px solid ${color}`,
+        outlineOffset: -1,
         background: filled ? color : "transparent",
         color: filled ? "#000000" : color,
         fontSize: 13,

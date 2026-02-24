@@ -56,6 +56,7 @@ export function Header({
             onClick={handleBack}
             className="absolute flex items-center justify-center pressable"
             style={{
+              position: "absolute",
               left: 4,
               top: 2,
               padding: "8px 12px",
@@ -88,6 +89,7 @@ export function Header({
           onClick={() => { playTap(); setShowRules(true); }}
           className="absolute flex items-center justify-center pressable"
           style={{
+            position: "absolute",
             right: 4,
             top: 2,
             padding: "8px 12px",
@@ -147,7 +149,8 @@ export function Header({
                 style={{
                   width: 100,
                   height: 100,
-                  border: "1px solid #ffffff",
+                  outline: "1px solid #ffffff",
+                  outlineOffset: -1,
                   background: "transparent",
     
                   fontSize: 13,
@@ -164,7 +167,8 @@ export function Header({
                 style={{
                   width: 100,
                   height: 100,
-                  border: "1px solid #ffffff",
+                  outline: "1px solid #ffffff",
+                  outlineOffset: -1,
                   background: "#ffffff",
     
                   fontSize: 13,
@@ -436,6 +440,7 @@ function RulesModal({
           onClick={() => { playTap(); onClose(); }}
           className="absolute flex items-center justify-center pressable"
           style={{
+            position: "absolute",
             right: 4,
             top: 2,
             padding: "8px 12px",
@@ -455,7 +460,7 @@ function RulesModal({
 
       {/* Scrollable content */}
       <div
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto selectable"
         style={{
           padding: "0 24px 48px",
 
@@ -493,7 +498,8 @@ function RulesModal({
                   className="pressable"
                   style={{
                     background: "none",
-                    border: "1px solid #666666",
+                    outline: "1px solid #666666",
+                    outlineOffset: -1,
                     borderRadius: 4,
                     padding: "4px 10px",
     
