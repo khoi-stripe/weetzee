@@ -222,7 +222,7 @@ export function ScorecardView({
     <div className="flex flex-col w-full flex-1 min-h-0" style={{ padding: landscapeHeader ? "16px" : "0 16px 16px", gap: 16 }}>
 
       {/* Scrollable table with fade */}
-      <div className="relative min-h-0">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         <div
           ref={scrollRef}
           className="min-h-0 overflow-y-auto overflow-x-auto rounded scrollbar-visible"
