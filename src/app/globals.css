@@ -164,3 +164,22 @@ body {
   transform: scale(0.85);
   transition: transform 800ms cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+/* Block landscape on phones (max-height ≤ 500px excludes iPads) */
+@media (orientation: landscape) and (max-height: 500px) {
+  body::after {
+    content: "Please rotate to portrait";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #000000;
+    color: #ffffff;
+    display: grid;
+    place-content: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    padding: 32px;
+  }
+}
