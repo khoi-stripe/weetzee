@@ -38,6 +38,8 @@ export function Die({
   label,
   coloredPips = false,
   dieValueMap,
+  setAside = false,
+  setAsideColor,
 }: {
   value: number;
   held?: boolean;
@@ -50,6 +52,8 @@ export function Die({
   label?: string;
   coloredPips?: boolean;
   dieValueMap?: Record<number, number>;
+  setAside?: boolean;
+  setAsideColor?: string;
 }) {
   const mappedValue = dieValueMap?.[value];
   const pips = PIP_LAYOUTS[value] ?? [];
@@ -60,9 +64,23 @@ export function Die({
   const strokeColor = kismetColor ?? accent ?? "#ffffff";
   const heldFill = kismetColor ?? heldColor;
 
-  const borderColor = held ? heldFill : strokeColor;
-  const bg = held ? heldFill : "#000000";
-  const pipColor = held ? "#000000" : strokeColor;
+  let borderColor: string;
+  let bg: string;
+  let pipColor: string;
+
+  if (setAside && setAsideColor) {
+    borderColor = setAsideColor;
+    bg = setAsideColor;
+    pipColor = "#000000";
+  } else if (held) {
+    borderColor = heldFill;
+    bg = heldFill;
+    pipColor = "#000000";
+  } else {
+    borderColor = strokeColor;
+    bg = "#000000";
+    pipColor = strokeColor;
+  }
 
   return (
     <div

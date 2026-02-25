@@ -1,5 +1,5 @@
 import type { Ruleset, ScoreCategory } from "../types";
-import { counts, sum, hasNOfAKind, isLargeStraight, isFullHouse, computeTotal } from "./classic";
+import { counts, sum, hasNOfAKind, isLargeStraight, isLargeStraightN, isFullHouse, isFullHouseN, computeTotal } from "./classic";
 
 export function pipColor(value: number): "white" | "red" | "green" {
   if (value <= 2) return "white";
@@ -29,6 +29,10 @@ function hasTwoPairSameColor(dice: number[]): boolean {
 
 function isFullHouseSameColor(dice: number[]): boolean {
   return isFullHouse(dice) && allSameColor(dice);
+}
+
+function isFullHouseNSameColor(dice: number[]): boolean {
+  return isFullHouseN(dice) && allSameColor(dice);
 }
 
 // ===== Basic Section (same as upper) =====
@@ -117,6 +121,89 @@ function getKismetBonus(scores: Record<string, number | null>): number {
 
 function getKismetTotal(scores: Record<string, number | null>, extraWeetzees: number = 0): number {
   return computeTotal(scores, getKismetBonus, extraWeetzees);
+}
+
+export function makeKismetCategories(diceCount: number): ScoreCategory[] {
+  const is6 = diceCount === 6;
+  const maxSum = 6 * diceCount;
+
+  const basic: ScoreCategory[] = [1, 2, 3, 4, 5, 6].map((face) => ({
+    id: `upper_${face}`,
+    name: ["Aces", "Deuces", "Treys", "Fours", "Fives", "Sixes"][face - 1],
+    evaluate: (dice: number[]) => dice.filter((d) => d === face).reduce((a, b) => a + b, 0),
+    maxScore: face * diceCount,
+  }));
+
+  const kismet: ScoreCategory[] = [
+    {
+      id: "two_pair_same_color",
+      name: "2 pair same color",
+      evaluate: (dice: number[]) => (hasTwoPairSameColor(dice) ? sum(dice) : null),
+      maxScore: maxSum,
+    },
+    {
+      id: "three_of_a_kind",
+      name: "3 of a kind",
+      evaluate: (dice: number[]) => (hasNOfAKind(dice, 3) ? sum(dice) : null),
+      maxScore: maxSum,
+    },
+    {
+      id: "straight",
+      name: "Straight",
+      evaluate: is6
+        ? (dice: number[]) => (isLargeStraightN(dice) ? 30 : null)
+        : (dice: number[]) => (isLargeStraight(dice) ? 30 : null),
+      maxScore: 30,
+    },
+    {
+      id: "flush",
+      name: "Flush",
+      evaluate: (dice: number[]) => (allSameColor(dice) ? 35 : null),
+      maxScore: 35,
+    },
+    {
+      id: "full_house",
+      name: "Full house",
+      evaluate: is6
+        ? (dice: number[]) => (isFullHouseN(dice) ? sum(dice) + 15 : null)
+        : (dice: number[]) => (isFullHouse(dice) ? sum(dice) + 15 : null),
+      maxScore: maxSum + 15,
+    },
+    {
+      id: "full_house_same_color",
+      name: "Full house same color",
+      evaluate: is6
+        ? (dice: number[]) => (isFullHouseNSameColor(dice) ? sum(dice) + 20 : null)
+        : (dice: number[]) => (isFullHouseSameColor(dice) ? sum(dice) + 20 : null),
+      maxScore: maxSum + 20,
+    },
+    {
+      id: "four_of_a_kind",
+      name: "4 of a kind",
+      evaluate: (dice: number[]) => (hasNOfAKind(dice, 4) ? sum(dice) + 25 : null),
+      maxScore: maxSum + 25,
+    },
+    {
+      id: "yarborough",
+      name: "Yarborough",
+      evaluate: (dice: number[]) => sum(dice),
+      maxScore: maxSum,
+    },
+    {
+      id: "kismet",
+      name: "Kismet",
+      evaluate: (dice: number[]) => (hasNOfAKind(dice, diceCount) ? sum(dice) + 50 : null),
+      maxScore: maxSum + 50,
+    },
+    {
+      id: "bonus",
+      name: "Bonus",
+      evaluate: () => null,
+      maxScore: 75,
+    },
+  ];
+
+  return [...basic, ...kismet];
 }
 
 export const KISMET_RULESET: Ruleset = {

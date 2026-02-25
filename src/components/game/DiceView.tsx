@@ -61,6 +61,11 @@ export function DiceView({
   setAsideDiceIds = [],
   farkled = false,
   hugged = false,
+  farkleActionLabel,
+  farkleActionEnabled = false,
+  farkleBankEnabled = false,
+  farkleOnBank,
+  farkleBankLabel,
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -75,6 +80,11 @@ export function DiceView({
   setAsideDiceIds?: number[];
   farkled?: boolean;
   hugged?: boolean;
+  farkleActionLabel?: string;
+  farkleActionEnabled?: boolean;
+  farkleBankEnabled?: boolean;
+  farkleOnBank?: () => void;
+  farkleBankLabel?: string;
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
@@ -85,7 +95,9 @@ export function DiceView({
   const [layout, setLayout] = useState({ cols: 2, rows: 3, cellSize: 0 });
   const GAP = 16;
   const showRollButton = !farkleMode;
-  const ITEM_COUNT = dice.length + (showRollButton ? 1 : 0);
+  const showFarkleButtons = farkleMode;
+  const extraItems = showRollButton ? 1 : showFarkleButtons ? 2 : 0;
+  const ITEM_COUNT = dice.length + extraItems;
 
   // --- Intro fade-in ---
   const staggerOrder = useRef<number[]>(shuffle(dice.map((_, i) => i)));
@@ -273,6 +285,8 @@ export function DiceView({
       {dice.map((die, i) => {
         const isSetAside = farkleMode && setAsideDiceIds.includes(die.id);
         const dieCanHold = canHold && !isSetAside;
+        // Set-aside dice get sorted to front via CSS order
+        const order = farkleMode && isSetAside ? 0 : 1;
         return (
           <div
             key={die.id}
@@ -280,8 +294,9 @@ export function DiceView({
             style={{
               width: layout.cellSize || "100%",
               height: layout.cellSize || "100%",
-              opacity: isSetAside ? 0.3 : (visibleDice.has(i) ? undefined : 0),
+              opacity: isSetAside ? 0.4 : (visibleDice.has(i) ? undefined : 0),
               transition: "opacity 300ms",
+              order,
             }}
           >
             <Die
@@ -291,16 +306,18 @@ export function DiceView({
               coloredPips={coloredPips}
               onClick={dieCanHold ? () => { playTap(); onToggleHold(die.id); } : undefined}
               disabled={!dieCanHold}
-              label={!farkleMode && rollsUsed === 0 ? "Roll me" : undefined}
+              label={rollsUsed === 0 ? "Roll me" : undefined}
               rolling={rollingDice.has(i)}
               flash={flashDice.has(i)}
               dieValueMap={dieValueMap}
+              setAside={isSetAside}
+              setAsideColor={playerColor}
             />
           </div>
         );
       })}
       {showRollButton && (
-        <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
+        <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
           <RollButton
             rollsUsed={rollsUsed}
             rollsPerTurn={rollsPerTurn}
@@ -308,9 +325,132 @@ export function DiceView({
             onRoll={onRoll}
             showButton={showButton}
             allHeld={allHeld}
+            color={playerColor}
           />
         </div>
       )}
+      {showFarkleButtons && (
+        <>
+          <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
+            <FarkleActionButton
+              label={farkleActionLabel ?? "ROLL"}
+              enabled={farkleActionEnabled}
+              onAction={onRoll}
+              showButton={showButton}
+              color={playerColor}
+            />
+          </div>
+          <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
+            <FarkleBankButton
+              label={farkleBankLabel ?? "BANK"}
+              enabled={farkleBankEnabled}
+              onBank={farkleOnBank ?? (() => {})}
+              showButton={showButton}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ===== Farkle Action Button (circular, in-grid) =====
+
+function FarkleActionButton({
+  label,
+  enabled,
+  onAction,
+  showButton,
+  color,
+}: {
+  label: string;
+  enabled: boolean;
+  onAction: () => void;
+  showButton: boolean;
+  color: string;
+}) {
+  const [introDone, setIntroDone] = useState(false);
+  const animating = showButton && !introDone;
+
+  return (
+    <button
+      onClick={enabled ? onAction : undefined}
+      disabled={!enabled}
+      className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
+      onAnimationEnd={() => setIntroDone(true)}
+      style={{
+        width: "100%",
+        height: "100%",
+        outline: `1px solid ${enabled ? color : "#ffffff"}`,
+        outlineOffset: -1,
+        opacity: enabled ? 1 : 0.35,
+        fontSize: "clamp(9px, 8cqi, 100px)",
+        fontWeight: 600,
+        color: enabled ? color : "#ffffff",
+        background: "transparent",
+        cursor: enabled ? "pointer" : "default",
+        transform: showButton ? undefined : "scale(0)",
+        textAlign: "center",
+        lineHeight: 1.2,
+        padding: "8%",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ===== Farkle Bank Button (diamond, in-grid) =====
+
+function FarkleBankButton({
+  label,
+  enabled,
+  onBank,
+  showButton,
+}: {
+  label: string;
+  enabled: boolean;
+  onBank: () => void;
+  showButton: boolean;
+}) {
+  const [introDone, setIntroDone] = useState(false);
+  const animating = showButton && !introDone;
+
+  return (
+    <div
+      className="flex items-center justify-center"
+      style={{
+        width: "100%",
+        height: "100%",
+        transform: showButton ? undefined : "scale(0)",
+      }}
+    >
+      <button
+        onClick={enabled ? onBank : undefined}
+        disabled={!enabled}
+        className={`flex items-center justify-center pressable ${animating ? "animate-scale-in" : ""}`}
+        onAnimationEnd={() => setIntroDone(true)}
+        style={{
+          width: "71%",
+          height: "71%",
+          transform: "rotate(45deg)",
+          outline: "1px solid #ffffff",
+          outlineOffset: -1,
+          borderRadius: 4,
+          opacity: enabled ? 1 : 0.35,
+          fontSize: "clamp(9px, 8cqi, 100px)",
+          fontWeight: 600,
+          color: enabled ? "#000000" : "#ffffff",
+          background: enabled ? "#ffffff" : "transparent",
+          cursor: enabled ? "pointer" : "default",
+          lineHeight: 1.2,
+          padding: "4%",
+        }}
+      >
+        <span style={{ transform: "rotate(-45deg)", display: "block", textAlign: "center" }}>
+          {label}
+        </span>
+      </button>
     </div>
   );
 }
@@ -324,6 +464,7 @@ function RollButton({
   onRoll,
   showButton,
   allHeld = false,
+  color = "#ffffff",
 }: {
   rollsUsed: number;
   rollsPerTurn: number;
@@ -331,6 +472,7 @@ function RollButton({
   onRoll: () => void;
   showButton: boolean;
   allHeld?: boolean;
+  color?: string;
 }) {
   const [introDone, setIntroDone] = useState(false);
 
@@ -354,13 +496,13 @@ function RollButton({
       style={{
         width: "100%",
         height: "100%",
-        outline: "1px solid #ffffff",
+        outline: `1px solid ${canRoll ? color : "#ffffff"}`,
         outlineOffset: -1,
         opacity: canRoll ? 1 : 0.35,
 
-        fontSize: "clamp(13px, 8cqi, 15px)",
+        fontSize: "clamp(9px, 8cqi, 100px)",
         fontWeight: 500,
-        color: "#ffffff",
+        color: canRoll ? color : "#ffffff",
         background: "transparent",
         cursor: canRoll ? "pointer" : "default",
         transform: showButton ? undefined : "scale(0)",

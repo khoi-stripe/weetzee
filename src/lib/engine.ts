@@ -1,6 +1,8 @@
 import type { Die, GameState, GameAction, Player, Ruleset } from "./types";
 import { PLAYER_COLORS } from "./types";
 import { hasScoring, scoreDice, isValidSelection } from "./rulesets/farkle";
+import { makeClassicCategories } from "./rulesets/classic";
+import { makeKismetCategories } from "./rulesets/kismet";
 
 // ===== Dice Helpers =====
 
@@ -58,6 +60,9 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     mustSetAside: false,
     finalRound: false,
     finalRoundTriggeredBy: -1,
+    scoringHintsEnabled: true,
+    sixDiceEnabled: false,
+    orderedScoringEnabled: false,
   };
 }
 
@@ -123,7 +128,8 @@ function advanceTurn(state: GameState): GameState {
   const nextTurn =
     nextPlayerIndex === 0 ? state.turn + 1 : state.turn;
 
-  const newDice = makeDice(state.ruleset.diceCount);
+  const effectiveDiceCount = state.sixDiceEnabled ? 6 : state.ruleset.diceCount;
+  const newDice = makeDice(effectiveDiceCount);
 
   let players = state.players;
   if (state.rollBankingEnabled) {
@@ -282,6 +288,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case "TOGGLE_SEQUENTIAL_TARGETS": {
+      if (state.rollsUsed > 0 || state.turn > 1) return state;
       return { ...state, sequentialTargetsEnabled: !state.sequentialTargetsEnabled };
     }
 
@@ -295,7 +302,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       const score = scoreDice(selectedValues);
       const newSetAside = [...state.setAsideDiceIds, ...heldDice.map(d => d.id)];
-      const allSetAside = newSetAside.length === state.ruleset.diceCount;
+      const effectiveDiceCount = state.sixDiceEnabled ? 6 : state.ruleset.diceCount;
+      const allSetAside = newSetAside.length === effectiveDiceCount;
 
       return {
         ...state,
@@ -331,6 +339,37 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
 
       return advanceTurn(nextState);
+    }
+
+    case "TOGGLE_SIX_DICE": {
+      if (state.rollsUsed > 0 || state.turn > 1) return state;
+      const enabling = !state.sixDiceEnabled;
+      const newDiceCount = enabling ? 6 : state.ruleset.diceCount;
+      let newCategories = state.ruleset.categories;
+      if (state.ruleset.id === "weetzee") {
+        newCategories = makeClassicCategories(newDiceCount);
+      } else if (state.ruleset.id === "kismet") {
+        newCategories = makeKismetCategories(newDiceCount);
+      }
+      return {
+        ...state,
+        sixDiceEnabled: enabling,
+        dice: makeDice(newDiceCount),
+        ruleset: { ...state.ruleset, categories: newCategories },
+      };
+    }
+
+    case "TOGGLE_ORDERED_SCORING": {
+      if (state.rollsUsed > 0 || state.turn > 1) return state;
+      return {
+        ...state,
+        orderedScoringEnabled: !state.orderedScoringEnabled,
+        ruleset: { ...state.ruleset, orderedScoring: !state.orderedScoringEnabled },
+      };
+    }
+
+    case "TOGGLE_SCORING_HINTS": {
+      return { ...state, scoringHintsEnabled: !state.scoringHintsEnabled };
     }
 
     case "RESTORE": {

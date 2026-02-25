@@ -10,13 +10,19 @@ import { GameOverScreen } from "@/components/game/GameOverScreen";
 function GameContent() {
   const params = useSearchParams();
   const playerCount = Math.min(Math.max(parseInt(params.get("players") ?? "2", 10), 1), 6);
-  const rulesetId = params.get("ruleset") ?? "classic";
+  const rulesetId = params.get("ruleset") ?? "weetzee";
   const game = useGame(playerCount, rulesetId);
   const { state } = game;
 
   if (state.gameOver) {
     return <GameOverScreen players={state.players} ruleset={state.ruleset} />;
   }
+
+  const gameStarted = state.rollsUsed > 0 || state.turn > 1;
+  const isFarkle = !!state.ruleset.farkle;
+  const isTarget = !!state.ruleset.targetAssignment;
+  const showSixDice = !isFarkle && !isTarget;
+  const showOrderedScoring = !isFarkle && !isTarget;
 
   return (
     <div
@@ -27,11 +33,17 @@ function GameContent() {
         rulesetId={state.ruleset.id}
         rulesetName={state.ruleset.name}
         rollBankingEnabled={state.rollBankingEnabled}
-        onToggleRollBanking={state.ruleset.forcedRolls || state.ruleset.targetAssignment || state.ruleset.farkle ? undefined : game.toggleRollBanking}
+        onToggleRollBanking={state.ruleset.forcedRolls || isTarget || isFarkle ? undefined : game.toggleRollBanking}
         multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
-        onToggleMultipleWeetzees={state.ruleset.targetAssignment || state.ruleset.farkle ? undefined : game.toggleMultipleWeetzees}
-        sequentialTargetsEnabled={state.sequentialTargetsEnabled}
-        onToggleSequentialTargets={state.ruleset.targetAssignment ? game.toggleSequentialTargets : undefined}
+        onToggleMultipleWeetzees={isTarget || isFarkle ? undefined : game.toggleMultipleWeetzees}
+        sequentialTargetsEnabled={isTarget ? state.sequentialTargetsEnabled : undefined}
+        onToggleSequentialTargets={isTarget ? (gameStarted ? undefined : game.toggleSequentialTargets) : undefined}
+        scoringHintsEnabled={state.scoringHintsEnabled}
+        onToggleScoringHints={isFarkle ? game.toggleScoringHints : undefined}
+        sixDiceEnabled={showSixDice ? state.sixDiceEnabled : undefined}
+        onToggleSixDice={showSixDice ? (gameStarted ? undefined : game.toggleSixDice) : undefined}
+        orderedScoringEnabled={showOrderedScoring ? state.orderedScoringEnabled : undefined}
+        onToggleOrderedScoring={showOrderedScoring ? (gameStarted ? undefined : game.toggleOrderedScoring) : undefined}
         onEndGame={game.endGame}
       />
       <GameView game={game} />

@@ -196,6 +196,39 @@ export function playWin() {
   });
 }
 
+// ===== Farkle bust =====
+// Descending minor third slide — a deflating "wah-wah" that conveys loss.
+
+export function playFarkle() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc1.type = "triangle";
+  osc2.type = "sine";
+  osc1.frequency.setValueAtTime(440, t);
+  osc1.frequency.exponentialRampToValueAtTime(220, t + 0.5);
+  osc2.frequency.setValueAtTime(349, t);
+  osc2.frequency.exponentialRampToValueAtTime(175, t + 0.5);
+
+  gain.gain.setValueAtTime(0.1, t);
+  gain.gain.linearRampToValueAtTime(0.06, t + 0.3);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc1.start(t);
+  osc2.start(t);
+  osc1.stop(t + 0.6);
+  osc2.stop(t + 0.6);
+}
+
 // ===== Toggle switch =====
 // Quick pitch bend — up for on, down for off.
 

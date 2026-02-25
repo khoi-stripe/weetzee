@@ -133,7 +133,7 @@ export function PlayerSelector({
               outline: "1px solid #ffffff",
               outlineOffset: -1,
               background: "transparent",
-              fontSize: "clamp(13px, 8cqi, 15px)",
+              fontSize: "clamp(9px, 8cqi, 100px)",
               fontWeight: 500,
               color: "#ffffff",
               cursor: "pointer",

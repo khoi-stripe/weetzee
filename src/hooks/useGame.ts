@@ -3,6 +3,8 @@
 import { useEffect, useReducer, useRef } from "react";
 import { gameReducer, makeInitialState } from "@/lib/engine";
 import { getRuleset } from "@/lib/rulesets";
+import { makeClassicCategories } from "@/lib/rulesets/classic";
+import { makeKismetCategories } from "@/lib/rulesets/kismet";
 import type { GameState, GameView } from "@/lib/types";
 
 const STORAGE_KEY = "weetzee-game";
@@ -42,8 +44,21 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
     if (!raw) return null;
     const saved: SerializableState = JSON.parse(raw);
     if (saved.rulesetId !== rulesetId || saved.players.length !== playerCount) return null;
-    const ruleset = getRuleset(saved.rulesetId);
+    let ruleset = getRuleset(saved.rulesetId);
     const { rulesetId: _, ...rest } = saved;
+    const sixDice = rest.sixDiceEnabled ?? false;
+    const orderedScoring = rest.orderedScoringEnabled ?? false;
+    if (sixDice) {
+      const diceCount = 6;
+      if (ruleset.id === "weetzee") {
+        ruleset = { ...ruleset, categories: makeClassicCategories(diceCount) };
+      } else if (ruleset.id === "kismet") {
+        ruleset = { ...ruleset, categories: makeKismetCategories(diceCount) };
+      }
+    }
+    if (orderedScoring) {
+      ruleset = { ...ruleset, orderedScoring: true };
+    }
     return {
       ...rest,
       ruleset,
@@ -54,6 +69,9 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
       mustSetAside: rest.mustSetAside ?? false,
       finalRound: rest.finalRound ?? false,
       finalRoundTriggeredBy: rest.finalRoundTriggeredBy ?? -1,
+      scoringHintsEnabled: rest.scoringHintsEnabled ?? true,
+      sixDiceEnabled: sixDice,
+      orderedScoringEnabled: orderedScoring,
     };
   } catch {
     return null;
@@ -66,7 +84,7 @@ function clearState() {
   } catch {}
 }
 
-export function useGame(playerCount: number, rulesetId: string = "classic") {
+export function useGame(playerCount: number, rulesetId: string = "weetzee") {
   const ruleset = getRuleset(rulesetId);
   const [state, dispatch] = useReducer(
     gameReducer,
@@ -151,11 +169,23 @@ export function useGame(playerCount: number, rulesetId: string = "classic") {
     dispatch({ type: "BANK" });
   }
 
+  function toggleScoringHints() {
+    dispatch({ type: "TOGGLE_SCORING_HINTS" });
+  }
+
+  function toggleSixDice() {
+    dispatch({ type: "TOGGLE_SIX_DICE" });
+  }
+
+  function toggleOrderedScoring() {
+    dispatch({ type: "TOGGLE_ORDERED_SCORING" });
+  }
+
   function endGame() {
     clearState();
   }
 
-  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, setAside, bank, endGame };
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, setAside, bank, toggleScoringHints, toggleSixDice, toggleOrderedScoring, endGame };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

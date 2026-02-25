@@ -20,6 +20,12 @@ export function Header({
   onToggleMultipleWeetzees,
   sequentialTargetsEnabled,
   onToggleSequentialTargets,
+  scoringHintsEnabled,
+  onToggleScoringHints,
+  sixDiceEnabled,
+  onToggleSixDice,
+  orderedScoringEnabled,
+  onToggleOrderedScoring,
   onEndGame,
 }: {
   showBack?: boolean;
@@ -33,6 +39,12 @@ export function Header({
   onToggleMultipleWeetzees?: () => void;
   sequentialTargetsEnabled?: boolean;
   onToggleSequentialTargets?: () => void;
+  scoringHintsEnabled?: boolean;
+  onToggleScoringHints?: () => void;
+  sixDiceEnabled?: boolean;
+  onToggleSixDice?: () => void;
+  orderedScoringEnabled?: boolean;
+  onToggleOrderedScoring?: () => void;
   onEndGame?: () => void;
 }) {
   const router = useRouter();
@@ -83,7 +95,7 @@ export function Header({
             letterSpacing: 0,
           }}
         >
-          Weetzee
+          {rulesetName ?? "Weetzee"}
         </p>
         <button
           onClick={() => { playTap(); setShowRules(true); }}
@@ -120,6 +132,12 @@ export function Header({
           onToggleMultipleWeetzees={onToggleMultipleWeetzees}
           sequentialTargetsEnabled={sequentialTargetsEnabled}
           onToggleSequentialTargets={onToggleSequentialTargets}
+          scoringHintsEnabled={scoringHintsEnabled}
+          onToggleScoringHints={onToggleScoringHints}
+          sixDiceEnabled={sixDiceEnabled}
+          onToggleSixDice={onToggleSixDice}
+          orderedScoringEnabled={orderedScoringEnabled}
+          onToggleOrderedScoring={onToggleOrderedScoring}
         />
       )}
 
@@ -242,28 +260,6 @@ function KeepYourHeadDownRules() {
   );
 }
 
-function ALittleHelpRules() {
-  return (
-    <>
-      <Section title="Upper section">
-        <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
-        <p style={{ marginTop: 8, color: "#999999" }}>
-          Bonus: Score 35 extra points if upper section totals 63 or more.
-        </p>
-      </Section>
-      <Section title="Lower section">
-        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
-        <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
-        <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
-        <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
-        <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
-        <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
-        <RuleRow name="Weetzee" desc="50 pts — all six dice the same" />
-      </Section>
-    </>
-  );
-}
-
 function KismetRules() {
   return (
     <>
@@ -288,34 +284,6 @@ function KismetRules() {
         <RuleRow name="4 of a kind" desc="Sum + 25 (need 4 matching)" />
         <RuleRow name="Yarborough" desc="Sum of all dice (no requirement)" />
         <RuleRow name="Kismet" desc="Sum + 50 — all five dice the same" />
-      </Section>
-    </>
-  );
-}
-
-function EverythingInOrderRules() {
-  return (
-    <>
-      <Section title="Constraint">
-        <p>You must score categories from top to bottom — no skipping ahead.</p>
-        <p style={{ marginTop: 8, color: "#999999" }}>
-          Exception: Weetzee may be scored at any time.
-        </p>
-      </Section>
-      <Section title="Upper section">
-        <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
-        <p style={{ marginTop: 8, color: "#999999" }}>
-          Bonus: Score 35 extra points if upper section totals 63 or more.
-        </p>
-      </Section>
-      <Section title="Lower section">
-        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
-        <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
-        <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
-        <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
-        <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
-        <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
-        <RuleRow name="Weetzee" desc="50 pts — all five dice the same" />
       </Section>
     </>
   );
@@ -374,11 +342,9 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
         {id === "farkle" ? "" : ", 3 rolls per turn"}
         {id === "keep-your-head-down" ? ", lowest score wins" : ", highest score wins"}
       </p>
-      {id === "classic" && <ClassicRules />}
+      {id === "weetzee" && <ClassicRules />}
       {id === "keep-your-head-down" && <KeepYourHeadDownRules />}
-      {id === "a-little-help" && <ALittleHelpRules />}
       {id === "kismet" && <KismetRules />}
-      {id === "everything-in-order" && <EverythingInOrderRules />}
       {id === "farkle" && <FarkleRules />}
     </div>
   );
@@ -396,6 +362,12 @@ function RulesModal({
   onToggleMultipleWeetzees,
   sequentialTargetsEnabled,
   onToggleSequentialTargets,
+  scoringHintsEnabled,
+  onToggleScoringHints,
+  sixDiceEnabled,
+  onToggleSixDice,
+  orderedScoringEnabled,
+  onToggleOrderedScoring,
 }: {
   onClose: () => void;
   onChangeRuleset?: () => void;
@@ -408,6 +380,12 @@ function RulesModal({
   onToggleMultipleWeetzees?: () => void;
   sequentialTargetsEnabled?: boolean;
   onToggleSequentialTargets?: () => void;
+  scoringHintsEnabled?: boolean;
+  onToggleScoringHints?: () => void;
+  sixDiceEnabled?: boolean;
+  onToggleSixDice?: () => void;
+  orderedScoringEnabled?: boolean;
+  onToggleOrderedScoring?: () => void;
 }) {
   const router = useRouter();
   const isAbout = !rulesetId && !showAllRulesets;
@@ -529,17 +507,13 @@ function RulesModal({
               <KismetRules />
             ) : rulesetId === "keep-your-head-down" ? (
               <KeepYourHeadDownRules />
-            ) : rulesetId === "a-little-help" ? (
-              <ALittleHelpRules />
-            ) : rulesetId === "everything-in-order" ? (
-              <EverythingInOrderRules />
             ) : rulesetId === "farkle" ? (
               <FarkleRules />
             ) : (
               <ClassicRules />
             )}
 
-            {(onToggleRollBanking || onToggleMultipleWeetzees || onToggleSequentialTargets) && (
+            {(onToggleRollBanking || onToggleMultipleWeetzees || onToggleSequentialTargets || onToggleScoringHints || onToggleSixDice !== undefined || onToggleOrderedScoring !== undefined) && (
               <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
                 <h3
                   style={{
@@ -568,12 +542,39 @@ function RulesModal({
                     onToggle={onToggleMultipleWeetzees}
                   />
                 )}
-                {onToggleSequentialTargets && (
+                {sequentialTargetsEnabled !== undefined && (
                   <ToggleRow
                     label="Sequential targets"
                     desc="Must score targets in order (10, 11, ... 20)"
                     enabled={!!sequentialTargetsEnabled}
                     onToggle={onToggleSequentialTargets}
+                    disabled={!onToggleSequentialTargets}
+                  />
+                )}
+                {onToggleScoringHints && (
+                  <ToggleRow
+                    label="Scoring hints"
+                    desc="Show available scoring combos on the score sheet"
+                    enabled={!!scoringHintsEnabled}
+                    onToggle={onToggleScoringHints}
+                  />
+                )}
+                {sixDiceEnabled !== undefined && (
+                  <ToggleRow
+                    label="6 dice"
+                    desc="Play with 6 dice instead of 5"
+                    enabled={!!sixDiceEnabled}
+                    onToggle={onToggleSixDice}
+                    disabled={!onToggleSixDice}
+                  />
+                )}
+                {orderedScoringEnabled !== undefined && (
+                  <ToggleRow
+                    label="Ordered scoring"
+                    desc="Must score categories from top to bottom"
+                    enabled={!!orderedScoringEnabled}
+                    onToggle={onToggleOrderedScoring}
+                    disabled={!onToggleOrderedScoring}
                   />
                 )}
               </div>
@@ -610,11 +611,9 @@ function AboutContent() {
           <div key={r.id} style={{ marginTop: 10 }}>
             <span style={{ color: "#ffffff", fontWeight: 500 }}>{r.name}</span>
             <span style={{ color: "#999999" }}>
-              {r.id === "classic" && " — The standard game. 5 dice, 13 categories, highest score wins."}
+              {r.id === "weetzee" && " — The standard game. 5 dice, 13 categories, highest score wins."}
               {r.id === "keep-your-head-down" && " — Same categories, but lowest score wins. You must use all 3 rolls and score your highest available category."}
-              {r.id === "a-little-help" && " — Classic rules with 6 dice instead of 5. A little easier to land those combos."}
               {r.id === "kismet" && " — Dice have colored pips. New color-based categories like flushes and same-color full houses."}
-              {r.id === "everything-in-order" && " — Classic scoring, but you must fill categories from top to bottom. No skipping ahead."}
               {r.id === "farkle" && " — Push your luck! Set aside scoring dice and keep rolling, or bank your points. First to 10,000 wins."}
             </span>
           </div>
@@ -721,21 +720,24 @@ function ToggleRow({
   desc,
   enabled,
   onToggle,
+  disabled = false,
 }: {
   label: string;
   desc: string;
   enabled: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div
-      onClick={() => { playToggle(!enabled); onToggle(); }}
+      onClick={() => { if (disabled || !onToggle) return; playToggle(!enabled); onToggle(); }}
       style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "12px 0",
-        cursor: "pointer",
+        cursor: disabled ? "default" : "pointer",
+        opacity: disabled ? 0.4 : 1,
       }}
     >
       <div>

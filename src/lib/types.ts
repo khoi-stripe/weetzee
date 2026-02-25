@@ -80,6 +80,9 @@ export interface GameState {
   mustSetAside: boolean;
   finalRound: boolean;
   finalRoundTriggeredBy: number;
+  scoringHintsEnabled: boolean;
+  sixDiceEnabled: boolean;
+  orderedScoringEnabled: boolean;
 }
 
 // ===== Actions =====
@@ -94,4 +97,7 @@ export type GameAction =
   | { type: "TOGGLE_SEQUENTIAL_TARGETS" }
   | { type: "SET_ASIDE" }
   | { type: "BANK" }
+  | { type: "TOGGLE_SCORING_HINTS" }
+  | { type: "TOGGLE_SIX_DICE" }
+  | { type: "TOGGLE_ORDERED_SCORING" }
   | { type: "RESTORE"; state: GameState };

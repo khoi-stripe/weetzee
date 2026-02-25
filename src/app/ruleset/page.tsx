@@ -30,7 +30,7 @@ function computeLayout(
 function RulesetContent() {
   const params = useSearchParams();
   const playerCount = params.get("players") ?? "1";
-  const [rulesetId, setRulesetId] = useState("classic");
+  const [rulesetId, setRulesetId] = useState("weetzee");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState({ cols: 2, rows: 3, cellSize: 0 });
@@ -89,7 +89,7 @@ function RulesetContent() {
             width: gridW,
           }}
         >
-          Choose ruleset
+          Choose game
         </p>
 
         <div
@@ -133,7 +133,7 @@ function RulesetContent() {
                 outline: "1px solid #ffffff",
                 outlineOffset: -1,
                 background: "transparent",
-                fontSize: "clamp(13px, 8cqi, 15px)",
+                fontSize: "clamp(9px, 8cqi, 100px)",
                 fontWeight: 500,
                 color: "#ffffff",
                 cursor: "pointer",
