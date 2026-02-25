@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Player, Ruleset } from "@/lib/types";
 import { getRulesetTotal } from "@/lib/rulesets";
 
@@ -19,6 +19,8 @@ export function PlayerBar({
 }) {
   const barRef = useRef<HTMLDivElement>(null);
   const [showScores, setShowScores] = useState(true);
+  const [peekedIndex, setPeekedIndex] = useState<number | null>(null);
+  const peekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const el = barRef.current;
@@ -32,6 +34,19 @@ export function PlayerBar({
     ro.observe(el);
     return () => ro.disconnect();
   }, [players.length]);
+
+  useEffect(() => {
+    return () => { if (peekTimer.current) clearTimeout(peekTimer.current); };
+  }, []);
+
+  const peekPlayer = useCallback((index: number) => {
+    if (peekTimer.current) clearTimeout(peekTimer.current);
+    setPeekedIndex(index);
+    peekTimer.current = setTimeout(() => {
+      setPeekedIndex(null);
+      peekTimer.current = null;
+    }, 2000);
+  }, []);
 
   return (
     <div
@@ -53,22 +68,28 @@ export function PlayerBar({
       >
         {players.map((player, i) => {
           const isActive = i === currentPlayerIndex;
+          const isPeeked = peekedIndex === i;
+          const showScore = isActive || isPeeked || showScores;
+          const expanded = (isActive || isPeeked) && !showScores;
           const total = getRulesetTotal(ruleset, player.scores, player.extraWeetzees);
           return (
             <div
               key={player.id}
               className="flex items-center min-w-0 justify-center"
               style={{
-                flex: isActive && !showScores ? 2 : 1,
+                flex: expanded ? 2 : 1,
                 padding: "8px 8px",
                 gap: 6,
                 background: isActive ? player.color : "transparent",
                 color: isActive ? "#000000" : player.color,
                 borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
+                transition: "flex 400ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                cursor: !onClick && !isActive && !showScores ? "pointer" : undefined,
               }}
+              onClick={!onClick && !isActive && !showScores ? (e) => { e.stopPropagation(); peekPlayer(i); } : undefined}
             >
               <span className="shrink-0">{player.name}</span>
-              {(isActive || showScores) && <span className="shrink-0">{total}</span>}
+              {showScore && <span className="shrink-0">{total}</span>}
             </div>
           );
         })}
