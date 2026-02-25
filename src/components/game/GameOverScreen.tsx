@@ -60,6 +60,28 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
           </div>
         </div>
 
+        {ranked.length > 1 && (
+          <div className="flex flex-col items-center" style={{ gap: 6, width: "100%" }}>
+            {ranked.slice(1).map((p, i) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-center"
+                style={{
+                  gap: 8,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  opacity: 0.6,
+                  animation: `fade-in 400ms ease ${200 + i * 100}ms both`,
+                }}
+              >
+                <span style={{ color: p.color, fontWeight: 700 }}>{p.name}</span>
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>{p.total}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <button
           onClick={() => { playTap(); router.push("/"); }}
           className="flex items-center justify-center rounded-full shrink-0 pressable"

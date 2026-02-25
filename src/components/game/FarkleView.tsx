@@ -629,7 +629,7 @@ function BustDie({ value, failed, index = 0 }: { value: number; failed: boolean;
         background: "transparent",
         flexShrink: 0,
         opacity: failed ? 0.4 : 1,
-        animation: `bust-die-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) ${index * 80}ms both`,
+        animation: `bust-die-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) ${500 + index * 80}ms both`,
       }}
     >
       {pips.map(([x, y], i) => (
