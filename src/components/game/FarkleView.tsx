@@ -108,7 +108,14 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
   );
   const heldValues = heldDice.map((d) => d.value);
   const selectionValid = heldValues.length > 0 && isValidSelection(heldValues);
-  const selectionScore = selectionValid ? scoreDice(heldValues) : 0;
+
+  const currentRollSetAsideValues = state.dice
+    .filter((d) => state.currentRollSetAsideIds.includes(d.id))
+    .map((d) => d.value);
+  const combinedValues = [...currentRollSetAsideValues, ...heldValues];
+  const cumulativeScore = selectionValid ? scoreDice(combinedValues) : 0;
+  const existingRollScore = currentRollSetAsideValues.length > 0 ? scoreDice(currentRollSetAsideValues) : 0;
+  const selectionScore = selectionValid ? cumulativeScore - existingRollScore : 0;
 
   const hasRolled = state.rollsUsed > 0;
   const hotDice = !state.farkled && state.setAsideDiceIds.length === 0 && state.turnScore > 0 && hasRolled;

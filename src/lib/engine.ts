@@ -55,7 +55,9 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     multipleWeetzeesEnabled: false,
     sequentialTargetsEnabled: false,
     turnScore: 0,
+    turnScoreAtRollStart: 0,
     setAsideDiceIds: [],
+    currentRollSetAsideIds: [],
     farkled: false,
     mustSetAside: false,
     finalRound: false,
@@ -153,7 +155,9 @@ function advanceTurn(state: GameState): GameState {
     turn: nextTurn,
     view: state.ruleset.targetAssignment ? "scorecard" : "rolling",
     turnScore: 0,
+    turnScoreAtRollStart: 0,
     setAsideDiceIds: [],
+    currentRollSetAsideIds: [],
     farkled: false,
     mustSetAside: false,
   };
@@ -190,6 +194,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
             rollsUsed: state.rollsUsed + 1,
             farkled: true,
             mustSetAside: false,
+            turnScoreAtRollStart: state.turnScore,
+            currentRollSetAsideIds: [],
             setAsideDiceIds: activeDice.length === 0 ? [] : state.setAsideDiceIds,
           };
         }
@@ -200,6 +206,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           rollsUsed: state.rollsUsed + 1,
           farkled: false,
           mustSetAside: true,
+          turnScoreAtRollStart: state.turnScore,
+          currentRollSetAsideIds: [],
           setAsideDiceIds: activeDice.length === 0 ? [] : state.setAsideDiceIds,
         };
       }
@@ -300,14 +308,22 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const selectedValues = heldDice.map(d => d.value);
       if (!isValidSelection(selectedValues)) return state;
 
-      const score = scoreDice(selectedValues);
+      const newCurrentRollSetAsideIds = [...state.currentRollSetAsideIds, ...heldDice.map(d => d.id)];
+      const allCurrentRollValues = state.dice
+        .filter(d => newCurrentRollSetAsideIds.includes(d.id))
+        .map(d => d.value);
+      const cumulativeScore = scoreDice(allCurrentRollValues);
+
       const newSetAside = [...state.setAsideDiceIds, ...heldDice.map(d => d.id)];
       const effectiveDiceCount = state.sixDiceEnabled ? 6 : state.ruleset.diceCount;
       const allSetAside = newSetAside.length === effectiveDiceCount;
 
+      const newTurnScore = state.turnScoreAtRollStart + cumulativeScore;
       return {
         ...state,
-        turnScore: state.turnScore + score,
+        turnScore: newTurnScore,
+        turnScoreAtRollStart: allSetAside ? newTurnScore : state.turnScoreAtRollStart,
+        currentRollSetAsideIds: allSetAside ? [] : newCurrentRollSetAsideIds,
         setAsideDiceIds: allSetAside ? [] : newSetAside,
         dice: state.dice.map(d => heldDice.some(h => h.id === d.id) ? { ...d, held: false } : d),
         mustSetAside: false,

@@ -75,7 +75,9 @@ export interface GameState {
   multipleWeetzeesEnabled: boolean;
   sequentialTargetsEnabled: boolean;
   turnScore: number;
+  turnScoreAtRollStart: number;
   setAsideDiceIds: number[];
+  currentRollSetAsideIds: number[];
   farkled: boolean;
   mustSetAside: boolean;
   finalRound: boolean;
