@@ -500,9 +500,12 @@ function RulesModal({
             )}
 
             {showAllRulesets ? (
-              VISIBLE_RULESETS.map((r) => (
-                <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
-              ))
+              <>
+                <HouseRulesInfo />
+                {VISIBLE_RULESETS.map((r) => (
+                  <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
+                ))}
+              </>
             ) : rulesetId === "kismet" ? (
               <KismetRules />
             ) : rulesetId === "keep-your-head-down" ? (
@@ -545,7 +548,7 @@ function RulesModal({
                 {sequentialTargetsEnabled !== undefined && (
                   <ToggleRow
                     label="Sequential targets"
-                    desc="Must score targets in order (10, 11, ... 20)"
+                    desc={onToggleSequentialTargets ? "Must score targets in order (10, 11, ... 20)" : "Must score targets in order (set before game starts)"}
                     enabled={!!sequentialTargetsEnabled}
                     onToggle={onToggleSequentialTargets}
                     disabled={!onToggleSequentialTargets}
@@ -562,7 +565,7 @@ function RulesModal({
                 {sixDiceEnabled !== undefined && (
                   <ToggleRow
                     label="6 dice"
-                    desc="Play with 6 dice instead of 5"
+                    desc={onToggleSixDice ? "Play with 6 dice instead of 5" : "Play with 6 dice instead of 5 (set before game starts)"}
                     enabled={!!sixDiceEnabled}
                     onToggle={onToggleSixDice}
                     disabled={!onToggleSixDice}
@@ -571,7 +574,7 @@ function RulesModal({
                 {orderedScoringEnabled !== undefined && (
                   <ToggleRow
                     label="Ordered scoring"
-                    desc="Must score categories from top to bottom"
+                    desc={onToggleOrderedScoring ? "Must score categories from top to bottom" : "Must score categories from top to bottom (set before game starts)"}
                     enabled={!!orderedScoringEnabled}
                     onToggle={onToggleOrderedScoring}
                     disabled={!onToggleOrderedScoring}
@@ -600,13 +603,15 @@ function AboutContent() {
 
       <Section title="How it works">
         <p>
-          Pick how many players, choose a ruleset, and start rolling.
+          Pick how many players, choose a game, and start rolling.
           Each turn you get up to 3 rolls — hold the dice you like and re-roll the rest, then pick a
           scoring category. Play through all categories and the highest score wins.
         </p>
       </Section>
 
-      <Section title="Rulesets">
+      <HouseRulesInfo />
+
+      <Section title="Games">
         {VISIBLE_RULESETS.map((r) => (
           <div key={r.id} style={{ marginTop: 10 }}>
             <span style={{ color: "#ffffff", fontWeight: 500 }}>{r.name}</span>
@@ -622,6 +627,30 @@ function AboutContent() {
 
       <InstallSection alwaysShow />
     </>
+  );
+}
+
+function HouseRulesInfo() {
+  return (
+    <Section title="House rules">
+      <p>Optional rules for Weetzee and Kismet. Toggle them from the settings menu during play.</p>
+      <div style={{ marginTop: 10 }}>
+        <span style={{ color: "#ffffff", fontWeight: 500 }}>Roll banking</span>
+        <span style={{ color: "#999999" }}> — Bank unused rolls for future turns, up to 3 extra.</span>
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <span style={{ color: "#ffffff", fontWeight: 500 }}>Multiple Weetzees</span>
+        <span style={{ color: "#999999" }}> — Score extra Weetzees for 100 bonus points each.</span>
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <span style={{ color: "#ffffff", fontWeight: 500 }}>6 dice</span>
+        <span style={{ color: "#999999" }}> — Play with 6 dice instead of 5. Must be set before the game starts.</span>
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <span style={{ color: "#ffffff", fontWeight: 500 }}>Ordered scoring</span>
+        <span style={{ color: "#999999" }}> — Must score categories from top to bottom. Must be set before the game starts.</span>
+      </div>
+    </Section>
   );
 }
 
