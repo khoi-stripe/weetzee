@@ -28,24 +28,30 @@ function loadPrefs(): HouseRulesPrefs {
   return { rollBankingEnabled: false, multipleWeetzeesEnabled: false, sequentialTargetsEnabled: false };
 }
 
-type SerializableState = Omit<GameState, "ruleset"> & { rulesetId: string };
+const MAX_SAVE_AGE_MS = 24 * 60 * 60 * 1000;
+
+type SerializableState = Omit<GameState, "ruleset"> & { rulesetId: string; savedAt: number };
 
 function saveState(state: GameState) {
   try {
     const { ruleset, ...rest } = state;
-    const serializable: SerializableState = { ...rest, rulesetId: ruleset.id };
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+    const serializable: SerializableState = { ...rest, rulesetId: ruleset.id, savedAt: Date.now() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
   } catch {}
 }
 
 function loadState(playerCount: number, rulesetId: string): GameState | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const saved: SerializableState = JSON.parse(raw);
+    if (saved.savedAt && Date.now() - saved.savedAt > MAX_SAVE_AGE_MS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
     if (saved.rulesetId !== rulesetId || saved.players.length !== playerCount) return null;
     let ruleset = getRuleset(saved.rulesetId);
-    const { rulesetId: _, ...rest } = saved;
+    const { rulesetId: _, savedAt: _ts, ...rest } = saved;
     const sixDice = rest.sixDiceEnabled ?? false;
     const orderedScoring = rest.orderedScoringEnabled ?? false;
     if (sixDice) {
@@ -82,7 +88,7 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
 
 function clearState() {
   try {
-    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
   } catch {}
 }
 
