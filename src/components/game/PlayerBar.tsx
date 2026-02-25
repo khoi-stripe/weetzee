@@ -57,8 +57,9 @@ export function PlayerBar({
           return (
             <div
               key={player.id}
-              className="flex items-center flex-1 min-w-0 justify-center"
+              className="flex items-center min-w-0 justify-center"
               style={{
+                flex: isActive && !showScores ? 2 : 1,
                 padding: "8px 8px",
                 gap: 6,
                 background: isActive ? player.color : "transparent",
@@ -67,7 +68,7 @@ export function PlayerBar({
               }}
             >
               <span className="shrink-0">{player.name}</span>
-              {showScores && <span className="shrink-0">{total}</span>}
+              {(isActive || showScores) && <span className="shrink-0">{total}</span>}
             </div>
           );
         })}
