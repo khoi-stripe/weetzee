@@ -162,8 +162,8 @@ export function DiceView({
       return;
     }
 
-    // Determine which dice were not held (those that were re-rolled)
-    const unheldIndices = dice.map((d, i) => (!d.held ? i : -1)).filter((i) => i !== -1);
+    // Determine which dice were not held and not set aside (those that were re-rolled)
+    const unheldIndices = dice.map((d, i) => (!d.held && !setAsideDiceIds.includes(d.id) ? i : -1)).filter((i) => i !== -1);
     if (unheldIndices.length === 0) {
       setDisplayValues(dice.map((d) => d.value));
       return;
