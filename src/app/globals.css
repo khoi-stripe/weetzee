@@ -118,6 +118,11 @@ body {
   100% { transform: scale(1); }
 }
 
+@keyframes bust-die-in {
+  0%   { transform: scale(0) translateX(-12px); opacity: 0; }
+  100% { transform: scale(1) translateX(0); opacity: 1; }
+}
+
 @keyframes scale-out {
   0%   { transform: scale(1); }
   40%  { transform: scale(1.1); }

@@ -121,7 +121,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
   const hotDice = !state.farkled && state.setAsideDiceIds.length === 0 && state.turnScore > 0 && hasRolled;
   const canSetAside = !state.farkled && selectionValid && hasRolled;
   const canRoll = !state.farkled && !state.mustSetAside && (state.setAsideDiceIds.length > 0 || hotDice) && !heldDice.length;
-  const canBank = !state.farkled && !state.mustSetAside && state.turnScore > 0 && hasRolled && !heldDice.length;
+  const canBank = (state.farkled || (!state.mustSetAside && state.turnScore > 0)) && hasRolled && !heldDice.length;
 
   // Combined action button: ROLL or SET ASIDE depending on state
   let actionLabel: string;
@@ -268,8 +268,8 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
     farkleActionLabel: actionLabel,
     farkleActionEnabled: actionEnabled,
     farkleBankEnabled: canBank,
-    farkleOnBank: handleBank,
-    farkleBankLabel: canBank ? `BANK ${state.turnScore}` : "BANK",
+    farkleOnBank: state.farkled ? handleBustDone : handleBank,
+    farkleBankLabel: state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : "BANK"),
   };
 
   return (
@@ -566,10 +566,10 @@ function FarkleBustScreen({
           {(keptDice.length > 0 || failedDice.length > 0) && (
             <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 4, marginBottom: 4, flexWrap: "wrap" }}>
               {keptDice.map((d, i) => (
-                <BustDie key={`k${i}`} value={d.value} failed={false} />
+                <BustDie key={`k${i}`} value={d.value} failed={false} index={i} />
               ))}
               {failedDice.map((d, i) => (
-                <BustDie key={`f${i}`} value={d.value} failed={true} />
+                <BustDie key={`f${i}`} value={d.value} failed={true} index={keptDice.length + i} />
               ))}
             </div>
           )}
@@ -613,7 +613,7 @@ const BUST_PIP_LAYOUTS: Record<number, [number, number][]> = {
   6: [[25, 20], [75, 20], [25, 50], [75, 50], [25, 80], [75, 80]],
 };
 
-function BustDie({ value, failed }: { value: number; failed: boolean }) {
+function BustDie({ value, failed, index = 0 }: { value: number; failed: boolean; index?: number }) {
   const pips = BUST_PIP_LAYOUTS[value] ?? [];
   const pipSize = "17%";
 
@@ -629,6 +629,7 @@ function BustDie({ value, failed }: { value: number; failed: boolean }) {
         background: "transparent",
         flexShrink: 0,
         opacity: failed ? 0.4 : 1,
+        animation: `bust-die-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) ${index * 80}ms both`,
       }}
     >
       {pips.map(([x, y], i) => (
