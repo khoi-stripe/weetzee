@@ -302,6 +302,11 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
       {isLandscape ? (
         <div className="flex flex-row w-full h-full p-8" style={{ gap: 32 }}>
           <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+            <PlayerBar
+              players={state.players}
+              currentPlayerIndex={state.currentPlayerIndex}
+              ruleset={state.ruleset}
+            />
             <DiceView {...diceViewProps} />
           </div>
           <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
