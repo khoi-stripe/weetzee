@@ -396,7 +396,7 @@ function FarkleActionButton({
         textAlign: "center",
         lineHeight: 1.2,
         padding: "8%",
-        animation: hotDice ? "hot-dice-flash 600ms ease" : undefined,
+        ...hotDice ? { "--hot-color": color, animation: "hot-dice-flash 800ms ease" } as React.CSSProperties : {},
       }}
     >
       {label}
