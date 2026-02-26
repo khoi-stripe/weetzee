@@ -338,6 +338,7 @@ export function DiceView({
               onAction={onRoll}
               showButton={showButton}
               color={playerColor}
+              hotDice={farkleActionLabel === "HOT DICE!"}
             />
           </div>
           <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
@@ -362,12 +363,14 @@ function FarkleActionButton({
   onAction,
   showButton,
   color,
+  hotDice,
 }: {
   label: string;
   enabled: boolean;
   onAction: () => void;
   showButton: boolean;
   color: string;
+  hotDice?: boolean;
 }) {
   const [introDone, setIntroDone] = useState(false);
   const animating = showButton && !introDone;
@@ -393,6 +396,7 @@ function FarkleActionButton({
         textAlign: "center",
         lineHeight: 1.2,
         padding: "8%",
+        animation: hotDice ? "hot-dice-flash 600ms ease" : undefined,
       }}
     >
       {label}

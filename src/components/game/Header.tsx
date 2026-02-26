@@ -325,6 +325,12 @@ function FarkleRules() {
         <RuleRow name="1-2-3-4-5-6" desc="2,500 pts" />
         <RuleRow name="3 pairs" desc="1,500 pts" />
       </Section>
+      <Section title="Piggybacking (house rule)">
+        <RuleRow name="Inherit" desc="After a player banks, the next player can piggyback their remaining dice and score" />
+        <RuleRow name="Fresh roll" desc="Or start your turn normally with all 6 dice" />
+        <RuleRow name="Hot dice" desc="If the previous player used all 6 dice, you still roll all 6 but inherit their banked score" />
+        <RuleRow name="Farkle risk" desc="If you farkle while piggybacking, you lose both the inherited score and your own" />
+      </Section>
       <Section title="Strategy">
         <p style={{ color: "#999999" }}>
           Set aside high-scoring dice, then decide whether to push your luck
