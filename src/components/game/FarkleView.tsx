@@ -315,6 +315,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
               <FarkleScoringSheet
                 possibilities={scoringPossibilities}
                 hintsEnabled={state.scoringHintsEnabled}
+                playerColor={currentPlayer.color}
               />
             </div>
           </div>
@@ -361,6 +362,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
                 <FarkleScoringSheet
                   possibilities={scoringPossibilities}
                   hintsEnabled={state.scoringHintsEnabled}
+                  playerColor={currentPlayer.color}
                 />
               </div>
             </div>
@@ -446,52 +448,51 @@ function TurnScoreBar({
 function FarkleScoringSheet({
   possibilities,
   hintsEnabled,
+  playerColor,
 }: {
   possibilities: { label: string; score: number; count: number }[];
   hintsEnabled: boolean;
+  playerColor: string;
 }) {
+  const activeLabels = new Set(
+    hintsEnabled ? possibilities.map(p => POSSIBILITY_TO_REF[p.label] ?? p.label) : []
+  );
+
   return (
     <div className="flex-1 overflow-y-auto" style={{ paddingTop: 8, paddingBottom: 32 }}>
-      <h3 style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 16 }}>
+      <h3 style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 16, padding: "0 8px" }}>
         Scoring Reference
       </h3>
-
-      {hintsEnabled && possibilities.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <h4 style={{ fontSize: 11, fontWeight: 500, color: "#999999", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>
-            Available now
-          </h4>
-          {possibilities.map((p, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between"
-              style={{ padding: "6px 0", borderBottom: "1px solid #1a1a1a" }}
-            >
-              <span style={{ color: "#ffffff", fontSize: 13 }}>{p.label}</span>
-              <span style={{ color: "#ffffff", fontSize: 13, fontWeight: 600 }}>{p.score}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div>
-        <h4 style={{ fontSize: 11, fontWeight: 500, color: "#999999", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>
-          All combinations
-        </h4>
-        {FARKLE_REFERENCE.map((item, i) => (
+      {FARKLE_REFERENCE.map((item, i) => {
+        const highlighted = activeLabels.has(item.label);
+        return (
           <div
             key={i}
-            className="flex items-center justify-between"
-            style={{ padding: "6px 0", borderBottom: "1px solid #1a1a1a" }}
+            className={`flex items-center justify-between${highlighted ? " pulse-bg" : ""}`}
+            style={{
+              padding: "6px 8px",
+              borderBottom: "1px solid #1a1a1a",
+              borderRadius: highlighted ? 4 : 0,
+              ...highlighted ? { "--pulse-color": playerColor } as React.CSSProperties : {},
+            }}
           >
-            <span style={{ color: "#999999", fontSize: 13 }}>{item.label}</span>
-            <span style={{ color: "#999999", fontSize: 13 }}>{item.score}</span>
+            <span style={{ color: highlighted ? "#ffffff" : "#999999", fontSize: 13, fontWeight: highlighted ? 600 : 400 }}>{item.label}</span>
+            <span style={{ color: highlighted ? "#ffffff" : "#999999", fontSize: 13, fontWeight: highlighted ? 600 : 400 }}>{item.score}</span>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
+
+const POSSIBILITY_TO_REF: Record<string, string> = {
+  "Four 1s": "Four of a kind", "Four 2s": "Four of a kind", "Four 3s": "Four of a kind",
+  "Four 4s": "Four of a kind", "Four 5s": "Four of a kind", "Four 6s": "Four of a kind",
+  "Five 1s": "Five of a kind", "Five 2s": "Five of a kind", "Five 3s": "Five of a kind",
+  "Five 4s": "Five of a kind", "Five 5s": "Five of a kind", "Five 6s": "Five of a kind",
+  "Six 1s": "Six of a kind", "Six 2s": "Six of a kind", "Six 3s": "Six of a kind",
+  "Six 4s": "Six of a kind", "Six 5s": "Six of a kind", "Six 6s": "Six of a kind",
+};
 
 const FARKLE_REFERENCE = [
   { label: "Single 1", score: "100" },
