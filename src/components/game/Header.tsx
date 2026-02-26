@@ -76,7 +76,6 @@ export function Header({
             onClick={handleBack}
             className="absolute flex items-center justify-center pressable"
             style={{
-              position: "absolute",
               left: 4,
               top: 2,
               padding: "8px 12px",
@@ -109,7 +108,6 @@ export function Header({
           onClick={() => { playTap(); setShowRules(true); }}
           className="absolute flex items-center justify-center pressable"
           style={{
-            position: "absolute",
             right: 4,
             top: 2,
             padding: "8px 12px",
@@ -460,7 +458,6 @@ function RulesModal({
           onClick={() => { playTap(); onClose(); }}
           className="absolute flex items-center justify-center pressable"
           style={{
-            position: "absolute",
             right: 4,
             top: 2,
             padding: "8px 12px",

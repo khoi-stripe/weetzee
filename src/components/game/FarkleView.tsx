@@ -6,7 +6,7 @@ import { PlayerBar } from "./PlayerBar";
 import type { UseGameReturn } from "@/hooks/useGame";
 import type { Die, Player } from "@/lib/types";
 import { isValidSelection, scoreDice, getScoringPossibilities } from "@/lib/rulesets/farkle";
-import { playTap, playTurnChange, playConfirm, playDeselect, playFarkle, getAudioCtx } from "@/lib/sounds";
+import { playTap, playTurnChange, playConfirm, playFarkle, getAudioCtx } from "@/lib/sounds";
 
 export function FarkleView({ game }: { game: UseGameReturn }) {
   const { state, roll, toggleHold, setAside, bank, acceptPiggyback } = game;
@@ -649,7 +649,7 @@ const BUST_PIP_LAYOUTS: Record<number, [number, number][]> = {
   6: [[25, 20], [75, 20], [25, 50], [75, 50], [25, 80], [75, 80]],
 };
 
-function BustDie({ value, failed, index = 0 }: { value: number; failed: boolean; index?: number }) {
+function BustDie({ value, failed, index = 0, animate = true }: { value: number; failed: boolean; index?: number; animate?: boolean }) {
   const pips = BUST_PIP_LAYOUTS[value] ?? [];
   const pipSize = "17%";
 
@@ -665,7 +665,7 @@ function BustDie({ value, failed, index = 0 }: { value: number; failed: boolean;
         background: "transparent",
         flexShrink: 0,
         opacity: failed ? 0.4 : 1,
-        animation: `bust-die-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) ${500 + index * 80}ms both`,
+        animation: animate ? `bust-die-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) ${500 + index * 80}ms both` : undefined,
       }}
     >
       {pips.map(([x, y], i) => (
@@ -781,7 +781,7 @@ function PlayerInterstitial({
             </span>
             <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 2 }}>
               {diceToShow.map((d, i) => (
-                <InterstitialDie key={i} value={d.value} />
+                <BustDie key={i} value={d.value} failed={false} animate={false} />
               ))}
             </div>
           </div>
@@ -867,35 +867,3 @@ function PlayerInterstitial({
   );
 }
 
-function InterstitialDie({ value }: { value: number }) {
-  const pips = BUST_PIP_LAYOUTS[value] ?? [];
-  const pipSize = "17%";
-  return (
-    <div
-      className="relative"
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: 4,
-        outline: "1px solid #000000",
-        outlineOffset: -1,
-        background: "transparent",
-        flexShrink: 0,
-      }}
-    >
-      {pips.map(([x, y], i) => (
-        <div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            width: pipSize,
-            height: pipSize,
-            left: `calc(${x}% - ${pipSize} / 2)`,
-            top: `calc(${y}% - ${pipSize} / 2)`,
-            background: "#000000",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
