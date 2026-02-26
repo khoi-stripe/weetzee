@@ -223,19 +223,23 @@ function ClassicRules() {
   return (
     <>
       <Section title="Upper section">
-        <RuleRow name="Ones – Sixes" desc="Sum of the matching face value" />
+        <ScoreTable>
+          <ScoreRow name="Ones – Sixes" value="Sum of matching face" />
+        </ScoreTable>
         <p style={{ marginTop: 8, color: "#999999" }}>
           Bonus: Score 35 extra points if upper section totals 63 or more.
         </p>
       </Section>
       <Section title="Lower section">
-        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
-        <RuleRow name="4 of a kind" desc="Sum of all dice (need 4 matching)" />
-        <RuleRow name="Full house" desc="25 pts — three of one + pair of another" />
-        <RuleRow name="Sm. straight" desc="30 pts — four sequential dice" />
-        <RuleRow name="Lg. straight" desc="40 pts — five sequential dice" />
-        <RuleRow name="Chance" desc="Sum of all dice (no requirement)" />
-        <RuleRow name="Weetzee" desc="50 pts — all five dice the same" />
+        <ScoreTable>
+          <ScoreRow name="3 of a kind" value="Sum of all dice" />
+          <ScoreRow name="4 of a kind" value="Sum of all dice" />
+          <ScoreRow name="Full house" value="25 pts" />
+          <ScoreRow name="Sm. straight" value="30 pts" />
+          <ScoreRow name="Lg. straight" value="40 pts" />
+          <ScoreRow name="Chance" value="Sum of all dice" />
+          <ScoreRow name="Weetzee" value="50 pts" />
+        </ScoreTable>
       </Section>
     </>
   );
@@ -262,8 +266,10 @@ function KeepYourHeadDownRules() {
       </Section>
       <Section title="Scoring">
         <p>After rolling, choose an unused target to assign your total against.</p>
-        <RuleRow name="Exact match" desc="−3 pts (reward)" />
-        <RuleRow name="Any miss" desc="difference × 3 pts" />
+        <ScoreTable>
+          <ScoreRow name="Exact match" value="−3 pts (reward)" />
+          <ScoreRow name="Any miss" value="difference × 3 pts" />
+        </ScoreTable>
       </Section>
       <Section title="Strategy">
         <p style={{ color: "#999999" }}>Threes are worth 0 — great for low targets, but they make high targets harder to reach.</p>
@@ -281,21 +287,29 @@ function KismetRules() {
         <RuleRow name="5, 6" desc="Green" />
       </Section>
       <Section title="Basic section">
-        <RuleRow name="Aces – Sixes" desc="Sum of the matching face value" />
-        <p style={{ marginTop: 8, color: "#999999" }}>
-          Tiered bonus: 35 pts at 63+, 55 pts at 71+, 75 pts at 78+.
-        </p>
+        <ScoreTable>
+          <ScoreRow name="Aces – Sixes" value="Sum of matching face" />
+        </ScoreTable>
+      </Section>
+      <Section title="Upper section bonus">
+        <ScoreTable>
+          <ScoreRow name="63+ total" value="35 pts" />
+          <ScoreRow name="71+ total" value="55 pts" />
+          <ScoreRow name="78+ total" value="75 pts" />
+        </ScoreTable>
       </Section>
       <Section title="Kismet section">
-        <RuleRow name="2 pair same color" desc="Sum of all dice (two pairs sharing a pip color)" />
-        <RuleRow name="3 of a kind" desc="Sum of all dice (need 3 matching)" />
-        <RuleRow name="Straight" desc="30 pts — five sequential dice" />
-        <RuleRow name="Flush" desc="35 pts — all five dice the same color" />
-        <RuleRow name="Full house" desc="Sum + 15 — three of one + pair of another" />
-        <RuleRow name="Full house same color" desc="Sum + 20 — full house, all same color" />
-        <RuleRow name="4 of a kind" desc="Sum + 25 (need 4 matching)" />
-        <RuleRow name="Yarborough" desc="Sum of all dice (no requirement)" />
-        <RuleRow name="Kismet" desc="Sum + 50 — all five dice the same" />
+        <ScoreTable>
+          <ScoreRow name="2 pair same color" value="Sum of all dice" />
+          <ScoreRow name="3 of a kind" value="Sum of all dice" />
+          <ScoreRow name="Straight" value="30 pts" />
+          <ScoreRow name="Flush" value="35 pts" />
+          <ScoreRow name="Full house" value="Sum + 15" />
+          <ScoreRow name="Full house same color" value="Sum + 20" />
+          <ScoreRow name="4 of a kind" value="Sum + 25" />
+          <ScoreRow name="Yarborough" value="Sum of all dice" />
+          <ScoreRow name="Kismet" value="Sum + 50" />
+        </ScoreTable>
       </Section>
     </>
   );
@@ -315,27 +329,29 @@ function FarkleRules() {
         <RuleRow name="Hot dice" desc="If all 6 dice are set aside, roll all 6 again and keep going" />
       </Section>
       <Section title="Scoring">
-        <RuleRow name="Single 1" desc="100 pts" />
-        <RuleRow name="Single 5" desc="50 pts" />
-        <RuleRow name="Three 1s" desc="1,000 pts" />
-        <RuleRow name="Three 2s–6s" desc="Face × 100 pts" />
-        <RuleRow name="4 of a kind" desc="1,000 pts" />
-        <RuleRow name="5 of a kind" desc="2,000 pts" />
-        <RuleRow name="6 of a kind" desc="3,000 pts" />
-        <RuleRow name="1-2-3-4-5-6" desc="2,500 pts" />
-        <RuleRow name="3 pairs" desc="1,500 pts" />
-      </Section>
-      <Section title="Piggybacking (house rule)">
-        <RuleRow name="Inherit" desc="After a player banks, the next player can piggyback their remaining dice and score" />
-        <RuleRow name="Fresh roll" desc="Or start your turn normally with all 6 dice" />
-        <RuleRow name="Hot dice" desc="If the previous player used all 6 dice, you still roll all 6 but inherit their banked score" />
-        <RuleRow name="Farkle risk" desc="If you farkle while piggybacking, you lose both the inherited score and your own" />
+        <ScoreTable>
+          <ScoreRow name="Single 1" value="100 pts" />
+          <ScoreRow name="Single 5" value="50 pts" />
+          <ScoreRow name="Three 1s" value="1,000 pts" />
+          <ScoreRow name="Three 2s–6s" value="Face × 100" />
+          <ScoreRow name="4 of a kind" value="1,000 pts" />
+          <ScoreRow name="5 of a kind" value="2,000 pts" />
+          <ScoreRow name="6 of a kind" value="3,000 pts" />
+          <ScoreRow name="1-2-3-4-5-6" value="2,500 pts" />
+          <ScoreRow name="3 pairs" value="1,500 pts" />
+        </ScoreTable>
       </Section>
       <Section title="Strategy">
         <p style={{ color: "#999999" }}>
           Set aside high-scoring dice, then decide whether to push your luck
           or bank what you have. A farkle wipes your entire turn.
         </p>
+      </Section>
+      <Section title="Piggybacking (house rule)">
+        <RuleRow name="Inherit" desc="After a player banks, the next player can piggyback their remaining dice and score" />
+        <RuleRow name="Fresh roll" desc="Or start your turn normally with all 6 dice" />
+        <RuleRow name="Hot dice" desc="If the previous player used all 6 dice, you still roll all 6 but inherit their banked score" />
+        <RuleRow name="Farkle risk" desc="If you farkle while piggybacking, you lose both the inherited score and your own" />
       </Section>
     </>
   );
@@ -471,7 +487,7 @@ function RulesModal({
           fontSize: 13,
           lineHeight: 1.6,
           color: "#cccccc",
-          maxWidth: 720,
+          maxWidth: 640,
           margin: "0 auto",
           width: "100%",
         }}
@@ -588,6 +604,14 @@ function RulesModal({
                     onToggle={onToggleScoringHints}
                   />
                 )}
+                {onTogglePiggyback && (
+                  <ToggleRow
+                    label="Piggybacking"
+                    desc="Next player can inherit the previous player's remaining dice and score"
+                    enabled={!!piggybackEnabled}
+                    onToggle={onTogglePiggyback}
+                  />
+                )}
                 {sixDiceEnabled !== undefined && (
                   <ToggleRow
                     label="6 dice"
@@ -612,14 +636,6 @@ function RulesModal({
                     desc="Must score 500+ in a turn before you can start banking"
                     enabled={!!openingThresholdEnabled}
                     onToggle={onToggleOpeningThreshold}
-                  />
-                )}
-                {onTogglePiggyback && (
-                  <ToggleRow
-                    label="Piggybacking"
-                    desc="Next player can inherit the previous player's remaining dice and score"
-                    enabled={!!piggybackEnabled}
-                    onToggle={onTogglePiggyback}
                   />
                 )}
               </div>
@@ -650,8 +666,6 @@ function AboutContent() {
           scoring category. Play through all categories and the highest score wins.
         </p>
       </Section>
-
-      <HouseRulesInfo />
 
       <Section title="Games">
         {VISIBLE_RULESETS.map((r) => (
@@ -783,6 +797,23 @@ function RuleRow({ name, desc }: { name: string; desc: string }) {
       <span style={{ color: "#ffffff", fontWeight: 500 }}>{name}</span>
       <span style={{ color: "#999999" }}> — {desc}</span>
     </div>
+  );
+}
+
+function ScoreTable({ children }: { children: React.ReactNode }) {
+  return (
+    <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 6 }}>
+      <tbody>{children}</tbody>
+    </table>
+  );
+}
+
+function ScoreRow({ name, value }: { name: string; value: string }) {
+  return (
+    <tr>
+      <td style={{ color: "#ffffff", fontWeight: 400, padding: "4px 8px 4px 0", fontSize: 13, whiteSpace: "nowrap", borderBottom: "1px solid #1a1a1a" }}>{name}</td>
+      <td style={{ color: "#999999", padding: "4px 0", fontSize: 13, textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", borderBottom: "1px solid #1a1a1a" }}>{value}</td>
+    </tr>
   );
 }
 

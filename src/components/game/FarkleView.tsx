@@ -755,11 +755,11 @@ function PlayerInterstitial({
           }}
         >
           <div
-            className="w-full h-full flex flex-col items-center justify-center rounded-full"
+            className="w-full h-full flex flex-col items-center justify-center rounded"
             style={{
               background: player.color,
               color: "#000000",
-              gap: 6,
+              gap: 8,
               animation: exiting
                 ? "scale-out 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
                 : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
@@ -773,7 +773,7 @@ function PlayerInterstitial({
                 Final round
               </span>
             )}
-            <span style={{ fontSize: 13, fontWeight: 500 }}>
+            <span style={{ fontSize: 16, fontWeight: 500, marginBottom: 4 }}>
               +{piggyback.score} piggyback
             </span>
             <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 2 }}>
