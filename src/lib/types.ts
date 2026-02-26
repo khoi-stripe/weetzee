@@ -85,6 +85,9 @@ export interface GameState {
   scoringHintsEnabled: boolean;
   sixDiceEnabled: boolean;
   orderedScoringEnabled: boolean;
+  openingThresholdEnabled: boolean;
+  piggybackEnabled: boolean;
+  piggybackOffer: { dice: Die[]; setAsideDiceIds: number[]; turnScore: number } | null;
 }
 
 // ===== Actions =====
@@ -102,4 +105,7 @@ export type GameAction =
   | { type: "TOGGLE_SCORING_HINTS" }
   | { type: "TOGGLE_SIX_DICE" }
   | { type: "TOGGLE_ORDERED_SCORING" }
+  | { type: "TOGGLE_OPENING_THRESHOLD" }
+  | { type: "TOGGLE_PIGGYBACK" }
+  | { type: "ACCEPT_PIGGYBACK" }
   | { type: "RESTORE"; state: GameState };

@@ -65,6 +65,9 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     scoringHintsEnabled: true,
     sixDiceEnabled: false,
     orderedScoringEnabled: false,
+    openingThresholdEnabled: false,
+    piggybackEnabled: false,
+    piggybackOffer: null,
   };
 }
 
@@ -160,6 +163,7 @@ function advanceTurn(state: GameState): GameState {
     currentRollSetAsideIds: [],
     farkled: false,
     mustSetAside: false,
+    piggybackOffer: null,
   };
 
   if (state.finalRound && nextPlayerIndex === state.finalRoundTriggeredBy) {
@@ -175,11 +179,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case "ROLL": {
       if (state.ruleset.farkle) {
-        const activeDice = state.dice.filter(d => !state.setAsideDiceIds.includes(d.id));
-        const diceToRoll = activeDice.length === 0 ? state.dice : activeDice;
+        const clearPiggyback = state.piggybackOffer ? { piggybackOffer: null } : {};
+        const base = { ...state, ...clearPiggyback };
+
+        const activeDice = base.dice.filter(d => !base.setAsideDiceIds.includes(d.id));
+        const diceToRoll = activeDice.length === 0 ? base.dice : activeDice;
 
         const allIds = diceToRoll.map(d => d.id);
-        const newDice = state.dice.map(d => {
+        const newDice = base.dice.map(d => {
           if (allIds.includes(d.id)) return { ...d, value: rollValue(), held: false };
           return d;
         });
@@ -189,26 +196,26 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
         if (isFarkle) {
           return {
-            ...state,
+            ...base,
             dice: newDice,
-            rollsUsed: state.rollsUsed + 1,
+            rollsUsed: base.rollsUsed + 1,
             farkled: true,
             mustSetAside: false,
-            turnScoreAtRollStart: state.turnScore,
+            turnScoreAtRollStart: base.turnScore,
             currentRollSetAsideIds: [],
-            setAsideDiceIds: activeDice.length === 0 ? [] : state.setAsideDiceIds,
+            setAsideDiceIds: activeDice.length === 0 ? [] : base.setAsideDiceIds,
           };
         }
 
         return {
-          ...state,
+          ...base,
           dice: newDice,
-          rollsUsed: state.rollsUsed + 1,
+          rollsUsed: base.rollsUsed + 1,
           farkled: false,
           mustSetAside: true,
-          turnScoreAtRollStart: state.turnScore,
+          turnScoreAtRollStart: base.turnScore,
           currentRollSetAsideIds: [],
-          setAsideDiceIds: activeDice.length === 0 ? [] : state.setAsideDiceIds,
+          setAsideDiceIds: activeDice.length === 0 ? [] : base.setAsideDiceIds,
         };
       }
 
@@ -306,19 +313,25 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (heldDice.length === 0) return state;
 
       const selectedValues = heldDice.map(d => d.value);
-      if (!isValidSelection(selectedValues)) return state;
-
       const newCurrentRollSetAsideIds = [...state.currentRollSetAsideIds, ...heldDice.map(d => d.id)];
       const allCurrentRollValues = state.dice
         .filter(d => newCurrentRollSetAsideIds.includes(d.id))
         .map(d => d.value);
+
+      if (!isValidSelection(selectedValues) && !isValidSelection(allCurrentRollValues)) return state;
+
       const cumulativeScore = scoreDice(allCurrentRollValues);
+      const existingRollScore = state.currentRollSetAsideIds.length > 0
+        ? scoreDice(state.dice.filter(d => state.currentRollSetAsideIds.includes(d.id)).map(d => d.value))
+        : 0;
+      const additiveScore = existingRollScore + scoreDice(selectedValues);
+      const effectiveScore = Math.max(cumulativeScore, additiveScore);
 
       const newSetAside = [...state.setAsideDiceIds, ...heldDice.map(d => d.id)];
       const effectiveDiceCount = state.sixDiceEnabled ? 6 : state.ruleset.diceCount;
       const allSetAside = newSetAside.length === effectiveDiceCount;
 
-      const newTurnScore = state.turnScoreAtRollStart + cumulativeScore;
+      const newTurnScore = state.turnScoreAtRollStart + effectiveScore;
       return {
         ...state,
         turnScore: newTurnScore,
@@ -335,7 +348,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.farkled) return advanceTurn(state);
 
       const currentPlayer = state.players[state.currentPlayerIndex];
+
       const prevTotal = (currentPlayer.scores["total"] as number) ?? 0;
+      if (state.openingThresholdEnabled && prevTotal === 0 && state.turnScore < 500) {
+        return state;
+      }
       const newTotal = prevTotal + state.turnScore;
 
       const updatedPlayers = state.players.map((p, i) =>
@@ -354,7 +371,23 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         };
       }
 
-      return advanceTurn(nextState);
+      const isSinglePlayer = state.players.length === 1;
+      const shouldOfferPiggyback = state.piggybackEnabled && !isSinglePlayer;
+
+      const advanced = advanceTurn(nextState);
+
+      if (shouldOfferPiggyback) {
+        return {
+          ...advanced,
+          piggybackOffer: {
+            dice: state.dice,
+            setAsideDiceIds: state.setAsideDiceIds,
+            turnScore: state.turnScore,
+          },
+        };
+      }
+
+      return advanced;
     }
 
     case "TOGGLE_SIX_DICE": {
@@ -386,6 +419,28 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "TOGGLE_SCORING_HINTS": {
       return { ...state, scoringHintsEnabled: !state.scoringHintsEnabled };
+    }
+
+    case "TOGGLE_OPENING_THRESHOLD": {
+      return { ...state, openingThresholdEnabled: !state.openingThresholdEnabled };
+    }
+
+    case "TOGGLE_PIGGYBACK": {
+      return { ...state, piggybackEnabled: !state.piggybackEnabled };
+    }
+
+    case "ACCEPT_PIGGYBACK": {
+      if (!state.piggybackOffer) return state;
+      const offer = state.piggybackOffer;
+      return {
+        ...state,
+        dice: offer.dice.map(d => ({ ...d, held: false })),
+        setAsideDiceIds: offer.setAsideDiceIds,
+        turnScore: offer.turnScore,
+        turnScoreAtRollStart: offer.turnScore,
+        currentRollSetAsideIds: [],
+        piggybackOffer: null,
+      };
     }
 
     case "RESTORE": {

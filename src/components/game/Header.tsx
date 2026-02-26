@@ -26,6 +26,10 @@ export function Header({
   onToggleSixDice,
   orderedScoringEnabled,
   onToggleOrderedScoring,
+  openingThresholdEnabled,
+  onToggleOpeningThreshold,
+  piggybackEnabled,
+  onTogglePiggyback,
   onEndGame,
 }: {
   showBack?: boolean;
@@ -45,6 +49,10 @@ export function Header({
   onToggleSixDice?: () => void;
   orderedScoringEnabled?: boolean;
   onToggleOrderedScoring?: () => void;
+  openingThresholdEnabled?: boolean;
+  onToggleOpeningThreshold?: () => void;
+  piggybackEnabled?: boolean;
+  onTogglePiggyback?: () => void;
   onEndGame?: () => void;
 }) {
   const router = useRouter();
@@ -138,6 +146,10 @@ export function Header({
           onToggleSixDice={onToggleSixDice}
           orderedScoringEnabled={orderedScoringEnabled}
           onToggleOrderedScoring={onToggleOrderedScoring}
+          openingThresholdEnabled={openingThresholdEnabled}
+          onToggleOpeningThreshold={onToggleOpeningThreshold}
+          piggybackEnabled={piggybackEnabled}
+          onTogglePiggyback={onTogglePiggyback}
         />
       )}
 
@@ -368,6 +380,10 @@ function RulesModal({
   onToggleSixDice,
   orderedScoringEnabled,
   onToggleOrderedScoring,
+  openingThresholdEnabled,
+  onToggleOpeningThreshold,
+  piggybackEnabled,
+  onTogglePiggyback,
 }: {
   onClose: () => void;
   onChangeRuleset?: () => void;
@@ -386,6 +402,10 @@ function RulesModal({
   onToggleSixDice?: () => void;
   orderedScoringEnabled?: boolean;
   onToggleOrderedScoring?: () => void;
+  openingThresholdEnabled?: boolean;
+  onToggleOpeningThreshold?: () => void;
+  piggybackEnabled?: boolean;
+  onTogglePiggyback?: () => void;
 }) {
   const router = useRouter();
   const isAbout = !rulesetId && !showAllRulesets;
@@ -516,7 +536,7 @@ function RulesModal({
               <ClassicRules />
             )}
 
-            {(onToggleRollBanking || onToggleMultipleWeetzees || onToggleSequentialTargets || onToggleScoringHints || onToggleSixDice !== undefined || onToggleOrderedScoring !== undefined) && (
+            {(onToggleRollBanking || onToggleMultipleWeetzees || onToggleSequentialTargets || onToggleScoringHints || onToggleSixDice !== undefined || onToggleOrderedScoring !== undefined || onToggleOpeningThreshold || onTogglePiggyback) && (
               <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
                 <h3
                   style={{
@@ -578,6 +598,22 @@ function RulesModal({
                     enabled={!!orderedScoringEnabled}
                     onToggle={onToggleOrderedScoring}
                     disabled={!onToggleOrderedScoring}
+                  />
+                )}
+                {onToggleOpeningThreshold && (
+                  <ToggleRow
+                    label="Opening threshold"
+                    desc="Must score 500+ in a turn before you can start banking"
+                    enabled={!!openingThresholdEnabled}
+                    onToggle={onToggleOpeningThreshold}
+                  />
+                )}
+                {onTogglePiggyback && (
+                  <ToggleRow
+                    label="Piggybacking"
+                    desc="Next player can inherit the previous player's remaining dice and score"
+                    enabled={!!piggybackEnabled}
+                    onToggle={onTogglePiggyback}
                   />
                 )}
               </div>

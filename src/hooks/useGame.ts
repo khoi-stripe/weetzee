@@ -80,6 +80,9 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
       scoringHintsEnabled: rest.scoringHintsEnabled ?? true,
       sixDiceEnabled: sixDice,
       orderedScoringEnabled: orderedScoring,
+      openingThresholdEnabled: rest.openingThresholdEnabled ?? false,
+      piggybackEnabled: rest.piggybackEnabled ?? false,
+      piggybackOffer: rest.piggybackOffer ?? null,
     };
   } catch {
     return null;
@@ -189,11 +192,23 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee") {
     dispatch({ type: "TOGGLE_ORDERED_SCORING" });
   }
 
+  function toggleOpeningThreshold() {
+    dispatch({ type: "TOGGLE_OPENING_THRESHOLD" });
+  }
+
+  function togglePiggyback() {
+    dispatch({ type: "TOGGLE_PIGGYBACK" });
+  }
+
+  function acceptPiggyback() {
+    dispatch({ type: "ACCEPT_PIGGYBACK" });
+  }
+
   function endGame() {
     clearState();
   }
 
-  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, setAside, bank, toggleScoringHints, toggleSixDice, toggleOrderedScoring, endGame };
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, setAside, bank, toggleScoringHints, toggleSixDice, toggleOrderedScoring, toggleOpeningThreshold, togglePiggyback, acceptPiggyback, endGame };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

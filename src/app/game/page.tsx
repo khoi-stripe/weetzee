@@ -44,6 +44,10 @@ function GameContent() {
         onToggleSixDice={showSixDice ? (gameStarted ? undefined : game.toggleSixDice) : undefined}
         orderedScoringEnabled={showOrderedScoring ? state.orderedScoringEnabled : undefined}
         onToggleOrderedScoring={showOrderedScoring ? (gameStarted ? undefined : game.toggleOrderedScoring) : undefined}
+        openingThresholdEnabled={isFarkle ? state.openingThresholdEnabled : undefined}
+        onToggleOpeningThreshold={isFarkle ? game.toggleOpeningThreshold : undefined}
+        piggybackEnabled={isFarkle ? state.piggybackEnabled : undefined}
+        onTogglePiggyback={isFarkle ? game.togglePiggyback : undefined}
         onEndGame={game.endGame}
       />
       <GameView game={game} />

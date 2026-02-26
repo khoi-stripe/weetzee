@@ -9,11 +9,12 @@ import { isValidSelection, scoreDice, getScoringPossibilities } from "@/lib/rule
 import { playTap, playTurnChange, playConfirm, playDeselect, playFarkle, getAudioCtx } from "@/lib/sounds";
 
 export function FarkleView({ game }: { game: UseGameReturn }) {
-  const { state, roll, toggleHold, setAside, bank } = game;
+  const { state, roll, toggleHold, setAside, bank, acceptPiggyback } = game;
   const currentPlayer = state.players[state.currentPlayerIndex];
 
   const [interstitialPlayer, setInterstitialPlayer] = useState<Player | null>(null);
   const [interstitialExiting, setInterstitialExiting] = useState(false);
+  const [interstitialLastTurn, setInterstitialLastTurn] = useState(false);
   const [showFarkleBust, setShowFarkleBust] = useState(false);
   const [bustExiting, setBustExiting] = useState(false);
   const bustScoreRef = useRef(0);
@@ -75,11 +76,13 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
       setShowFarkleBust(false);
       setBustExiting(false);
 
+      const isLastTurn = state.finalRound;
       bank();
 
       if (!isSinglePlayer) {
+        setInterstitialLastTurn(isLastTurn);
         showInterstitial(nextPlayer);
-        setTimeout(() => showInterstitial(null), 2000);
+        setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
       }
     }, 400);
   }
@@ -93,12 +96,17 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
     const isSinglePlayer = state.players.length === 1;
 
     bankTimer.current = setTimeout(() => {
+      const currentTotal = (currentPlayer.scores["total"] as number ?? 0) + state.turnScore;
+      const isLastTurn = state.finalRound ||
+        (!state.finalRound && !!state.ruleset.winThreshold && currentTotal >= state.ruleset.winThreshold);
+
       bank();
       bankTimer.current = null;
 
       if (!isSinglePlayer) {
+        setInterstitialLastTurn(isLastTurn);
         showInterstitial(nextPlayer);
-        setTimeout(() => showInterstitial(null), 2000);
+        setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
       }
     }, 300);
   }
@@ -107,21 +115,27 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
     (d) => d.held && !state.setAsideDiceIds.includes(d.id)
   );
   const heldValues = heldDice.map((d) => d.value);
-  const selectionValid = heldValues.length > 0 && isValidSelection(heldValues);
 
   const currentRollSetAsideValues = state.dice
     .filter((d) => state.currentRollSetAsideIds.includes(d.id))
     .map((d) => d.value);
   const combinedValues = [...currentRollSetAsideValues, ...heldValues];
+  const selectionValid = heldValues.length > 0 && (isValidSelection(heldValues) || isValidSelection(combinedValues));
+
   const cumulativeScore = selectionValid ? scoreDice(combinedValues) : 0;
   const existingRollScore = currentRollSetAsideValues.length > 0 ? scoreDice(currentRollSetAsideValues) : 0;
-  const selectionScore = selectionValid ? cumulativeScore - existingRollScore : 0;
+  const additiveScore = existingRollScore + (selectionValid ? scoreDice(heldValues) : 0);
+  const effectiveScore = Math.max(cumulativeScore, additiveScore);
+  const selectionScore = selectionValid ? effectiveScore - existingRollScore : 0;
 
   const hasRolled = state.rollsUsed > 0;
   const hotDice = !state.farkled && state.setAsideDiceIds.length === 0 && state.turnScore > 0 && hasRolled;
   const canSetAside = !state.farkled && selectionValid && hasRolled;
   const canRoll = !state.farkled && !state.mustSetAside && (state.setAsideDiceIds.length > 0 || hotDice) && !heldDice.length;
-  const canBank = (state.farkled || (!state.mustSetAside && state.turnScore > 0)) && hasRolled && !heldDice.length;
+  const playerTotal = (currentPlayer.scores["total"] as number) ?? 0;
+  const needsOpening = state.openingThresholdEnabled && playerTotal === 0;
+  const belowThreshold = needsOpening && state.turnScore < 500;
+  const canBank = (state.farkled || (!state.mustSetAside && state.turnScore > 0 && !belowThreshold)) && hasRolled && !heldDice.length;
 
   // Combined action button: ROLL or SET ASIDE depending on state
   let actionLabel: string;
@@ -255,21 +269,34 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
     ? getScoringPossibilities(availableDice)
     : [];
 
+  const hasPiggybackChoice = !!state.piggybackOffer && !hasRolled;
+
+  function handlePiggyback() {
+    playConfirm();
+    acceptPiggyback();
+    roll();
+  }
+
   const diceViewProps = {
-    dice: state.dice,
+    dice: hasPiggybackChoice ? state.piggybackOffer!.dice : state.dice,
     rollsUsed: state.rollsUsed,
     rollsPerTurn: 999,
     playerColor: currentPlayer.color,
     onRoll: actionHandler,
     onToggleHold: toggleHold,
     farkleMode: true as const,
-    setAsideDiceIds: state.setAsideDiceIds,
+    setAsideDiceIds: hasPiggybackChoice ? [] : state.setAsideDiceIds,
     farkled: state.farkled,
     farkleActionLabel: actionLabel,
     farkleActionEnabled: actionEnabled,
-    farkleBankEnabled: canBank,
-    farkleOnBank: state.farkled ? handleBustDone : handleBank,
-    farkleBankLabel: state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : "BANK"),
+    farkleBankEnabled: hasPiggybackChoice ? true : canBank,
+    farkleOnBank: hasPiggybackChoice ? handlePiggyback : (state.farkled ? handleBustDone : handleBank),
+    farkleBankLabel: hasPiggybackChoice ? (
+      <PiggybackLabel
+        score={state.piggybackOffer!.turnScore}
+        remainingDice={state.piggybackOffer!.dice.length - state.piggybackOffer!.setAsideDiceIds.length || state.piggybackOffer!.dice.length}
+      />
+    ) : (state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : (belowThreshold && state.turnScore > 0 ? `NEED 500` : "BANK"))),
   };
 
   return (
@@ -355,7 +382,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
       )}
 
       {interstitialPlayer && (
-        <PlayerInterstitial player={interstitialPlayer} exiting={interstitialExiting} />
+        <PlayerInterstitial player={interstitialPlayer} exiting={interstitialExiting} lastTurn={interstitialLastTurn} />
       )}
     </div>
   );
@@ -395,19 +422,14 @@ function TurnScoreBar({
           gap: 6,
         }}
       >
-        <span style={{ color: "#999999" }}>Turn</span>
-        <span style={{ color: "#ffffff", fontWeight: 700 }}>
-          {turnScore + selectionScore}
+        <span style={{ color: "#ffffff" }}>
+          Turn {turnScore + selectionScore}
         </span>
         {selectionScore > 0 && turnScore > 0 && (
-          <span style={{ color: playerColor }}>
-            +{selectionScore}
-          </span>
+          <span style={{ color: playerColor }}>+{selectionScore}</span>
         )}
         {finalRound && (
-          <span style={{ color: "#ff6b6b" }}>
-            Final round
-          </span>
+          <span style={{ color: "#ff6b6b" }}>Final round</span>
         )}
       </div>
     </div>
@@ -680,9 +702,36 @@ function BustDie({ value, failed, index = 0 }: { value: number; failed: boolean;
   );
 }
 
+// ===== Piggyback Label =====
+
+function PiggybackLabel({ score, remainingDice }: { score: number; remainingDice: number }) {
+  return (
+    <span className="flex flex-col items-center" style={{ gap: 8, lineHeight: 1 }}>
+      <span>Piggyback</span>
+      <span className="flex items-center" style={{ gap: 6, fontWeight: 500 }}>
+        <span>+{score}</span>
+        <span className="flex items-center" style={{ gap: 1.5 }}>
+          {Array.from({ length: remainingDice }).map((_, i) => (
+            <span
+              key={i}
+              style={{
+                display: "inline-block",
+                width: "0.7em",
+                height: "0.7em",
+                borderRadius: 1.5,
+                border: "1px solid currentColor",
+              }}
+            />
+          ))}
+        </span>
+      </span>
+    </span>
+  );
+}
+
 // ===== Player Interstitial =====
 
-function PlayerInterstitial({ player, exiting }: { player: Player; exiting: boolean }) {
+function PlayerInterstitial({ player, exiting, lastTurn }: { player: Player; exiting: boolean; lastTurn?: boolean }) {
   return (
     <div
       className="absolute inset-0 flex items-center justify-center"
@@ -696,7 +745,7 @@ function PlayerInterstitial({ player, exiting }: { player: Player; exiting: bool
       }}
     >
       <div
-        className="flex items-center justify-center rounded-full"
+        className="flex flex-col items-center justify-center rounded-full"
         style={{
           width: "100%",
           aspectRatio: "1 / 1",
@@ -704,12 +753,18 @@ function PlayerInterstitial({ player, exiting }: { player: Player; exiting: bool
           fontSize: 20,
           fontWeight: 500,
           color: "#000000",
+          gap: 4,
           animation: exiting
             ? "scale-out 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
             : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
         }}
       >
         {player.name}
+        {lastTurn && (
+          <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(0, 0, 0, 0.6)" }}>
+            Final round
+          </span>
+        )}
       </div>
     </div>
   );

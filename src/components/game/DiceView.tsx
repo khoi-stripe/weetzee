@@ -84,7 +84,7 @@ export function DiceView({
   farkleActionEnabled?: boolean;
   farkleBankEnabled?: boolean;
   farkleOnBank?: () => void;
-  farkleBankLabel?: string;
+  farkleBankLabel?: React.ReactNode;
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
@@ -408,7 +408,7 @@ function FarkleBankButton({
   onBank,
   showButton,
 }: {
-  label: string;
+  label: React.ReactNode;
   enabled: boolean;
   onBank: () => void;
   showButton: boolean;
@@ -422,6 +422,7 @@ function FarkleBankButton({
       style={{
         width: "100%",
         height: "100%",
+        paddingTop: 8,
         transform: showButton ? undefined : "scale(0)",
       }}
     >
