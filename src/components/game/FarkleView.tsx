@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DiceView } from "./DiceView";
 import { PlayerBar } from "./PlayerBar";
 import type { UseGameReturn } from "@/hooks/useGame";
-import type { Player } from "@/lib/types";
+import type { Die, Player } from "@/lib/types";
 import { isValidSelection, scoreDice, getScoringPossibilities } from "@/lib/rulesets/farkle";
 import { playTap, playTurnChange, playConfirm, playDeselect, playFarkle, getAudioCtx } from "@/lib/sounds";
 
@@ -15,6 +15,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
   const [interstitialPlayer, setInterstitialPlayer] = useState<Player | null>(null);
   const [interstitialExiting, setInterstitialExiting] = useState(false);
   const [interstitialLastTurn, setInterstitialLastTurn] = useState(false);
+  const [interstitialPiggyback, setInterstitialPiggyback] = useState<{ score: number; dice: Die[]; setAsideDiceIds: number[] } | null>(null);
   const [showFarkleBust, setShowFarkleBust] = useState(false);
   const [bustExiting, setBustExiting] = useState(false);
   const bustScoreRef = useRef(0);
@@ -81,6 +82,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
 
       if (!isSinglePlayer) {
         setInterstitialLastTurn(isLastTurn);
+        setInterstitialPiggyback(null);
         showInterstitial(nextPlayer);
         setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
       }
@@ -99,14 +101,23 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
       const currentTotal = (currentPlayer.scores["total"] as number ?? 0) + state.turnScore;
       const isLastTurn = state.finalRound ||
         (!state.finalRound && !!state.ruleset.winThreshold && currentTotal >= state.ruleset.winThreshold);
+      const hasPiggyback = state.piggybackEnabled && !isSinglePlayer;
+      const piggybackInfo = hasPiggyback ? {
+        score: state.turnScore,
+        dice: state.dice,
+        setAsideDiceIds: state.setAsideDiceIds,
+      } : null;
 
       bank();
       bankTimer.current = null;
 
       if (!isSinglePlayer) {
         setInterstitialLastTurn(isLastTurn);
+        setInterstitialPiggyback(piggybackInfo);
         showInterstitial(nextPlayer);
-        setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
+        if (!hasPiggyback) {
+          setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
+        }
       }
     }, 300);
   }
@@ -269,34 +280,21 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
     ? getScoringPossibilities(availableDice)
     : [];
 
-  const hasPiggybackChoice = !!state.piggybackOffer && !hasRolled;
-
-  function handlePiggyback() {
-    playConfirm();
-    acceptPiggyback();
-    roll();
-  }
-
   const diceViewProps = {
-    dice: hasPiggybackChoice ? state.piggybackOffer!.dice : state.dice,
+    dice: state.dice,
     rollsUsed: state.rollsUsed,
     rollsPerTurn: 999,
     playerColor: currentPlayer.color,
     onRoll: actionHandler,
     onToggleHold: toggleHold,
     farkleMode: true as const,
-    setAsideDiceIds: hasPiggybackChoice ? [] : state.setAsideDiceIds,
+    setAsideDiceIds: state.setAsideDiceIds,
     farkled: state.farkled,
     farkleActionLabel: actionLabel,
     farkleActionEnabled: actionEnabled,
-    farkleBankEnabled: hasPiggybackChoice ? true : canBank,
-    farkleOnBank: hasPiggybackChoice ? handlePiggyback : (state.farkled ? handleBustDone : handleBank),
-    farkleBankLabel: hasPiggybackChoice ? (
-      <PiggybackLabel
-        score={state.piggybackOffer!.turnScore}
-        remainingDice={state.piggybackOffer!.dice.length - state.piggybackOffer!.setAsideDiceIds.length || state.piggybackOffer!.dice.length}
-      />
-    ) : (state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : (belowThreshold && state.turnScore > 0 ? `NEED 500` : "BANK"))),
+    farkleBankEnabled: canBank,
+    farkleOnBank: state.farkled ? handleBustDone : handleBank,
+    farkleBankLabel: state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : (belowThreshold && state.turnScore > 0 ? `NEED 500` : "BANK")),
   };
 
   return (
@@ -382,7 +380,14 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
       )}
 
       {interstitialPlayer && (
-        <PlayerInterstitial player={interstitialPlayer} exiting={interstitialExiting} lastTurn={interstitialLastTurn} />
+        <PlayerInterstitial
+          player={interstitialPlayer}
+          exiting={interstitialExiting}
+          lastTurn={interstitialLastTurn}
+          piggyback={interstitialPiggyback}
+          onFreshRoll={() => { playTap(); showInterstitial(null); }}
+          onPiggyback={() => { playTap(); acceptPiggyback(); roll(); showInterstitial(null); }}
+        />
       )}
     </div>
   );
@@ -702,36 +707,119 @@ function BustDie({ value, failed, index = 0 }: { value: number; failed: boolean;
   );
 }
 
-// ===== Piggyback Label =====
-
-function PiggybackLabel({ score, remainingDice }: { score: number; remainingDice: number }) {
-  return (
-    <span className="flex flex-col items-center" style={{ gap: 8, lineHeight: 1 }}>
-      <span>Piggyback</span>
-      <span className="flex items-center" style={{ gap: 6, fontWeight: 500 }}>
-        <span>+{score}</span>
-        <span className="flex items-center" style={{ gap: 1.5 }}>
-          {Array.from({ length: remainingDice }).map((_, i) => (
-            <span
-              key={i}
-              style={{
-                display: "inline-block",
-                width: "0.7em",
-                height: "0.7em",
-                borderRadius: 1.5,
-                border: "1px solid currentColor",
-              }}
-            />
-          ))}
-        </span>
-      </span>
-    </span>
-  );
-}
-
 // ===== Player Interstitial =====
 
-function PlayerInterstitial({ player, exiting, lastTurn }: { player: Player; exiting: boolean; lastTurn?: boolean }) {
+function PlayerInterstitial({
+  player,
+  exiting,
+  lastTurn,
+  piggyback,
+  onFreshRoll,
+  onPiggyback,
+}: {
+  player: Player;
+  exiting: boolean;
+  lastTurn?: boolean;
+  piggyback?: { score: number; dice: Die[]; setAsideDiceIds: number[] } | null;
+  onFreshRoll?: () => void;
+  onPiggyback?: () => void;
+}) {
+  if (piggyback) {
+    const remainingDice = piggyback.dice.filter(d => !piggyback.setAsideDiceIds.includes(d.id));
+    const diceToShow = remainingDice.length === 0 ? piggyback.dice : remainingDice;
+
+    return (
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center"
+        style={{
+          background: "rgba(0, 0, 0, 0.85)",
+          zIndex: 50,
+          padding: 16,
+          gap: 24,
+          animation: exiting
+            ? "interstitial-out 400ms ease forwards"
+            : "interstitial-in 300ms ease forwards",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "min(80vw, 80vh)",
+            aspectRatio: "1 / 1",
+          }}
+        >
+          <div
+            className="w-full h-full flex flex-col items-center justify-center rounded-full"
+            style={{
+              background: player.color,
+              color: "#000000",
+              gap: 6,
+              animation: exiting
+                ? "scale-out 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
+                : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 700 }}>
+              {player.name}
+            </span>
+            {lastTurn && (
+              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(0, 0, 0, 0.6)" }}>
+                Final round
+              </span>
+            )}
+            <span style={{ fontSize: 13, fontWeight: 500 }}>
+              +{piggyback.score} piggyback
+            </span>
+            <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 2 }}>
+              {diceToShow.map((d, i) => (
+                <InterstitialDie key={i} value={d.value} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center" style={{ gap: 16 }}>
+          <button
+            onClick={onFreshRoll}
+            className="flex items-center justify-center rounded-full shrink-0 pressable"
+            style={{
+              width: 100,
+              height: 100,
+              outline: "1px solid #ffffff",
+              outlineOffset: -1,
+              background: "transparent",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#ffffff",
+              cursor: "pointer",
+              animation: exiting ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 400ms both",
+            }}
+          >
+            Fresh roll
+          </button>
+          <button
+            onClick={onPiggyback}
+            className="flex items-center justify-center rounded-full shrink-0 pressable"
+            style={{
+              width: 100,
+              height: 100,
+              outline: "1px solid #ffffff",
+              outlineOffset: -1,
+              background: "#ffffff",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#000000",
+              cursor: "pointer",
+              animation: exiting ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 500ms both",
+            }}
+          >
+            Piggyback
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="absolute inset-0 flex items-center justify-center"
@@ -766,6 +854,39 @@ function PlayerInterstitial({ player, exiting, lastTurn }: { player: Player; exi
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+function InterstitialDie({ value }: { value: number }) {
+  const pips = BUST_PIP_LAYOUTS[value] ?? [];
+  const pipSize = "17%";
+  return (
+    <div
+      className="relative"
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 4,
+        outline: "1px solid #000000",
+        outlineOffset: -1,
+        background: "transparent",
+        flexShrink: 0,
+      }}
+    >
+      {pips.map(([x, y], i) => (
+        <div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: pipSize,
+            height: pipSize,
+            left: `calc(${x}% - ${pipSize} / 2)`,
+            top: `calc(${y}% - ${pipSize} / 2)`,
+            background: "#000000",
+          }}
+        />
+      ))}
     </div>
   );
 }
