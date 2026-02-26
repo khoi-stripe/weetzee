@@ -1,12 +1,24 @@
 // Centralized synth-based sound effects.
 // Each sound class uses a distinct synthesis technique for a unique character.
 
-export function getAudioCtx(): AudioContext | null {
+let _ctx: AudioContext | null = null;
+
+function ensureCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  const w = window as unknown as { __weetzeeAudioCtx?: AudioContext };
-  if (!w.__weetzeeAudioCtx) w.__weetzeeAudioCtx = new AudioContext();
-  if (w.__weetzeeAudioCtx.state === "suspended") w.__weetzeeAudioCtx.resume();
-  return w.__weetzeeAudioCtx;
+  if (_ctx && _ctx.state === "closed") _ctx = null;
+  if (!_ctx) _ctx = new AudioContext();
+  if (_ctx.state === "suspended") _ctx.resume();
+  return _ctx;
+}
+
+export function getAudioCtx(): AudioContext | null {
+  return ensureCtx();
+}
+
+if (typeof window !== "undefined") {
+  const warmUp = () => ensureCtx();
+  window.addEventListener("pointerdown", warmUp, { capture: true, passive: true });
+  window.addEventListener("keydown", warmUp, { capture: true, passive: true });
 }
 
 // ===== Dice rolling =====
