@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v6";
+const CACHE_VERSION = "v7";
 const CACHE_NAME = `weetzee-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = ["/", "/offline.html"];
@@ -42,17 +42,19 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() =>
-          caches
-            .match(event.request)
-            .then((cached) => cached || caches.match("/offline.html"))
-        )
+      caches.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request)
+          .then((response) => {
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            }
+            return response;
+          })
+          .catch(() => cached || caches.match("/offline.html"));
+
+        return cached || fetchPromise;
+      })
     );
     return;
   }
