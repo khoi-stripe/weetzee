@@ -14,6 +14,11 @@ type HouseRulesPrefs = {
   rollBankingEnabled: boolean;
   multipleWeetzeesEnabled: boolean;
   sequentialTargetsEnabled: boolean;
+  scoringHintsEnabled: boolean;
+  sixDiceEnabled: boolean;
+  orderedScoringEnabled: boolean;
+  openingThresholdEnabled: boolean;
+  piggybackEnabled: boolean;
 };
 
 function savePrefs(prefs: HouseRulesPrefs) {
@@ -23,9 +28,25 @@ function savePrefs(prefs: HouseRulesPrefs) {
 function loadPrefs(): HouseRulesPrefs {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        rollBankingEnabled: parsed.rollBankingEnabled ?? false,
+        multipleWeetzeesEnabled: parsed.multipleWeetzeesEnabled ?? false,
+        sequentialTargetsEnabled: parsed.sequentialTargetsEnabled ?? false,
+        scoringHintsEnabled: parsed.scoringHintsEnabled ?? true,
+        sixDiceEnabled: parsed.sixDiceEnabled ?? false,
+        orderedScoringEnabled: parsed.orderedScoringEnabled ?? false,
+        openingThresholdEnabled: parsed.openingThresholdEnabled ?? false,
+        piggybackEnabled: parsed.piggybackEnabled ?? false,
+      };
+    }
   } catch {}
-  return { rollBankingEnabled: false, multipleWeetzeesEnabled: false, sequentialTargetsEnabled: false };
+  return {
+    rollBankingEnabled: false, multipleWeetzeesEnabled: false, sequentialTargetsEnabled: false,
+    scoringHintsEnabled: true, sixDiceEnabled: false, orderedScoringEnabled: false,
+    openingThresholdEnabled: false, piggybackEnabled: false,
+  };
 }
 
 const MAX_SAVE_AGE_MS = 24 * 60 * 60 * 1000;
@@ -117,6 +138,11 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee") {
       if (prefs.rollBankingEnabled && !ruleset.forcedRolls && !ruleset.targetAssignment) dispatch({ type: "TOGGLE_ROLL_BANKING" });
       if (prefs.multipleWeetzeesEnabled) dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
       if (prefs.sequentialTargetsEnabled && ruleset.targetAssignment) dispatch({ type: "TOGGLE_SEQUENTIAL_TARGETS" });
+      if (!prefs.scoringHintsEnabled) dispatch({ type: "TOGGLE_SCORING_HINTS" });
+      if (prefs.sixDiceEnabled) dispatch({ type: "TOGGLE_SIX_DICE" });
+      if (prefs.orderedScoringEnabled) dispatch({ type: "TOGGLE_ORDERED_SCORING" });
+      if (prefs.openingThresholdEnabled && ruleset.farkle) dispatch({ type: "TOGGLE_OPENING_THRESHOLD" });
+      if (prefs.piggybackEnabled && ruleset.farkle) dispatch({ type: "TOGGLE_PIGGYBACK" });
     }
   }, [playerCount, rulesetId]);
 
@@ -145,31 +171,32 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee") {
     dispatch({ type: "SET_VIEW", view });
   }
 
-  function toggleRollBanking() {
-    dispatch({ type: "TOGGLE_ROLL_BANKING" });
-    savePrefs({
-      rollBankingEnabled: !state.rollBankingEnabled,
+  function currentPrefs(): HouseRulesPrefs {
+    return {
+      rollBankingEnabled: state.rollBankingEnabled,
       multipleWeetzeesEnabled: state.multipleWeetzeesEnabled,
       sequentialTargetsEnabled: state.sequentialTargetsEnabled,
-    });
+      scoringHintsEnabled: state.scoringHintsEnabled,
+      sixDiceEnabled: state.sixDiceEnabled,
+      orderedScoringEnabled: state.orderedScoringEnabled,
+      openingThresholdEnabled: state.openingThresholdEnabled,
+      piggybackEnabled: state.piggybackEnabled,
+    };
+  }
+
+  function toggleRollBanking() {
+    dispatch({ type: "TOGGLE_ROLL_BANKING" });
+    savePrefs({ ...currentPrefs(), rollBankingEnabled: !state.rollBankingEnabled });
   }
 
   function toggleMultipleWeetzees() {
     dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
-    savePrefs({
-      rollBankingEnabled: state.rollBankingEnabled,
-      multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled,
-      sequentialTargetsEnabled: state.sequentialTargetsEnabled,
-    });
+    savePrefs({ ...currentPrefs(), multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled });
   }
 
   function toggleSequentialTargets() {
     dispatch({ type: "TOGGLE_SEQUENTIAL_TARGETS" });
-    savePrefs({
-      rollBankingEnabled: state.rollBankingEnabled,
-      multipleWeetzeesEnabled: state.multipleWeetzeesEnabled,
-      sequentialTargetsEnabled: !state.sequentialTargetsEnabled,
-    });
+    savePrefs({ ...currentPrefs(), sequentialTargetsEnabled: !state.sequentialTargetsEnabled });
   }
 
   function setAside() {
@@ -182,22 +209,27 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee") {
 
   function toggleScoringHints() {
     dispatch({ type: "TOGGLE_SCORING_HINTS" });
+    savePrefs({ ...currentPrefs(), scoringHintsEnabled: !state.scoringHintsEnabled });
   }
 
   function toggleSixDice() {
     dispatch({ type: "TOGGLE_SIX_DICE" });
+    savePrefs({ ...currentPrefs(), sixDiceEnabled: !state.sixDiceEnabled });
   }
 
   function toggleOrderedScoring() {
     dispatch({ type: "TOGGLE_ORDERED_SCORING" });
+    savePrefs({ ...currentPrefs(), orderedScoringEnabled: !state.orderedScoringEnabled });
   }
 
   function toggleOpeningThreshold() {
     dispatch({ type: "TOGGLE_OPENING_THRESHOLD" });
+    savePrefs({ ...currentPrefs(), openingThresholdEnabled: !state.openingThresholdEnabled });
   }
 
   function togglePiggyback() {
     dispatch({ type: "TOGGLE_PIGGYBACK" });
+    savePrefs({ ...currentPrefs(), piggybackEnabled: !state.piggybackEnabled });
   }
 
   function acceptPiggyback() {
