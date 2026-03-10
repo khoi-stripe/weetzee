@@ -76,12 +76,15 @@ export function PlayerSelector({
 
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
+  const [pressedIndex, setPressedIndex] = useState<number | null>(null);
 
   function handlePointerDown(playerIndex: number) {
     if (!onToggleCpu) return;
     longPressTriggered.current = false;
+    setPressedIndex(playerIndex);
     longPressTimer.current = setTimeout(() => {
       longPressTriggered.current = true;
+      setPressedIndex(null);
       const playerNum = playerIndex + 1;
       if (playerNum > count) onChange(playerNum);
       playToggle(!cpuPlayers?.has(playerIndex));
@@ -90,6 +93,7 @@ export function PlayerSelector({
   }
 
   function handlePointerUp(playerIndex: number) {
+    setPressedIndex(null);
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -103,6 +107,7 @@ export function PlayerSelector({
   }
 
   function handlePointerCancel() {
+    setPressedIndex(null);
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -154,6 +159,10 @@ export function PlayerSelector({
                 width: layout.cellSize || "100%",
                 height: layout.cellSize || "100%",
                 position: "relative",
+                transform: pressedIndex === i ? "scale(0.88)" : "scale(1)",
+                transition: pressedIndex === i
+                  ? "transform 400ms cubic-bezier(0.2, 0, 0.2, 1)"
+                  : "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}
               onPointerDown={() => handlePointerDown(i)}
               onPointerUp={() => handlePointerUp(i)}

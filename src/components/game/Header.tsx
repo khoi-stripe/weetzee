@@ -731,6 +731,17 @@ function AboutContent() {
         ))}
       </Section>
 
+      <Section title="CPU players">
+        <p>
+          Long-press any die on the player select screen to toggle it as a computer opponent.
+          CPU players take their turns automatically.
+        </p>
+        <p style={{ marginTop: 10 }}>
+          You can change the CPU difficulty (Easy, Medium, or Hard) mid-game from the settings menu.
+          Easy makes occasional mistakes, Medium plays smart, and Hard plays to win.
+        </p>
+      </Section>
+
       <InstallSection alwaysShow />
     </>
   );
