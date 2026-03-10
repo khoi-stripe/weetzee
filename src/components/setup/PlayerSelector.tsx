@@ -121,18 +121,17 @@ export function PlayerSelector({
       className="flex flex-col items-center justify-center"
       style={{ flex: 1, minHeight: 0, width: "100%", padding: `${GAP}px ${GAP}px 32px`, gap: 24 }}
     >
-      <p
-        className="shrink-0"
-        style={{
-          fontSize: 16,
-          fontWeight: 400,
-          color: "#ffffff",
-          textAlign: "center",
-          width: gridW,
-        }}
-      >
-        {title}
-      </p>
+      <div className="shrink-0" style={{ textAlign: "center", width: gridW }}>
+        <p
+          style={{
+            fontSize: 16,
+            fontWeight: 400,
+            color: "#ffffff",
+          }}
+        >
+          {title}
+        </p>
+      </div>
 
       <div
         style={{
@@ -214,19 +213,6 @@ export function PlayerSelector({
         </div>
       </div>
 
-      {onToggleCpu && (
-        <p
-          className="shrink-0"
-          style={{
-            fontSize: 11,
-            fontWeight: 400,
-            color: "#666666",
-            textAlign: "center",
-          }}
-        >
-          Long-press to toggle CPU
-        </p>
-      )}
     </div>
   );
 }

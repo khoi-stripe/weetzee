@@ -76,14 +76,14 @@ export function Header({
 
   return (
     <>
-      <div className="relative shrink-0 w-full" style={{ height: 48 }}>
+      <div className="shrink-0 w-full flex items-center" style={{ height: 48, position: "relative" }}>
         {showBack && (
           <button
             onClick={handleBack}
-            className="absolute flex items-center justify-center pressable"
+            className="flex items-center justify-center pressable"
             style={{
+              position: "absolute",
               left: 4,
-              top: 2,
               padding: "8px 12px",
 
               fontSize: 13,
@@ -98,13 +98,12 @@ export function Header({
           </button>
         )}
         <p
-          className="absolute font-medium text-white text-center"
+          className="font-medium text-white text-center"
           style={{
             fontSize: 16,
+            position: "absolute",
             left: "50%",
             transform: "translateX(-50%)",
-            top: 13.5,
-
             letterSpacing: 0,
           }}
         >
@@ -112,10 +111,10 @@ export function Header({
         </p>
         <button
           onClick={() => { playTap(); setShowRules(true); }}
-          className="absolute flex items-center justify-center pressable"
+          className="flex items-center justify-center pressable"
           style={{
+            position: "absolute",
             right: 4,
-            top: 2,
             padding: "8px 12px",
             background: "none",
             border: "none",
