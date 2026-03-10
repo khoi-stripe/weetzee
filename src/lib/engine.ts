@@ -384,6 +384,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (shouldOfferPiggyback) {
         return {
           ...advanced,
+          dice: state.dice.map(d => ({ ...d, held: false })),
           piggybackOffer: {
             dice: state.dice,
             setAsideDiceIds: state.setAsideDiceIds,

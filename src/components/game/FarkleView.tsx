@@ -899,6 +899,7 @@ function PlayerInterstitial({
               opacity: aiChoice === "piggyback" ? 0.4 : 1,
               cursor: aiChoice ? "default" : "pointer",
               animation: (freshIntroDone || exiting) ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 400ms both",
+              transition: freshIntroDone ? "transform 550ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 300ms ease, background 300ms ease, color 300ms ease" : undefined,
               transform: aiChoice === "fresh" ? "scale(0.85)" : undefined,
             }}
           >
@@ -920,6 +921,7 @@ function PlayerInterstitial({
               opacity: aiChoice === "fresh" ? 0.4 : 1,
               cursor: aiChoice ? "default" : "pointer",
               animation: (piggyIntroDone || exiting) ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 500ms both",
+              transition: piggyIntroDone ? "transform 550ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 300ms ease, background 300ms ease, color 300ms ease" : undefined,
               transform: aiChoice === "piggyback" ? "scale(0.85)" : undefined,
             }}
           >
