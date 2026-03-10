@@ -14,11 +14,11 @@ import { playTap, playTurnChange } from "@/lib/sounds";
 // Portrait: vertical sliding strip (DiceView → PlayerBar → ScorecardView).
 // Landscape: side-by-side (DiceView | ScorecardView) with PlayerBar on top.
 
-export function GameView({ game, isAITurn = false }: { game: UseGameReturn; isAITurn?: boolean }) {
+export function GameView({ game, isAITurn = false, aiPendingAction = null }: { game: UseGameReturn; isAITurn?: boolean; aiPendingAction?: string | null }) {
   const { state, roll, toggleHold, scoreCategory, setView } = game;
 
   if (state.ruleset.farkle) {
-    return <FarkleView game={game} isAITurn={isAITurn} />;
+    return <FarkleView game={game} isAITurn={isAITurn} aiPendingAction={aiPendingAction} />;
   }
 
   const defaultPanel = state.ruleset.targetAssignment ? 1 : 0;

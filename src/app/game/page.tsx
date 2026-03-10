@@ -38,7 +38,7 @@ function GameContent() {
     }
   }, []);
 
-  const { isAITurn } = useAI(state, dispatch);
+  const { isAITurn, aiPendingAction } = useAI(state, dispatch);
 
   if (state.gameOver) {
     return <GameOverScreen players={state.players} ruleset={state.ruleset} />;
@@ -79,7 +79,7 @@ function GameContent() {
         onSetAIDifficulty={hasCPU ? game.setAIDifficulty : undefined}
         onEndGame={game.endGame}
       />
-      <GameView game={game} isAITurn={isAITurn} />
+      <GameView game={game} isAITurn={isAITurn} aiPendingAction={aiPendingAction} />
     </div>
   );
 }

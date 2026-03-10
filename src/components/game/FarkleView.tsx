@@ -6,9 +6,10 @@ import { PlayerBar } from "./PlayerBar";
 import type { UseGameReturn } from "@/hooks/useGame";
 import type { Die, Player } from "@/lib/types";
 import { isValidSelection, scoreDice, getScoringPossibilities } from "@/lib/rulesets/farkle";
+import { farkleShouldAcceptPiggyback } from "@/lib/ai";
 import { playTap, playTurnChange, playConfirm, playFarkle, getAudioCtx } from "@/lib/sounds";
 
-export function FarkleView({ game, isAITurn = false }: { game: UseGameReturn; isAITurn?: boolean }) {
+export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: { game: UseGameReturn; isAITurn?: boolean; aiPendingAction?: string | null }) {
   const { state, roll, toggleHold, setAside, bank, acceptPiggyback } = game;
   const currentPlayer = state.players[state.currentPlayerIndex];
 
@@ -43,28 +44,86 @@ export function FarkleView({ game, isAITurn = false }: { game: UseGameReturn; is
     };
   }, []);
 
+  const [aiPiggybackChoice, setAiPiggybackChoice] = useState<"fresh" | "piggyback" | null>(null);
+
   // Show interstitial when transitioning between players (e.g., after AI turn ends)
   useEffect(() => {
     if (prevPlayerIndex.current !== state.currentPlayerIndex) {
       const prevWasAI = state.players[prevPlayerIndex.current]?.isComputer;
-      const currentIsHuman = !currentPlayer.isComputer;
       prevPlayerIndex.current = state.currentPlayerIndex;
 
-      if (prevWasAI && currentIsHuman && state.players.length > 1) {
+      if (prevWasAI && state.players.length > 1) {
+        if (state.piggybackOffer) {
+          setInterstitialPiggyback({
+            score: state.piggybackOffer.turnScore,
+            dice: state.piggybackOffer.dice,
+            setAsideDiceIds: state.piggybackOffer.setAsideDiceIds,
+          });
+        } else {
+          setInterstitialPiggyback(null);
+        }
+        setInterstitialLastTurn(state.finalRound);
+        setAiPiggybackChoice(null);
         showInterstitial(currentPlayer);
-        setTimeout(() => showInterstitial(null), 2000);
+        if (!state.piggybackOffer) {
+          setTimeout(() => showInterstitial(null), state.finalRound ? 3200 : 2000);
+        }
       }
     }
-  }, [state.currentPlayerIndex]);
+  }, [state.currentPlayerIndex, state.piggybackOffer]);
+
+  // Auto-tap piggyback choice for CPU players
+  // 3-phase: press down → bounce back → execute + dismiss
+  const aiPiggybackDecisionRef = useRef<boolean | null>(null);
+  const aiPiggybackTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    aiPiggybackTimers.current.forEach(clearTimeout);
+    aiPiggybackTimers.current = [];
+    aiPiggybackDecisionRef.current = null;
+    setAiPiggybackChoice(null);
+
+    if (!interstitialPiggyback || !currentPlayer.isComputer) return;
+
+    const accept = farkleShouldAcceptPiggyback(state);
+    aiPiggybackDecisionRef.current = accept;
+
+    // Phase 1 (1.5s): press down
+    const t1 = setTimeout(() => {
+      setAiPiggybackChoice(accept ? "piggyback" : "fresh");
+    }, 1500);
+
+    // Phase 2 (2.0s): release — clear choice so .pressable transition bounces back
+    const t2 = setTimeout(() => {
+      setAiPiggybackChoice(null);
+    }, 2000);
+
+    // Phase 3 (2.6s): execute action + dismiss
+    const t3 = setTimeout(() => {
+      if (aiPiggybackDecisionRef.current) {
+        acceptPiggyback();
+        roll();
+      } else {
+        roll();
+      }
+      showInterstitial(null);
+    }, 2600);
+
+    aiPiggybackTimers.current.push(t1, t2, t3);
+
+    return () => {
+      aiPiggybackTimers.current.forEach(clearTimeout);
+      aiPiggybackTimers.current = [];
+    };
+  }, [interstitialPiggyback, currentPlayer.isComputer]);
 
   // Show farkle bust screen when farkled (after 2s delay so player sees the roll)
-  // AI players skip the bust screen — the AI hook handles banking directly
   const prevFarkled = useRef(false);
   const farkleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bustDice, setBustDice] = useState<{ value: number }[]>([]);
   const [bustKeptDice, setBustKeptDice] = useState<{ value: number }[]>([]);
   useEffect(() => {
-    if (state.farkled && !prevFarkled.current && !isAITurn) {
+    if (state.farkled && !prevFarkled.current) {
       bustScoreRef.current = state.turnScore;
       const activeDice = state.dice.filter(d => !state.setAsideDiceIds.includes(d.id));
       const keptDice = state.dice.filter(d => state.setAsideDiceIds.includes(d.id));
@@ -77,11 +136,23 @@ export function FarkleView({ game, isAITurn = false }: { game: UseGameReturn; is
       }, 2000);
     }
     prevFarkled.current = state.farkled;
-  }, [state.farkled, state.turnScore, state.dice, state.setAsideDiceIds, isAITurn]);
+  }, [state.farkled, state.turnScore, state.dice, state.setAsideDiceIds]);
 
   useEffect(() => {
     return () => { if (farkleTimer.current) clearTimeout(farkleTimer.current); };
   }, []);
+
+  // Auto-dismiss bust screen for CPU players
+  const bustAutoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (bustAutoTimer.current) { clearTimeout(bustAutoTimer.current); bustAutoTimer.current = null; }
+    if (!showFarkleBust || !isAITurn) return;
+    bustAutoTimer.current = setTimeout(() => {
+      handleBustDone();
+      bustAutoTimer.current = null;
+    }, 2500);
+    return () => { if (bustAutoTimer.current) { clearTimeout(bustAutoTimer.current); bustAutoTimer.current = null; } };
+  }, [showFarkleBust, isAITurn]);
 
   function handleBustDone() {
     setBustExiting(true);
@@ -310,7 +381,9 @@ export function FarkleView({ game, isAITurn = false }: { game: UseGameReturn; is
     farkleActionEnabled: actionEnabled,
     farkleBankEnabled: canBank,
     farkleOnBank: isAITurn ? () => {} : (state.farkled ? handleBustDone : handleBank),
-    farkleBankLabel: isAITurn ? "" : (state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : (belowThreshold && state.turnScore > 0 ? `NEED 500` : "BANK"))),
+    farkleBankLabel: state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : (belowThreshold && state.turnScore > 0 ? `NEED 500` : "BANK")),
+    farkleActionPressed: aiPendingAction === "roll" || aiPendingAction === "set-aside",
+    farkleBankPressed: aiPendingAction === "bank",
   };
 
   return (
@@ -408,6 +481,7 @@ export function FarkleView({ game, isAITurn = false }: { game: UseGameReturn; is
           exiting={interstitialExiting}
           lastTurn={interstitialLastTurn}
           piggyback={interstitialPiggyback}
+          aiChoice={aiPiggybackChoice}
           onFreshRoll={() => { playTap(); showInterstitial(null); }}
           onPiggyback={() => { playTap(); acceptPiggyback(); roll(); showInterstitial(null); }}
         />
@@ -739,6 +813,7 @@ function PlayerInterstitial({
   exiting,
   lastTurn,
   piggyback,
+  aiChoice,
   onFreshRoll,
   onPiggyback,
 }: {
@@ -746,9 +821,13 @@ function PlayerInterstitial({
   exiting: boolean;
   lastTurn?: boolean;
   piggyback?: { score: number; dice: Die[]; setAsideDiceIds: number[] } | null;
+  aiChoice?: "fresh" | "piggyback" | null;
   onFreshRoll?: () => void;
   onPiggyback?: () => void;
 }) {
+  const [freshIntroDone, setFreshIntroDone] = useState(false);
+  const [piggyIntroDone, setPiggyIntroDone] = useState(false);
+
   if (piggyback) {
     const remainingDice = piggyback.dice.filter(d => !piggyback.setAsideDiceIds.includes(d.id));
     const diceToShow = remainingDice.length === 0 ? piggyback.dice : remainingDice;
@@ -806,36 +885,42 @@ function PlayerInterstitial({
         <div className="flex items-center justify-center" style={{ gap: 16 }}>
           <button
             onClick={onFreshRoll}
+            onAnimationEnd={() => setFreshIntroDone(true)}
             className="flex items-center justify-center rounded-full shrink-0 pressable"
             style={{
               width: 100,
               height: 100,
               outline: "1px solid #ffffff",
               outlineOffset: -1,
-              background: "transparent",
+              background: aiChoice === "fresh" ? "#ffffff" : "transparent",
               fontSize: 13,
               fontWeight: 500,
-              color: "#ffffff",
-              cursor: "pointer",
-              animation: exiting ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 400ms both",
+              color: aiChoice === "fresh" ? "#000000" : "#ffffff",
+              opacity: aiChoice === "piggyback" ? 0.4 : 1,
+              cursor: aiChoice ? "default" : "pointer",
+              animation: (freshIntroDone || exiting) ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 400ms both",
+              transform: aiChoice === "fresh" ? "scale(0.85)" : undefined,
             }}
           >
             Fresh roll
           </button>
           <button
             onClick={onPiggyback}
+            onAnimationEnd={() => setPiggyIntroDone(true)}
             className="flex items-center justify-center rounded-full shrink-0 pressable"
             style={{
               width: 100,
               height: 100,
               outline: "1px solid #ffffff",
               outlineOffset: -1,
-              background: "#ffffff",
+              background: aiChoice === "piggyback" || !aiChoice ? "#ffffff" : "transparent",
               fontSize: 13,
               fontWeight: 500,
-              color: "#000000",
-              cursor: "pointer",
-              animation: exiting ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 500ms both",
+              color: aiChoice === "piggyback" || !aiChoice ? "#000000" : "#ffffff",
+              opacity: aiChoice === "fresh" ? 0.4 : 1,
+              cursor: aiChoice ? "default" : "pointer",
+              animation: (piggyIntroDone || exiting) ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 500ms both",
+              transform: aiChoice === "piggyback" ? "scale(0.85)" : undefined,
             }}
           >
             Piggyback

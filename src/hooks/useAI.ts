@@ -1,23 +1,31 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import type { GameState, GameAction } from "@/lib/types";
 import {
   scorecardChooseHolds,
   scorecardChooseCategory,
   farkleChooseSetAside,
   farkleShouldBank,
-  farkleShouldAcceptPiggyback,
   kyhdChooseHolds,
   kyhdChooseTarget,
 } from "@/lib/ai";
 
-const AI_DELAY_ROLL = 1200;
-const AI_DELAY_HOLD = 600;
-const AI_DELAY_SCORE = 800;
-const AI_DELAY_FARKLE_SET_ASIDE = 800;
-const AI_DELAY_FARKLE_BANK = 1000;
-const AI_DELAY_FARKLE_BUST = 1500;
+const AI_DELAY_ROLL = 1300;
+const AI_DELAY_HOLD = 550;
+const AI_DELAY_SCORE = 1400;
+const AI_DELAY_FARKLE_SET_ASIDE = 1200;
+const AI_DELAY_FARKLE_BANK = 1800;
+const AI_DELAY_FARKLE_BUST = 1650;
+const AI_DELAY_TRANSITION = 2640;
+const AI_PRESS_DURATION = 500;
+
+// Pause before multi-step decisions (evaluating dice, picking a category)
+const AI_THINK_PAUSE = 900;
+
+function jitter(ms: number): number {
+  return Math.round(ms * (0.8 + Math.random() * 0.4));
+}
 
 type DispatchFn = (action: GameAction) => void;
 
@@ -33,45 +41,71 @@ export function useAI(
     onAIBanked?: () => void;
     onAIBusted?: () => void;
   }
-): { isAITurn: boolean } {
+): { isAITurn: boolean; aiPendingAction: string | null } {
   const currentPlayer = state.players[state.currentPlayerIndex];
   const isAITurn = currentPlayer?.isComputer && !state.gameOver;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const busyRef = useRef(false);
+  const cancelledRef = useRef(false);
+  const [aiPendingAction, setAIPendingAction] = useState<string | null>(null);
+  const prevPlayerRef = useRef(state.currentPlayerIndex);
+  const needsTransitionDelay = useRef(false);
 
-  const cleanup = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    busyRef.current = false;
-  }, []);
-
-  useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
+  if (prevPlayerRef.current !== state.currentPlayerIndex) {
+    needsTransitionDelay.current = state.players.length > 1 && state.rollsUsed === 0;
+    prevPlayerRef.current = state.currentPlayerIndex;
+  }
 
   useEffect(() => {
     if (!isAITurn) {
-      cleanup();
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      busyRef.current = false;
+      setAIPendingAction(null);
       return;
     }
 
     if (busyRef.current) return;
 
+    // Piggyback offers are handled by FarkleView interstitial
+    if (state.piggybackOffer) return;
+
+    busyRef.current = true;
+    cancelledRef.current = false;
+
     const isFarkle = !!state.ruleset.farkle;
     const isTarget = !!state.ruleset.targetAssignment;
 
-    if (isFarkle) {
-      runFarkleAI(state, dispatch, timerRef, busyRef, callbacks);
-    } else if (isTarget) {
-      runTargetAI(state, dispatch, timerRef, busyRef, callbacks);
-    } else {
-      runScorecardAI(state, dispatch, timerRef, busyRef, callbacks);
+    async function run() {
+      try {
+        if (needsTransitionDelay.current) {
+          needsTransitionDelay.current = false;
+          await delay(AI_DELAY_TRANSITION, timerRef);
+        }
+        if (cancelledRef.current) { busyRef.current = false; return; }
+
+        busyRef.current = false;
+        if (isFarkle) {
+          runFarkleAI(state, dispatch, timerRef, busyRef, callbacks, setAIPendingAction);
+        } else if (isTarget) {
+          runTargetAI(state, dispatch, timerRef, busyRef, callbacks);
+        } else {
+          runScorecardAI(state, dispatch, timerRef, busyRef, callbacks);
+        }
+      } catch {
+        busyRef.current = false;
+      }
     }
+
+    run();
+
+    return () => {
+      cancelledRef.current = true;
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      busyRef.current = false;
+    };
   }, [isAITurn, state.rollsUsed, state.currentPlayerIndex, state.turn, state.farkled, state.mustSetAside, state.setAsideDiceIds.length, state.piggybackOffer]);
 
-  return { isAITurn: !!isAITurn };
+  return { isAITurn: !!isAITurn, aiPendingAction };
 }
 
 function delay(
@@ -100,18 +134,16 @@ async function runScorecardAI(
     const rollsLeft = maxRolls - state.rollsUsed;
 
     if (state.rollsUsed === 0) {
-      // First roll
-      await delay(AI_DELAY_ROLL, timerRef);
+      await delay(jitter(AI_DELAY_ROLL), timerRef);
       dispatch({ type: "ROLL" });
       busyRef.current = false;
       return;
     }
 
     if (rollsLeft > 0) {
-      // Decide holds then roll again
+      await delay(jitter(AI_THINK_PAUSE), timerRef);
       const decision = scorecardChooseHolds(state);
 
-      // Set holds
       const currentlyHeld = new Set(state.dice.filter((d) => d.held).map((d) => d.id));
       const targetHeld = new Set(decision.holdIds);
 
@@ -119,18 +151,16 @@ async function runScorecardAI(
         const shouldHold = targetHeld.has(d.id);
         const isHeld = currentlyHeld.has(d.id);
         if (shouldHold !== isHeld) {
-          await delay(AI_DELAY_HOLD, timerRef);
+          await delay(jitter(AI_DELAY_HOLD), timerRef);
           dispatch({ type: "TOGGLE_HOLD", dieId: d.id });
         }
       }
 
-      // Check if all dice are held — go straight to scoring
       const heldAfter = decision.holdIds.length;
       if (heldAfter >= state.dice.length) {
-        // All held — just score
-        await delay(AI_DELAY_SCORE, timerRef);
+        await delay(jitter(AI_DELAY_SCORE), timerRef);
         dispatch({ type: "SET_VIEW", view: "scorecard" });
-        await delay(AI_DELAY_SCORE, timerRef);
+        await delay(jitter(AI_DELAY_SCORE), timerRef);
         const catId = scorecardChooseCategory(state);
         if (catId) {
           dispatch({ type: "SCORE_CATEGORY", categoryId: catId });
@@ -140,14 +170,13 @@ async function runScorecardAI(
         return;
       }
 
-      await delay(AI_DELAY_ROLL, timerRef);
+      await delay(jitter(AI_DELAY_ROLL), timerRef);
       dispatch({ type: "ROLL" });
       busyRef.current = false;
       return;
     }
 
-    // No rolls left — score
-    await delay(AI_DELAY_SCORE, timerRef);
+    await delay(jitter(AI_DELAY_SCORE), timerRef);
     const catId = scorecardChooseCategory(state);
     if (catId) {
       dispatch({ type: "SCORE_CATEGORY", categoryId: catId });
@@ -176,17 +205,14 @@ async function runTargetAI(
     const rollsLeft = maxRolls - state.rollsUsed;
 
     if (state.rollsUsed === 0) {
-      // In target mode, player picks target first then rolls
-      // But the game starts on the scorecard view, so we need to pick a target
-      // Actually in KYHD, the flow is: view scorecard → roll → hold → roll → assign
-      // Let's just roll first
-      await delay(AI_DELAY_ROLL, timerRef);
+      await delay(jitter(AI_DELAY_ROLL), timerRef);
       dispatch({ type: "ROLL" });
       busyRef.current = false;
       return;
     }
 
     if (rollsLeft > 0) {
+      await delay(jitter(AI_THINK_PAUSE), timerRef);
       const decision = kyhdChooseHolds(state);
 
       const currentlyHeld = new Set(state.dice.filter((d) => d.held).map((d) => d.id));
@@ -196,23 +222,21 @@ async function runTargetAI(
         const shouldHold = targetHeld.has(d.id);
         const isHeld = currentlyHeld.has(d.id);
         if (shouldHold !== isHeld) {
-          await delay(AI_DELAY_HOLD, timerRef);
+          await delay(jitter(AI_DELAY_HOLD), timerRef);
           dispatch({ type: "TOGGLE_HOLD", dieId: d.id });
         }
       }
 
-      // Roll again if we haven't used all rolls
       const heldCount = decision.holdIds.length;
       if (heldCount < state.dice.length) {
-        await delay(AI_DELAY_ROLL, timerRef);
+        await delay(jitter(AI_DELAY_ROLL), timerRef);
         dispatch({ type: "ROLL" });
         busyRef.current = false;
         return;
       }
     }
 
-    // Score — pick best target
-    await delay(AI_DELAY_SCORE, timerRef);
+    await delay(jitter(AI_DELAY_SCORE), timerRef);
     const catId = kyhdChooseTarget(state);
     if (catId) {
       dispatch({ type: "SCORE_CATEGORY", categoryId: catId });
@@ -232,86 +256,86 @@ async function runFarkleAI(
   timerRef: React.RefObject<ReturnType<typeof setTimeout> | null>,
   busyRef: React.RefObject<boolean>,
   callbacks?: { onAIBanked?: () => void; onAIBusted?: () => void },
+  signalAction?: (action: string | null) => void,
 ) {
   if (busyRef.current) return;
   busyRef.current = true;
 
+  async function signalAndDelay(action: string, totalMs: number) {
+    const total = jitter(totalMs);
+    const thinkMs = Math.max(0, total - AI_PRESS_DURATION);
+    if (thinkMs > 0) await delay(thinkMs, timerRef);
+    signalAction?.(action);
+    await delay(Math.min(total, AI_PRESS_DURATION), timerRef);
+  }
+
   try {
-    // Handle piggyback offer
     if (state.piggybackOffer) {
-      await delay(AI_DELAY_ROLL, timerRef);
-      if (farkleShouldAcceptPiggyback(state)) {
-        dispatch({ type: "ACCEPT_PIGGYBACK" });
-        await delay(AI_DELAY_ROLL, timerRef);
-        dispatch({ type: "ROLL" });
-      } else {
-        // Decline piggyback → just roll fresh
-        dispatch({ type: "ROLL" });
-      }
       busyRef.current = false;
       return;
     }
 
-    // Handle farkle (bust)
     if (state.farkled) {
-      await delay(AI_DELAY_FARKLE_BUST, timerRef);
-      dispatch({ type: "BANK" });
-      callbacks?.onAIBusted?.();
       busyRef.current = false;
       return;
     }
 
-    // Need to roll first
     if (state.rollsUsed === 0) {
-      await delay(AI_DELAY_ROLL, timerRef);
+      await signalAndDelay("roll", AI_DELAY_ROLL);
       dispatch({ type: "ROLL" });
+      signalAction?.(null);
       busyRef.current = false;
       return;
     }
 
-    // Must set aside scoring dice
     if (state.mustSetAside) {
+      await delay(jitter(AI_THINK_PAUSE), timerRef);
       const decision = farkleChooseSetAside(state);
       if (decision.holdIds.length > 0) {
         for (const id of decision.holdIds) {
-          await delay(300, timerRef);
+          await delay(jitter(350), timerRef);
           dispatch({ type: "TOGGLE_HOLD", dieId: id });
         }
-        await delay(AI_DELAY_FARKLE_SET_ASIDE, timerRef);
+        await signalAndDelay("set-aside", AI_DELAY_FARKLE_SET_ASIDE);
         dispatch({ type: "SET_ASIDE" });
+        signalAction?.(null);
       }
       busyRef.current = false;
       return;
     }
 
-    // Hot dice: all dice were set aside, setAsideDiceIds cleared — always roll
     const hotDice = state.setAsideDiceIds.length === 0 && state.turnScore > 0 && state.rollsUsed > 0;
     if (hotDice) {
-      await delay(AI_DELAY_ROLL, timerRef);
+      await signalAndDelay("roll", AI_DELAY_ROLL);
       dispatch({ type: "ROLL" });
+      signalAction?.(null);
       busyRef.current = false;
       return;
     }
 
-    // Decide: bank or roll
+    // Bank-vs-roll is the key decision — think before acting
+    await delay(jitter(AI_THINK_PAUSE), timerRef);
+
     if (state.turnScore > 0 && farkleShouldBank(state)) {
-      await delay(AI_DELAY_FARKLE_BANK, timerRef);
+      await signalAndDelay("bank", AI_DELAY_FARKLE_BANK);
       dispatch({ type: "BANK" });
+      signalAction?.(null);
       callbacks?.onAIBanked?.();
       busyRef.current = false;
       return;
     }
 
-    // Roll again
     if (state.setAsideDiceIds.length > 0) {
-      await delay(AI_DELAY_ROLL, timerRef);
+      await signalAndDelay("roll", AI_DELAY_ROLL);
       dispatch({ type: "ROLL" });
+      signalAction?.(null);
       busyRef.current = false;
       return;
     }
 
     busyRef.current = false;
   } catch {
+    signalAction?.(null);
     busyRef.current = false;
   }
 }

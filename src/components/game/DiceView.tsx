@@ -66,6 +66,8 @@ export function DiceView({
   farkleBankEnabled = false,
   farkleOnBank,
   farkleBankLabel,
+  farkleActionPressed = false,
+  farkleBankPressed = false,
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -85,6 +87,8 @@ export function DiceView({
   farkleBankEnabled?: boolean;
   farkleOnBank?: () => void;
   farkleBankLabel?: string;
+  farkleActionPressed?: boolean;
+  farkleBankPressed?: boolean;
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
@@ -339,6 +343,7 @@ export function DiceView({
               showButton={showButton}
               color={playerColor}
               hotDice={farkleActionLabel === "HOT DICE!"}
+              pressed={farkleActionPressed}
             />
           </div>
           <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
@@ -347,6 +352,7 @@ export function DiceView({
               enabled={farkleBankEnabled}
               onBank={farkleOnBank ?? (() => {})}
               showButton={showButton}
+              pressed={farkleBankPressed}
             />
           </div>
         </>
@@ -364,6 +370,7 @@ function FarkleActionButton({
   showButton,
   color,
   hotDice,
+  pressed = false,
 }: {
   label: string;
   enabled: boolean;
@@ -371,6 +378,7 @@ function FarkleActionButton({
   showButton: boolean;
   color: string;
   hotDice?: boolean;
+  pressed?: boolean;
 }) {
   const [introDone, setIntroDone] = useState(false);
   const animating = showButton && !introDone;
@@ -378,25 +386,25 @@ function FarkleActionButton({
   return (
     <button
       onClick={enabled ? onAction : undefined}
-      disabled={!enabled}
+      disabled={!enabled && !pressed}
       className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
       onAnimationEnd={() => setIntroDone(true)}
       style={{
         width: "100%",
         height: "100%",
-        outline: `1px solid ${enabled ? color : "#ffffff"}`,
+        outline: `1px solid ${pressed ? color : (enabled ? color : "#ffffff")}`,
         outlineOffset: -1,
-        opacity: enabled ? 1 : 0.35,
+        opacity: pressed ? 1 : (enabled ? 1 : 0.35),
         fontSize: "clamp(11px, 8cqi, 100px)",
         fontWeight: 600,
-        color: enabled ? color : "#ffffff",
-        background: "transparent",
+        color: pressed ? "#000000" : (enabled ? color : "#ffffff"),
+        background: pressed ? color : "transparent",
         cursor: enabled ? "pointer" : "default",
-        transform: showButton ? undefined : "scale(0)",
+        transform: pressed ? "scale(0.85)" : (showButton ? undefined : "scale(0)"),
         textAlign: "center",
         lineHeight: 1.2,
         padding: "8%",
-        ...hotDice ? { "--hot-color": color, animation: "hot-dice-flash 1600ms ease" } as React.CSSProperties : {},
+        ...hotDice && !pressed ? { "--hot-color": color, animation: "hot-dice-flash 1600ms ease" } as React.CSSProperties : {},
       }}
     >
       {label}
@@ -411,11 +419,13 @@ function FarkleBankButton({
   enabled,
   onBank,
   showButton,
+  pressed = false,
 }: {
   label: string;
   enabled: boolean;
   onBank: () => void;
   showButton: boolean;
+  pressed?: boolean;
 }) {
   const [introDone, setIntroDone] = useState(false);
   const animating = showButton && !introDone;
@@ -431,21 +441,21 @@ function FarkleBankButton({
     >
       <button
         onClick={enabled ? onBank : undefined}
-        disabled={!enabled}
+        disabled={!enabled && !pressed}
         className={`flex items-center justify-center pressable ${animating ? "animate-scale-in" : ""}`}
         onAnimationEnd={() => setIntroDone(true)}
         style={{
           width: "71%",
           height: "71%",
-          transform: "rotate(45deg)",
+          transform: pressed ? "rotate(45deg) scale(0.85)" : "rotate(45deg)",
           outline: "1px solid #ffffff",
           outlineOffset: -1,
           borderRadius: 4,
-          opacity: enabled ? 1 : 0.35,
+          opacity: pressed ? 1 : (enabled ? 1 : 0.35),
           fontSize: "clamp(11px, 8cqi, 100px)",
           fontWeight: 600,
-          color: enabled ? "#000000" : "#ffffff",
-          background: enabled ? "#ffffff" : "transparent",
+          color: (pressed || enabled) ? "#000000" : "#ffffff",
+          background: (pressed || enabled) ? "#ffffff" : "transparent",
           cursor: enabled ? "pointer" : "default",
           lineHeight: 1.2,
           padding: "4%",
