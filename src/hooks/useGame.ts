@@ -5,7 +5,7 @@ import { gameReducer, makeInitialState } from "@/lib/engine";
 import { getRuleset } from "@/lib/rulesets";
 import { makeClassicCategories } from "@/lib/rulesets/classic";
 import { makeKismetCategories } from "@/lib/rulesets/kismet";
-import type { GameState, GameView } from "@/lib/types";
+import type { GameState, GameView, AIDifficulty } from "@/lib/types";
 
 const STORAGE_KEY = "weetzee-game";
 const PREFS_KEY = "weetzee-prefs";
@@ -19,6 +19,7 @@ type HouseRulesPrefs = {
   orderedScoringEnabled: boolean;
   openingThresholdEnabled: boolean;
   piggybackEnabled: boolean;
+  aiDifficulty: AIDifficulty;
 };
 
 function savePrefs(prefs: HouseRulesPrefs) {
@@ -39,13 +40,14 @@ function loadPrefs(): HouseRulesPrefs {
         orderedScoringEnabled: parsed.orderedScoringEnabled ?? false,
         openingThresholdEnabled: parsed.openingThresholdEnabled ?? false,
         piggybackEnabled: parsed.piggybackEnabled ?? false,
+        aiDifficulty: parsed.aiDifficulty ?? "medium",
       };
     }
   } catch {}
   return {
     rollBankingEnabled: false, multipleWeetzeesEnabled: false, sequentialTargetsEnabled: false,
     scoringHintsEnabled: true, sixDiceEnabled: false, orderedScoringEnabled: false,
-    openingThresholdEnabled: false, piggybackEnabled: false,
+    openingThresholdEnabled: false, piggybackEnabled: false, aiDifficulty: "medium",
   };
 }
 
@@ -86,8 +88,13 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
     if (orderedScoring) {
       ruleset = { ...ruleset, orderedScoring: true };
     }
+    const players = rest.players.map((p: any) => ({
+      ...p,
+      isComputer: p.isComputer ?? false,
+    }));
     return {
       ...rest,
+      players,
       ruleset,
       sequentialTargetsEnabled: rest.sequentialTargetsEnabled ?? false,
       turnScore: rest.turnScore ?? 0,
@@ -104,6 +111,7 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
       openingThresholdEnabled: rest.openingThresholdEnabled ?? false,
       piggybackEnabled: rest.piggybackEnabled ?? false,
       piggybackOffer: rest.piggybackOffer ?? null,
+      aiDifficulty: rest.aiDifficulty ?? "medium",
     };
   } catch {
     return null;
@@ -116,12 +124,12 @@ function clearState() {
   } catch {}
 }
 
-export function useGame(playerCount: number, rulesetId: string = "weetzee") {
+export function useGame(playerCount: number, rulesetId: string = "weetzee", aiIndices: number[] = []) {
   const ruleset = getRuleset(rulesetId);
   const [state, dispatch] = useReducer(
     gameReducer,
     undefined,
-    () => makeInitialState(ruleset, playerCount)
+    () => makeInitialState(ruleset, playerCount, aiIndices)
   );
 
   const didRestore = useRef(false);
@@ -143,6 +151,7 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee") {
       if (prefs.orderedScoringEnabled) dispatch({ type: "TOGGLE_ORDERED_SCORING" });
       if (prefs.openingThresholdEnabled && ruleset.farkle) dispatch({ type: "TOGGLE_OPENING_THRESHOLD" });
       if (prefs.piggybackEnabled && ruleset.farkle) dispatch({ type: "TOGGLE_PIGGYBACK" });
+      if (prefs.aiDifficulty !== "medium") dispatch({ type: "SET_AI_DIFFICULTY", difficulty: prefs.aiDifficulty });
     }
   }, [playerCount, rulesetId]);
 
@@ -181,6 +190,7 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee") {
       orderedScoringEnabled: state.orderedScoringEnabled,
       openingThresholdEnabled: state.openingThresholdEnabled,
       piggybackEnabled: state.piggybackEnabled,
+      aiDifficulty: state.aiDifficulty,
     };
   }
 
@@ -236,11 +246,16 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee") {
     dispatch({ type: "ACCEPT_PIGGYBACK" });
   }
 
+  function setAIDifficulty(difficulty: AIDifficulty) {
+    dispatch({ type: "SET_AI_DIFFICULTY", difficulty });
+    savePrefs({ ...currentPrefs(), aiDifficulty: difficulty });
+  }
+
   function endGame() {
     clearState();
   }
 
-  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, setAside, bank, toggleScoringHints, toggleSixDice, toggleOrderedScoring, toggleOpeningThreshold, togglePiggyback, acceptPiggyback, endGame };
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, setAside, bank, toggleScoringHints, toggleSixDice, toggleOrderedScoring, toggleOpeningThreshold, togglePiggyback, acceptPiggyback, setAIDifficulty, endGame };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

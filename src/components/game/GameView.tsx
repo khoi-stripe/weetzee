@@ -14,11 +14,11 @@ import { playTap, playTurnChange } from "@/lib/sounds";
 // Portrait: vertical sliding strip (DiceView → PlayerBar → ScorecardView).
 // Landscape: side-by-side (DiceView | ScorecardView) with PlayerBar on top.
 
-export function GameView({ game }: { game: UseGameReturn }) {
+export function GameView({ game, isAITurn = false }: { game: UseGameReturn; isAITurn?: boolean }) {
   const { state, roll, toggleHold, scoreCategory, setView } = game;
 
   if (state.ruleset.farkle) {
-    return <FarkleView game={game} />;
+    return <FarkleView game={game} isAITurn={isAITurn} />;
   }
 
   const defaultPanel = state.ruleset.targetAssignment ? 1 : 0;
@@ -157,6 +157,7 @@ export function GameView({ game }: { game: UseGameReturn }) {
   // --- Next-player interstitial ---
   const [interstitialPlayer, setInterstitialPlayer] = useState<Player | null>(null);
   const [interstitialExiting, setInterstitialExiting] = useState(false);
+  const prevPlayerIndexRef = useRef(state.currentPlayerIndex);
 
   const showInterstitial = useCallback((player: Player | null) => {
     if (player) {
@@ -172,6 +173,29 @@ export function GameView({ game }: { game: UseGameReturn }) {
     }
   }, []);
 
+  // Show interstitial when transitioning from AI to human player
+  useEffect(() => {
+    if (prevPlayerIndexRef.current !== state.currentPlayerIndex) {
+      const prevWasAI = state.players[prevPlayerIndexRef.current]?.isComputer;
+      const currentIsHuman = !currentPlayer.isComputer;
+      prevPlayerIndexRef.current = state.currentPlayerIndex;
+
+      if (prevWasAI && currentIsHuman && state.players.length > 1) {
+        showInterstitial(currentPlayer);
+        setTimeout(() => {
+          showInterstitial(null);
+          if (!state.ruleset.targetAssignment) snapTo(0);
+        }, 2000);
+      }
+    }
+  }, [state.currentPlayerIndex]);
+
+  // Disable human input during AI turns
+  const inputDisabled = isAITurn;
+  const wrappedRoll = inputDisabled ? () => {} : roll;
+  const wrappedToggleHold = inputDisabled ? () => {} : toggleHold;
+  const wrappedScoreCategory = inputDisabled ? () => {} : scoreCategory;
+
   return (
     <div
       ref={containerRef}
@@ -184,9 +208,9 @@ export function GameView({ game }: { game: UseGameReturn }) {
         <LandscapeLayout
           state={state}
           currentPlayer={currentPlayer}
-          roll={roll}
-          toggleHold={toggleHold}
-          scoreCategory={scoreCategory}
+          roll={wrappedRoll}
+          toggleHold={wrappedToggleHold}
+          scoreCategory={wrappedScoreCategory}
           onShowInterstitial={showInterstitial}
         />
       ) : (
@@ -196,9 +220,9 @@ export function GameView({ game }: { game: UseGameReturn }) {
           dragOffset={dragOffset}
           state={state}
           currentPlayer={currentPlayer}
-          roll={roll}
-          toggleHold={toggleHold}
-          scoreCategory={scoreCategory}
+          roll={wrappedRoll}
+          toggleHold={wrappedToggleHold}
+          scoreCategory={wrappedScoreCategory}
           snapTo={snapTo}
           onShowInterstitial={showInterstitial}
           userPrefersScorecard={userPrefersScorecard}
@@ -245,6 +269,8 @@ function LandscapeLayout({
     const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
     const nextPlayer = state.players[nextPlayerIndex];
     const isSinglePlayer = state.players.length === 1;
+    const nextIsAI = nextPlayer.isComputer;
+    const interstitialDuration = nextIsAI ? 1200 : 2000;
 
     scoreTimer.current = setTimeout(() => {
       scoreCategory(id);
@@ -254,7 +280,7 @@ function LandscapeLayout({
         onShowInterstitial(nextPlayer);
         setTimeout(() => {
           onShowInterstitial(null);
-        }, 2000);
+        }, interstitialDuration);
       }
     }, 500);
   }
@@ -376,6 +402,8 @@ function ContentStrip({
     const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
     const nextPlayer = state.players[nextPlayerIndex];
     const isSinglePlayer = state.players.length === 1;
+    const nextIsAI = nextPlayer.isComputer;
+    const interstitialDuration = nextIsAI ? 1200 : 2000;
 
     const returnPanel = state.ruleset.targetAssignment || userPrefersScorecard.current ? 1 : 0;
 
@@ -390,7 +418,7 @@ function ContentStrip({
         setTimeout(() => {
           onShowInterstitial(null);
           snapTo(returnPanel as 0 | 1);
-        }, 2000);
+        }, interstitialDuration);
       }
     }, 500);
   }

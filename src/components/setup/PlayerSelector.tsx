@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Die } from "@/components/game/Die";
 import { PLAYER_COLORS } from "@/lib/types";
-import { playTap } from "@/lib/sounds";
+import { playTap, playToggle } from "@/lib/sounds";
 
 const TITLE_RESERVE = 48;
 
@@ -34,12 +34,16 @@ export function PlayerSelector({
   max = 6,
   onChange,
   onNext,
+  cpuPlayers,
+  onToggleCpu,
 }: {
   title: string;
   count: number;
   max?: number;
   onChange: (n: number) => void;
   onNext: () => void;
+  cpuPlayers?: Set<number>;
+  onToggleCpu?: (playerIndex: number) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ITEM_COUNT = max + 1;
@@ -69,6 +73,42 @@ export function PlayerSelector({
   const gridW = layout.cellSize > 0
     ? layout.cols * layout.cellSize + (layout.cols - 1) * GAP
     : undefined;
+
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
+
+  function handlePointerDown(playerIndex: number) {
+    if (!onToggleCpu) return;
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      const playerNum = playerIndex + 1;
+      if (playerNum > count) onChange(playerNum);
+      playToggle(!cpuPlayers?.has(playerIndex));
+      onToggleCpu(playerIndex);
+    }, 500);
+  }
+
+  function handlePointerUp(playerIndex: number) {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    playTap();
+    onChange(playerIndex + 1);
+  }
+
+  function handlePointerCancel() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    longPressTriggered.current = false;
+  }
 
   return (
     <div
@@ -104,6 +144,7 @@ export function PlayerSelector({
         {Array.from({ length: max }, (_, i) => {
           const playerNum = i + 1;
           const isSelected = playerNum <= count;
+          const isCpu = cpuPlayers?.has(i) ?? false;
           const color = PLAYER_COLORS[i] ?? "#ffffff";
 
           return (
@@ -112,14 +153,34 @@ export function PlayerSelector({
               style={{
                 width: layout.cellSize || "100%",
                 height: layout.cellSize || "100%",
+                position: "relative",
               }}
+              onPointerDown={() => handlePointerDown(i)}
+              onPointerUp={() => handlePointerUp(i)}
+              onPointerCancel={handlePointerCancel}
+              onPointerLeave={handlePointerCancel}
             >
               <Die
                 value={playerNum}
                 held={isSelected}
                 heldColor={color}
-                onClick={() => { playTap(); onChange(playerNum); }}
+                label={isCpu && isSelected ? "CPU" : undefined}
               />
+              {isCpu && isSelected && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "4%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "20%",
+                    height: "20%",
+                    borderRadius: "50%",
+                    background: color,
+                    opacity: 0.6,
+                  }}
+                />
+              )}
             </div>
           );
         })}
@@ -143,6 +204,20 @@ export function PlayerSelector({
           </button>
         </div>
       </div>
+
+      {onToggleCpu && (
+        <p
+          className="shrink-0"
+          style={{
+            fontSize: 11,
+            fontWeight: 400,
+            color: "#666666",
+            textAlign: "center",
+          }}
+        >
+          Long-press to toggle CPU
+        </p>
+      )}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Share } from "lucide-react";
 import { VISIBLE_RULESETS } from "@/lib/rulesets";
+import { AI_DIFFICULTY_LABELS } from "@/lib/types";
+import type { AIDifficulty } from "@/lib/types";
 import { playTap, playToggle } from "@/lib/sounds";
 
 // ===== Header =====
@@ -30,6 +32,8 @@ export function Header({
   onToggleOpeningThreshold,
   piggybackEnabled,
   onTogglePiggyback,
+  aiDifficulty,
+  onSetAIDifficulty,
   onEndGame,
 }: {
   showBack?: boolean;
@@ -53,6 +57,8 @@ export function Header({
   onToggleOpeningThreshold?: () => void;
   piggybackEnabled?: boolean;
   onTogglePiggyback?: () => void;
+  aiDifficulty?: AIDifficulty;
+  onSetAIDifficulty?: (d: AIDifficulty) => void;
   onEndGame?: () => void;
 }) {
   const router = useRouter();
@@ -148,6 +154,8 @@ export function Header({
           onToggleOpeningThreshold={onToggleOpeningThreshold}
           piggybackEnabled={piggybackEnabled}
           onTogglePiggyback={onTogglePiggyback}
+          aiDifficulty={aiDifficulty}
+          onSetAIDifficulty={onSetAIDifficulty}
         />
       )}
 
@@ -404,6 +412,8 @@ function RulesModal({
   onToggleOpeningThreshold,
   piggybackEnabled,
   onTogglePiggyback,
+  aiDifficulty,
+  onSetAIDifficulty,
 }: {
   onClose: () => void;
   onChangeRuleset?: () => void;
@@ -426,6 +436,8 @@ function RulesModal({
   onToggleOpeningThreshold?: () => void;
   piggybackEnabled?: boolean;
   onTogglePiggyback?: () => void;
+  aiDifficulty?: AIDifficulty;
+  onSetAIDifficulty?: (d: AIDifficulty) => void;
 }) {
   const router = useRouter();
   const isAbout = !rulesetId && !showAllRulesets;
@@ -635,6 +647,47 @@ function RulesModal({
                     onToggle={onToggleOpeningThreshold}
                   />
                 )}
+              </div>
+            )}
+
+            {onSetAIDifficulty && aiDifficulty && (
+              <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+                <h3
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#ffffff",
+                    marginBottom: 4,
+                  }}
+                >
+                  CPU difficulty
+                </h3>
+                <p style={{ fontSize: 11, color: "#999999", marginBottom: 16 }}>
+                  Changes how the computer players make decisions
+                </p>
+                <div className="flex gap-2">
+                  {(["easy", "medium", "hard"] as AIDifficulty[]).map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => { playTap(); onSetAIDifficulty!(level); }}
+                      className="pressable"
+                      style={{
+                        flex: 1,
+                        height: 36,
+                        borderRadius: 8,
+                        border: "none",
+                        fontSize: 12,
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        transition: "background 150ms, color 150ms",
+                        background: aiDifficulty === level ? "#ffffff" : "#1a1a1a",
+                        color: aiDifficulty === level ? "#000000" : "#999999",
+                      }}
+                    >
+                      {AI_DIFFICULTY_LABELS[level]}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 

@@ -28,23 +28,27 @@ function hasAllSame(dice: number[]): boolean {
 
 // ===== Player Factory =====
 
-export function makePlayers(count: number): Player[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `p${i + 1}`,
-    name: `P${i + 1}`,
-    color: PLAYER_COLORS[i] ?? "#ffffff",
-    scores: {},
-    bankedRolls: 0,
-    extraWeetzees: 0,
-  }));
+export function makePlayers(count: number, aiIndices: number[] = []): Player[] {
+  return Array.from({ length: count }, (_, i) => {
+    const isCpu = aiIndices.includes(i);
+    return {
+      id: `p${i + 1}`,
+      name: isCpu ? `CPU${i + 1}` : `P${i + 1}`,
+      color: PLAYER_COLORS[i] ?? "#ffffff",
+      scores: {},
+      bankedRolls: 0,
+      extraWeetzees: 0,
+      isComputer: isCpu,
+    };
+  });
 }
 
 // ===== Initial State =====
 
-export function makeInitialState(ruleset: Ruleset, playerCount: number): GameState {
+export function makeInitialState(ruleset: Ruleset, playerCount: number, aiIndices: number[] = []): GameState {
   return {
     ruleset,
-    players: makePlayers(playerCount),
+    players: makePlayers(playerCount, aiIndices),
     currentPlayerIndex: 0,
     dice: makeDice(ruleset.diceCount),
     rollsUsed: 0,
@@ -68,6 +72,7 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number): GameSta
     openingThresholdEnabled: false,
     piggybackEnabled: false,
     piggybackOffer: null,
+    aiDifficulty: "medium",
   };
 }
 
@@ -441,6 +446,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         currentRollSetAsideIds: [],
         piggybackOffer: null,
       };
+    }
+
+    case "SET_AI_DIFFICULTY": {
+      return { ...state, aiDifficulty: action.difficulty };
     }
 
     case "RESTORE": {

@@ -30,6 +30,7 @@ function computeLayout(
 function RulesetContent() {
   const params = useSearchParams();
   const playerCount = params.get("players") ?? "1";
+  const aiParam = params.get("ai") ?? "";
   const [rulesetId, setRulesetId] = useState("weetzee");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -56,7 +57,8 @@ function RulesetContent() {
 
   function startGame() {
     playTap();
-    router.push(`/game?players=${playerCount}&ruleset=${rulesetId}`);
+    const aiSuffix = aiParam ? `&ai=${aiParam}` : "";
+    router.push(`/game?players=${playerCount}&ruleset=${rulesetId}${aiSuffix}`);
   }
 
   const gridW = layout.cellSize > 0

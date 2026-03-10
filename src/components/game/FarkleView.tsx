@@ -8,7 +8,7 @@ import type { Die, Player } from "@/lib/types";
 import { isValidSelection, scoreDice, getScoringPossibilities } from "@/lib/rulesets/farkle";
 import { playTap, playTurnChange, playConfirm, playFarkle, getAudioCtx } from "@/lib/sounds";
 
-export function FarkleView({ game }: { game: UseGameReturn }) {
+export function FarkleView({ game, isAITurn = false }: { game: UseGameReturn; isAITurn?: boolean }) {
   const { state, roll, toggleHold, setAside, bank, acceptPiggyback } = game;
   const currentPlayer = state.players[state.currentPlayerIndex];
 
@@ -35,6 +35,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
   }, []);
 
   const bankTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevPlayerIndex = useRef(state.currentPlayerIndex);
 
   useEffect(() => {
     return () => {
@@ -42,13 +43,28 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
     };
   }, []);
 
+  // Show interstitial when transitioning between players (e.g., after AI turn ends)
+  useEffect(() => {
+    if (prevPlayerIndex.current !== state.currentPlayerIndex) {
+      const prevWasAI = state.players[prevPlayerIndex.current]?.isComputer;
+      const currentIsHuman = !currentPlayer.isComputer;
+      prevPlayerIndex.current = state.currentPlayerIndex;
+
+      if (prevWasAI && currentIsHuman && state.players.length > 1) {
+        showInterstitial(currentPlayer);
+        setTimeout(() => showInterstitial(null), 2000);
+      }
+    }
+  }, [state.currentPlayerIndex]);
+
   // Show farkle bust screen when farkled (after 2s delay so player sees the roll)
+  // AI players skip the bust screen — the AI hook handles banking directly
   const prevFarkled = useRef(false);
   const farkleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bustDice, setBustDice] = useState<{ value: number }[]>([]);
   const [bustKeptDice, setBustKeptDice] = useState<{ value: number }[]>([]);
   useEffect(() => {
-    if (state.farkled && !prevFarkled.current) {
+    if (state.farkled && !prevFarkled.current && !isAITurn) {
       bustScoreRef.current = state.turnScore;
       const activeDice = state.dice.filter(d => !state.setAsideDiceIds.includes(d.id));
       const keptDice = state.dice.filter(d => state.setAsideDiceIds.includes(d.id));
@@ -61,7 +77,7 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
       }, 2000);
     }
     prevFarkled.current = state.farkled;
-  }, [state.farkled, state.turnScore, state.dice, state.setAsideDiceIds]);
+  }, [state.farkled, state.turnScore, state.dice, state.setAsideDiceIds, isAITurn]);
 
   useEffect(() => {
     return () => { if (farkleTimer.current) clearTimeout(farkleTimer.current); };
@@ -155,22 +171,22 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
 
   if (!hasRolled) {
     actionLabel = "ROLL";
-    actionEnabled = true;
-    actionHandler = () => { getAudioCtx(); roll(); };
+    actionEnabled = !isAITurn;
+    actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (canSetAside) {
     actionLabel = `SET ASIDE +${selectionScore}`;
-    actionEnabled = true;
-    actionHandler = () => { playTap(); setAside(); };
+    actionEnabled = !isAITurn;
+    actionHandler = isAITurn ? () => {} : () => { playTap(); setAside(); };
   } else if (hotDice) {
-    actionLabel = "HOT DICE!";
-    actionEnabled = true;
-    actionHandler = () => { getAudioCtx(); roll(); };
+    actionLabel = isAITurn ? "THINKING..." : "HOT DICE!";
+    actionEnabled = !isAITurn;
+    actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (canRoll) {
     actionLabel = "ROLL";
-    actionEnabled = true;
-    actionHandler = () => { getAudioCtx(); roll(); };
+    actionEnabled = !isAITurn;
+    actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (state.mustSetAside) {
-    actionLabel = "SELECT DICE";
+    actionLabel = isAITurn ? "THINKING..." : "SELECT DICE";
     actionEnabled = false;
     actionHandler = () => {};
   } else {
@@ -286,15 +302,15 @@ export function FarkleView({ game }: { game: UseGameReturn }) {
     rollsPerTurn: 999,
     playerColor: currentPlayer.color,
     onRoll: actionHandler,
-    onToggleHold: toggleHold,
+    onToggleHold: isAITurn ? () => {} : toggleHold,
     farkleMode: true as const,
     setAsideDiceIds: state.setAsideDiceIds,
     farkled: state.farkled,
     farkleActionLabel: actionLabel,
     farkleActionEnabled: actionEnabled,
     farkleBankEnabled: canBank,
-    farkleOnBank: state.farkled ? handleBustDone : handleBank,
-    farkleBankLabel: state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : (belowThreshold && state.turnScore > 0 ? `NEED 500` : "BANK")),
+    farkleOnBank: isAITurn ? () => {} : (state.farkled ? handleBustDone : handleBank),
+    farkleBankLabel: isAITurn ? "" : (state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : (belowThreshold && state.turnScore > 0 ? `NEED 500` : "BANK"))),
   };
 
   return (

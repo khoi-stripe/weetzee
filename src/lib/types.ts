@@ -48,6 +48,7 @@ export interface Player {
   scores: Record<string, number | null>;
   bankedRolls: number;
   extraWeetzees: number;
+  isComputer: boolean;
 }
 
 // ===== Die =====
@@ -57,6 +58,16 @@ export interface Die {
   value: number;
   held: boolean;
 }
+
+// ===== AI Difficulty =====
+
+export type AIDifficulty = "easy" | "medium" | "hard";
+
+export const AI_DIFFICULTY_LABELS: Record<AIDifficulty, string> = {
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
+};
 
 // ===== Game State =====
 
@@ -88,6 +99,7 @@ export interface GameState {
   openingThresholdEnabled: boolean;
   piggybackEnabled: boolean;
   piggybackOffer: { dice: Die[]; setAsideDiceIds: number[]; turnScore: number } | null;
+  aiDifficulty: AIDifficulty;
 }
 
 // ===== Actions =====
@@ -108,4 +120,5 @@ export type GameAction =
   | { type: "TOGGLE_OPENING_THRESHOLD" }
   | { type: "TOGGLE_PIGGYBACK" }
   | { type: "ACCEPT_PIGGYBACK" }
+  | { type: "SET_AI_DIFFICULTY"; difficulty: AIDifficulty }
   | { type: "RESTORE"; state: GameState };
