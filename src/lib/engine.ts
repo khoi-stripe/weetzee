@@ -29,12 +29,17 @@ function hasAllSame(dice: number[]): boolean {
 // ===== Player Factory =====
 
 export function makePlayers(count: number, aiIndices: number[] = []): Player[] {
+  const colors = [...PLAYER_COLORS];
+  for (let i = colors.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [colors[i], colors[j]] = [colors[j], colors[i]];
+  }
   return Array.from({ length: count }, (_, i) => {
     const isCpu = aiIndices.includes(i);
     return {
       id: `p${i + 1}`,
       name: isCpu ? `CPU${i + 1}` : `P${i + 1}`,
-      color: PLAYER_COLORS[i] ?? "#ffffff",
+      color: colors[i] ?? "#ffffff",
       scores: {},
       bankedRolls: 0,
       extraWeetzees: 0,
