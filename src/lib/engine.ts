@@ -1,5 +1,6 @@
 import type { Die, GameState, GameAction, Player, Ruleset } from "./types";
-import { PLAYER_COLORS } from "./types";
+import { getPlayerColors } from "./types";
+
 import { hasScoring, scoreDice, isValidSelection } from "./rulesets/farkle";
 import { makeClassicCategories } from "./rulesets/classic";
 import { makeKismetCategories } from "./rulesets/kismet";
@@ -29,11 +30,7 @@ function hasAllSame(dice: number[]): boolean {
 // ===== Player Factory =====
 
 export function makePlayers(count: number, aiIndices: number[] = []): Player[] {
-  const colors = [...PLAYER_COLORS];
-  for (let i = colors.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [colors[i], colors[j]] = [colors[j], colors[i]];
-  }
+  const colors = getPlayerColors();
   return Array.from({ length: count }, (_, i) => {
     const isCpu = aiIndices.includes(i);
     return {

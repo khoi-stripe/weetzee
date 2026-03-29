@@ -39,7 +39,23 @@ export const PLAYER_COLORS = [
   "#af52de",  // violet
   "#ff6b9d",  // pink
   "#2dd4bf",  // teal
-] as const;
+];
+
+let _playerColors: string[] = [...PLAYER_COLORS];
+
+export function getPlayerColors(): string[] {
+  return _playerColors;
+}
+
+export function shufflePlayerColors(): string[] {
+  const a = [...PLAYER_COLORS];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  _playerColors = a;
+  return a;
+}
 
 export interface Player {
   id: string;

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Die } from "@/components/game/Die";
-import { PLAYER_COLORS } from "@/lib/types";
+import { getPlayerColors } from "@/lib/types";
+
 import { playTap, playToggle } from "@/lib/sounds";
 
 const TITLE_RESERVE = 48;
@@ -36,6 +37,7 @@ export function PlayerSelector({
   onNext,
   cpuPlayers,
   onToggleCpu,
+  colors,
 }: {
   title: string;
   count: number;
@@ -44,7 +46,9 @@ export function PlayerSelector({
   onNext: () => void;
   cpuPlayers?: Set<number>;
   onToggleCpu?: (playerIndex: number) => void;
+  colors?: string[];
 }) {
+  const playerColors = colors ?? getPlayerColors();
   const containerRef = useRef<HTMLDivElement>(null);
   const ITEM_COUNT = max + 1;
   const [layout, setLayout] = useState({ cols: 1, rows: ITEM_COUNT, cellSize: 0 });
@@ -149,7 +153,7 @@ export function PlayerSelector({
           const playerNum = i + 1;
           const isSelected = playerNum <= count;
           const isCpu = cpuPlayers?.has(i) ?? false;
-          const color = PLAYER_COLORS[i] ?? "#ffffff";
+          const color = playerColors[i] ?? "#ffffff";
 
           return (
             <div

@@ -1,14 +1,20 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/game/Header";
 import { PlayerSelector } from "@/components/setup/PlayerSelector";
 import { playTap } from "@/lib/sounds";
+import { PLAYER_COLORS, shufflePlayerColors } from "@/lib/types";
 
 export default function SetupPage() {
   const [playerCount, setPlayerCount] = useState(1);
   const [cpuPlayers, setCpuPlayers] = useState<Set<number>>(new Set());
+  const [colors, setColors] = useState(PLAYER_COLORS);
+
+  useEffect(() => {
+    setColors(shufflePlayerColors());
+  }, []);
   const router = useRouter();
 
   const handleChange = useCallback((n: number) => {
@@ -55,6 +61,7 @@ export default function SetupPage() {
         onNext={next}
         cpuPlayers={cpuPlayers}
         onToggleCpu={toggleCpu}
+        colors={colors}
       />
     </div>
   );
