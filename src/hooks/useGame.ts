@@ -5,6 +5,7 @@ import { gameReducer, makeInitialState } from "@/lib/engine";
 import { getRuleset } from "@/lib/rulesets";
 import { makeClassicCategories } from "@/lib/rulesets/classic";
 import { makeKismetCategories } from "@/lib/rulesets/kismet";
+import { getPlayerColors } from "@/lib/types";
 import type { GameState, GameView, AIDifficulty } from "@/lib/types";
 
 const STORAGE_KEY = "weetzee-game";
@@ -88,8 +89,10 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
     if (orderedScoring) {
       ruleset = { ...ruleset, orderedScoring: true };
     }
-    const players = rest.players.map((p: any) => ({
+    const sessionColors = getPlayerColors();
+    const players = rest.players.map((p: any, i: number) => ({
       ...p,
+      color: sessionColors[i] ?? p.color,
       isComputer: p.isComputer ?? false,
     }));
     return {

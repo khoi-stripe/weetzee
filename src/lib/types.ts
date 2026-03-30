@@ -41,10 +41,30 @@ export const PLAYER_COLORS = [
   "#2dd4bf",  // teal
 ];
 
-let _playerColors: string[] = [...PLAYER_COLORS];
+const COLORS_STORAGE_KEY = "weetzee-player-colors";
+
+let _playerColors: string[] | null = null;
+
+function loadStoredColors(): string[] | null {
+  try {
+    const raw = sessionStorage.getItem(COLORS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length === PLAYER_COLORS.length) return parsed;
+  } catch {}
+  return null;
+}
 
 export function getPlayerColors(): string[] {
-  return _playerColors;
+  if (_playerColors) return _playerColors;
+  if (typeof window !== "undefined") {
+    const stored = loadStoredColors();
+    if (stored) {
+      _playerColors = stored;
+      return stored;
+    }
+  }
+  return PLAYER_COLORS;
 }
 
 export function shufflePlayerColors(): string[] {
@@ -54,6 +74,7 @@ export function shufflePlayerColors(): string[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   _playerColors = a;
+  try { sessionStorage.setItem(COLORS_STORAGE_KEY, JSON.stringify(a)); } catch {}
   return a;
 }
 
