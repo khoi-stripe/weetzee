@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono } from "next/font/google";
+import { SerwistRegistration } from "@/components/SerwistRegistration";
 import { InstallPromptLoader } from "@/components/InstallPromptLoader";
+import { UpdatePromptLoader } from "@/components/UpdatePromptLoader";
 import "./globals.css";
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -45,13 +47,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={ibmPlexMono.variable}>
       <body>
-        {children}
-        <InstallPromptLoader />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js")}`,
-          }}
-        />
+        <SerwistRegistration>
+          {children}
+          <InstallPromptLoader />
+          <UpdatePromptLoader />
+        </SerwistRegistration>
       </body>
     </html>
   );
