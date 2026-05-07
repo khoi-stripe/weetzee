@@ -389,38 +389,44 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
   return (
     <div ref={containerRef} className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
       {isLandscape ? (
-        <div className="flex flex-row w-full h-full p-8" style={{ gap: 32 }}>
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <>
+          <div style={{ position: "relative", zIndex: 55 }}>
             <PlayerBar
               players={state.players}
               currentPlayerIndex={state.currentPlayerIndex}
               ruleset={state.ruleset}
             />
-            <DiceView {...diceViewProps} />
           </div>
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-            <TurnScoreBar
-              turnScore={state.turnScore}
-              selectionScore={selectionValid ? selectionScore : 0}
-              playerColor={currentPlayer.color}
-              finalRound={state.finalRound}
-            />
-            <div style={{ padding: "0 16px" }} className="flex-1 min-h-0 flex flex-col overflow-hidden">
-              <FarkleScoringSheet
-                possibilities={scoringPossibilities}
-                hintsEnabled={state.scoringHintsEnabled}
+          <div className="flex flex-row flex-1 min-h-0 w-full px-8 pb-8" style={{ gap: 32 }}>
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+              <DiceView {...diceViewProps} />
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+              <TurnScoreBar
+                turnScore={state.turnScore}
+                selectionScore={selectionValid ? selectionScore : 0}
                 playerColor={currentPlayer.color}
+                finalRound={state.finalRound}
               />
+              <div style={{ padding: "0 16px" }} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <FarkleScoringSheet
+                  possibilities={scoringPossibilities}
+                  hintsEnabled={state.scoringHintsEnabled}
+                  playerColor={currentPlayer.color}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </>
       ) : (
         <>
-          <PlayerBar
-            players={state.players}
-            currentPlayerIndex={state.currentPlayerIndex}
-            ruleset={state.ruleset}
-          />
+          <div style={{ position: "relative", zIndex: 55 }}>
+            <PlayerBar
+              players={state.players}
+              currentPlayerIndex={state.currentPlayerIndex}
+              ruleset={state.ruleset}
+            />
+          </div>
 
           <div
             ref={scrollRef}
@@ -664,7 +670,7 @@ function FarkleBustScreen({
       <div
         style={{
           width: "100%",
-          maxWidth: "min(80vw, 80vh)",
+          maxWidth: "min(80vw, 80vh, 400px)",
           aspectRatio: "1 / 1",
         }}
       >
@@ -848,7 +854,7 @@ function PlayerInterstitial({
         <div
           style={{
             width: "100%",
-            maxWidth: "min(80vw, 80vh)",
+            maxWidth: "min(80vw, 80vh, 400px)",
             aspectRatio: "1 / 1",
           }}
         >
@@ -948,6 +954,7 @@ function PlayerInterstitial({
         className="flex flex-col items-center justify-center rounded-full"
         style={{
           width: "100%",
+          maxWidth: "min(80vw, 80vh, 400px)",
           aspectRatio: "1 / 1",
           background: player.color,
           fontSize: 20,

@@ -11,20 +11,26 @@ import {
   kyhdChooseTarget,
 } from "@/lib/ai";
 
-const AI_DELAY_ROLL = 1300;
-const AI_DELAY_HOLD = 550;
+const AI_DELAY_ROLL = 1200;
+const AI_DELAY_HOLD = 400;
 const AI_DELAY_SCORE = 1400;
-const AI_DELAY_FARKLE_SET_ASIDE = 1200;
-const AI_DELAY_FARKLE_BANK = 1800;
+const AI_DELAY_FARKLE_SET_ASIDE = 1100;
+const AI_DELAY_FARKLE_BANK = 1600;
 const AI_DELAY_FARKLE_BUST = 1650;
 const AI_DELAY_TRANSITION = 2640;
 const AI_PRESS_DURATION = 500;
 
-// Pause before multi-step decisions (evaluating dice, picking a category)
-const AI_THINK_PAUSE = 900;
+const AI_THINK_SHORT = 500;
+const AI_THINK_LONG = 1200;
 
 function jitter(ms: number): number {
-  return Math.round(ms * (0.8 + Math.random() * 0.4));
+  const spread = 0.6 + Math.random() * 0.8;
+  return Math.round(ms * spread);
+}
+
+function thinkTime(complexity: number): number {
+  const base = AI_THINK_SHORT + (AI_THINK_LONG - AI_THINK_SHORT) * Math.min(complexity, 1);
+  return jitter(base);
 }
 
 type DispatchFn = (action: GameAction) => void;
@@ -141,17 +147,21 @@ async function runScorecardAI(
     }
 
     if (rollsLeft > 0) {
-      await delay(jitter(AI_THINK_PAUSE), timerRef);
       const decision = scorecardChooseHolds(state);
 
       const currentlyHeld = new Set(state.dice.filter((d) => d.held).map((d) => d.id));
       const targetHeld = new Set(decision.holdIds);
+      const toggleCount = state.dice.filter(d => targetHeld.has(d.id) !== currentlyHeld.has(d.id)).length;
 
+      await delay(thinkTime(toggleCount / state.dice.length), timerRef);
+
+      let first = true;
       for (const d of state.dice) {
         const shouldHold = targetHeld.has(d.id);
         const isHeld = currentlyHeld.has(d.id);
         if (shouldHold !== isHeld) {
-          await delay(jitter(AI_DELAY_HOLD), timerRef);
+          await delay(first ? jitter(AI_DELAY_HOLD) : jitter(AI_DELAY_HOLD * 0.5), timerRef);
+          first = false;
           dispatch({ type: "TOGGLE_HOLD", dieId: d.id });
         }
       }
@@ -176,7 +186,7 @@ async function runScorecardAI(
       return;
     }
 
-    await delay(jitter(AI_DELAY_SCORE), timerRef);
+    await delay(thinkTime(0.7), timerRef);
     const catId = scorecardChooseCategory(state);
     if (catId) {
       dispatch({ type: "SCORE_CATEGORY", categoryId: catId });
@@ -212,17 +222,21 @@ async function runTargetAI(
     }
 
     if (rollsLeft > 0) {
-      await delay(jitter(AI_THINK_PAUSE), timerRef);
       const decision = kyhdChooseHolds(state);
 
       const currentlyHeld = new Set(state.dice.filter((d) => d.held).map((d) => d.id));
       const targetHeld = new Set(decision.holdIds);
+      const toggleCount = state.dice.filter(d => targetHeld.has(d.id) !== currentlyHeld.has(d.id)).length;
 
+      await delay(thinkTime(toggleCount / state.dice.length), timerRef);
+
+      let first = true;
       for (const d of state.dice) {
         const shouldHold = targetHeld.has(d.id);
         const isHeld = currentlyHeld.has(d.id);
         if (shouldHold !== isHeld) {
-          await delay(jitter(AI_DELAY_HOLD), timerRef);
+          await delay(first ? jitter(AI_DELAY_HOLD) : jitter(AI_DELAY_HOLD * 0.5), timerRef);
+          first = false;
           dispatch({ type: "TOGGLE_HOLD", dieId: d.id });
         }
       }
@@ -289,11 +303,14 @@ async function runFarkleAI(
     }
 
     if (state.mustSetAside) {
-      await delay(jitter(AI_THINK_PAUSE), timerRef);
       const decision = farkleChooseSetAside(state);
-      if (decision.holdIds.length > 0) {
+      const diceCount = decision.holdIds.length;
+      await delay(thinkTime(diceCount / 6), timerRef);
+      if (diceCount > 0) {
+        let first = true;
         for (const id of decision.holdIds) {
-          await delay(jitter(350), timerRef);
+          await delay(first ? jitter(350) : jitter(200), timerRef);
+          first = false;
           dispatch({ type: "TOGGLE_HOLD", dieId: id });
         }
         await signalAndDelay("set-aside", AI_DELAY_FARKLE_SET_ASIDE);
@@ -306,6 +323,7 @@ async function runFarkleAI(
 
     const hotDice = state.setAsideDiceIds.length === 0 && state.turnScore > 0 && state.rollsUsed > 0;
     if (hotDice) {
+      await delay(thinkTime(0.3), timerRef);
       await signalAndDelay("roll", AI_DELAY_ROLL);
       dispatch({ type: "ROLL" });
       signalAction?.(null);
@@ -313,8 +331,8 @@ async function runFarkleAI(
       return;
     }
 
-    // Bank-vs-roll is the key decision — think before acting
-    await delay(jitter(AI_THINK_PAUSE), timerRef);
+    const bankWeight = state.turnScore > 2000 ? 0.9 : state.turnScore > 500 ? 0.6 : 0.3;
+    await delay(thinkTime(bankWeight), timerRef);
 
     if (state.turnScore > 0 && farkleShouldBank(state)) {
       await signalAndDelay("bank", AI_DELAY_FARKLE_BANK);
