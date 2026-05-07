@@ -3,31 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Die } from "@/components/game/Die";
 import { getPlayerColors } from "@/lib/types";
+import { computeSquareGridLayout } from "@/lib/gridLayout";
 
 import { playTap, playToggle } from "@/lib/sounds";
 
 const TITLE_RESERVE = 48;
 
-function computeLayout(
-  w: number,
-  h: number,
-  itemCount: number,
-  gap: number
-): { cols: number; rows: number; cellSize: number } {
-  let best = { cols: 1, rows: itemCount, cellSize: 0 };
-
-  for (let cols = 1; cols <= itemCount; cols++) {
-    const rows = Math.ceil(itemCount / cols);
-    const cellW = (w - gap * (cols - 1)) / cols;
-    const cellH = (h - gap * (rows - 1)) / rows;
-    const cellSize = Math.floor(Math.min(cellW, cellH));
-    if (cellSize > best.cellSize) {
-      best = { cols, rows, cellSize };
-    }
-  }
-
-  return best;
-}
 
 export function PlayerSelector({
   title,
@@ -60,7 +41,7 @@ export function PlayerSelector({
 
     function measure() {
       const { width, height } = el!.getBoundingClientRect();
-      setLayout(computeLayout(
+      setLayout(computeSquareGridLayout(
         width - GAP * 2,
         height - GAP * 2 - TITLE_RESERVE,
         ITEM_COUNT,

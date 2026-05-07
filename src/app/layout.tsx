@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { InstallPrompt } from "@/components/InstallPrompt";
+import { IBM_Plex_Mono } from "next/font/google";
+import { InstallPromptLoader } from "@/components/InstallPromptLoader";
 import "./globals.css";
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-ibm-plex-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Weetzee",
@@ -35,10 +43,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={ibmPlexMono.variable}>
       <body>
         {children}
-        <InstallPrompt />
+        <InstallPromptLoader />
         <script
           dangerouslySetInnerHTML={{
             __html: `if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js")}`,

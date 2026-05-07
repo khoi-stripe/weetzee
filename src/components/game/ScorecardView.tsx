@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Die } from "./Die";
 import type { Die as DieType, Player } from "@/lib/types";
@@ -62,7 +62,7 @@ export function ScorecardView({
   sequentialTargetsEnabled?: boolean;
 }) {
   const currentPlayer = players[currentPlayerIndex];
-  const diceValues = dice.map((d) => d.value);
+  const diceValues = useMemo(() => dice.map((d) => d.value), [dice]);
 
   const isTargetMode = !!ruleset.targetAssignment;
 
@@ -71,13 +71,17 @@ export function ScorecardView({
     ? rollsUsed > 0
     : ruleset.forcedRolls ? allRollsUsed : rollsUsed > 0;
 
-  const categories = ruleset.categories.filter((c) => c.id !== "bonus");
+  const categories = useMemo(
+    () => ruleset.categories.filter((c) => c.id !== "bonus"),
+    [ruleset.categories]
+  );
 
-  const rawScores = canScore
-    ? getAvailableScores(diceValues, ruleset, currentPlayer.scores)
-    : {};
+  const rawScores = useMemo(
+    () => (canScore ? getAvailableScores(diceValues, ruleset, currentPlayer.scores) : {}),
+    [canScore, diceValues, ruleset, currentPlayer.scores]
+  );
 
-  const selectableScores = (() => {
+  const selectableScores = useMemo(() => {
     if (isTargetMode) {
       if (!sequentialTargetsEnabled) return rawScores;
       const nextCat = categories.find((c) => currentPlayer.scores[c.id] === undefined && rawScores[c.id] !== undefined);
@@ -91,19 +95,16 @@ export function ScorecardView({
       if (score === maxScore || id === ruleset.alwaysAvailableId) filtered[id] = score;
     }
     return filtered;
-  })();
+  }, [isTargetMode, sequentialTargetsEnabled, categories, rawScores, currentPlayer.scores, ruleset.highestScoreOnly, ruleset.alwaysAvailableId]);
 
-  const bestCategoryId = isTargetMode
-    ? (Object.keys(selectableScores).length > 0
-        ? Object.entries(selectableScores).reduce((best, [id, score]) =>
-            score < best[1] ? [id, score] : best
-          )[0]
-        : null)
-    : (Object.keys(selectableScores).length > 0
-        ? Object.entries(selectableScores).reduce((best, [id, score]) =>
-            score > best[1] ? [id, score] : best
-          )[0]
-        : null);
+  const bestCategoryId = useMemo(() => {
+    const entries = Object.entries(selectableScores);
+    if (entries.length === 0) return null;
+    if (isTargetMode) {
+      return entries.reduce((best, [id, score]) => (score < best[1] ? [id, score] : best))[0];
+    }
+    return entries.reduce((best, [id, score]) => (score > best[1] ? [id, score] : best))[0];
+  }, [isTargetMode, selectableScores]);
 
   const locked = justScoredCategoryId != null;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -1026,10 +1027,14 @@ function MiniDiceStrip({
   const prevRollsUsed = useRef(rollsUsed);
   const cycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAnimatingMini = useRef(false);
+  const diceRef = useRef(dice);
+  diceRef.current = dice;
 
   useEffect(() => {
     const justRolled = rollsUsed > prevRollsUsed.current && rollsUsed > 0;
     prevRollsUsed.current = rollsUsed;
+    const dice = diceRef.current;
 
     if (!justRolled) {
       setDisplayValues(dice.map((d) => d.value));
@@ -1043,6 +1048,7 @@ function MiniDiceStrip({
     }
 
     setRollingDice(new Set(unheldIndices));
+    isAnimatingMini.current = true;
 
     if (cycleRef.current) clearInterval(cycleRef.current);
     if (settleTimer.current) clearTimeout(settleTimer.current);
@@ -1065,6 +1071,7 @@ function MiniDiceStrip({
     settleTimer.current = setTimeout(() => {
       if (cycleRef.current) clearInterval(cycleRef.current);
       cycleRef.current = null;
+      isAnimatingMini.current = false;
       setDisplayValues(dice.map((d) => d.value));
       setRollingDice(new Set());
       setFlashDice(new Set());
@@ -1073,9 +1080,19 @@ function MiniDiceStrip({
     return () => {
       if (cycleRef.current) clearInterval(cycleRef.current);
       if (settleTimer.current) clearTimeout(settleTimer.current);
+      isAnimatingMini.current = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rollsUsed, dice]);
+  }, [rollsUsed]);
+
+  useEffect(() => {
+    if (isAnimatingMini.current) return;
+    setDisplayValues((prev) => {
+      const next = dice.map((d) => d.value);
+      if (prev.length === next.length && prev.every((v, i) => v === next[i])) return prev;
+      return next;
+    });
+  }, [dice]);
 
   return (
     <div className="flex gap-3 w-full shrink-0">

@@ -4,30 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Die } from "./Die";
 import type { Die as DieType } from "@/lib/types";
 import { rollValue } from "@/lib/engine";
+import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { getAudioCtx, playBleep, playSettle, playTap } from "@/lib/sounds";
-
-// ===== Layout computation =====
-
-function computeLayout(
-  w: number,
-  h: number,
-  itemCount: number,
-  gap: number
-): { cols: number; rows: number; cellSize: number } {
-  let best = { cols: 1, rows: itemCount, cellSize: 0 };
-
-  for (let cols = 1; cols <= itemCount; cols++) {
-    const rows = Math.ceil(itemCount / cols);
-    const cellW = (w - gap * (cols - 1)) / cols;
-    const cellH = (h - gap * (rows - 1)) / rows;
-    const cellSize = Math.floor(Math.min(cellW, cellH));
-    if (cellSize > best.cellSize) {
-      best = { cols, rows, cellSize };
-    }
-  }
-
-  return best;
-}
 
 // ===== Rolling animation helpers =====
 
@@ -156,10 +134,17 @@ export function DiceView({
     return () => stopAnimation();
   }, [stopAnimation]);
 
+  const diceRef = useRef(dice);
+  diceRef.current = dice;
+  const setAsideDiceIdsRef = useRef(setAsideDiceIds);
+  setAsideDiceIdsRef.current = setAsideDiceIds;
+
   // Detect when a roll just happened (rollsUsed increased)
   useEffect(() => {
     const justRolled = rollsUsed > prevRollsUsed.current && rollsUsed > 0;
     prevRollsUsed.current = rollsUsed;
+    const dice = diceRef.current;
+    const setAsideDiceIds = setAsideDiceIdsRef.current;
 
     if (!justRolled) {
       setDisplayValues(dice.map((d) => d.value));
@@ -234,7 +219,17 @@ export function DiceView({
       }, totalDuration)
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rollsUsed, dice]);
+  }, [rollsUsed]);
+
+  // Keep displayValues in sync if dice values change while not animating (turn end, restore)
+  useEffect(() => {
+    if (isAnimating.current) return;
+    setDisplayValues((prev) => {
+      const next = dice.map((d) => d.value);
+      if (prev.length === next.length && prev.every((v, i) => v === next[i])) return prev;
+      return next;
+    });
+  }, [dice]);
 
   // --- Layout ---
 
@@ -248,10 +243,10 @@ export function DiceView({
         if (!parent) return;
         const { height } = parent.getBoundingClientRect();
         const h = height - GAP * 2;
-        setLayout(computeLayout(h, h, ITEM_COUNT, GAP));
+        setLayout(computeSquareGridLayout(h, h, ITEM_COUNT, GAP));
       } else {
         const { width, height } = el!.getBoundingClientRect();
-        setLayout(computeLayout(width - GAP * 2, height - GAP * 2, ITEM_COUNT, GAP));
+        setLayout(computeSquareGridLayout(width - GAP * 2, height - GAP * 2, ITEM_COUNT, GAP));
       }
     }
 

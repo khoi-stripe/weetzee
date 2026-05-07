@@ -1,5 +1,6 @@
-const CACHE_VERSION = "v9";
+const CACHE_VERSION = "v10";
 const CACHE_NAME = `weetzee-${CACHE_VERSION}`;
+const MAX_RUNTIME_ENTRIES = 80;
 
 const PRECACHE_URLS = ["/", "/offline.html"];
 
@@ -27,6 +28,20 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+async function trimCache(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length <= maxEntries) return;
+  const toDelete = keys.slice(0, keys.length - maxEntries);
+  await Promise.all(toDelete.map((req) => cache.delete(req)));
+}
+
+async function cachePut(request, response) {
+  const cache = await caches.open(CACHE_NAME);
+  await cache.put(request, response);
+  trimCache(CACHE_NAME, MAX_RUNTIME_ENTRIES);
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
@@ -45,8 +60,7 @@ self.addEventListener("fetch", (event) => {
       Promise.race([
         fetch(event.request).then((response) => {
           if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            cachePut(event.request, response.clone());
           }
           return response;
         }),
@@ -63,8 +77,7 @@ self.addEventListener("fetch", (event) => {
       fetch(event.request)
         .then((response) => {
           if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            cachePut(event.request, response.clone());
           }
           return response;
         })
@@ -78,8 +91,7 @@ self.addEventListener("fetch", (event) => {
       const fetchPromise = fetch(event.request)
         .then((response) => {
           if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            cachePut(event.request, response.clone());
           }
           return response;
         })

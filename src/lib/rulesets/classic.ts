@@ -192,13 +192,11 @@ export const CLASSIC_RULESET: Ruleset = {
   fiveOfAKindId: "weetzee",
 };
 
-// Upper section category IDs for bonus calculation
-export const UPPER_SECTION_IDS = UPPER_SECTION.map((c) => c.id);
-export const UPPER_BONUS_THRESHOLD = 63;
-export const UPPER_BONUS_VALUE = 35;
+const UPPER_SECTION_IDS = UPPER_SECTION.map((c) => c.id);
+const UPPER_BONUS_THRESHOLD = 63;
+const UPPER_BONUS_VALUE = 35;
 
-/** Compute upper section subtotal for a player's scores */
-export function getUpperTotal(scores: Record<string, number | null>): number {
+function getUpperTotal(scores: Record<string, number | null>): number {
   return UPPER_SECTION_IDS.reduce((sum, id) => sum + (scores[id] ?? 0), 0);
 }
 

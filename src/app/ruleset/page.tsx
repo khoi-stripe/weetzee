@@ -5,27 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/game/Header";
 import { Die } from "@/components/game/Die";
 import { VISIBLE_RULESETS } from "@/lib/rulesets";
+import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { playTap } from "@/lib/sounds";
 
 const ITEM_COUNT = VISIBLE_RULESETS.length + 1;
 const TITLE_RESERVE = 48;
 
-function computeLayout(
-  w: number,
-  h: number,
-  count: number,
-  gap: number
-): { cols: number; rows: number; cellSize: number } {
-  let best = { cols: 1, rows: count, cellSize: 0 };
-  for (let cols = 1; cols <= count; cols++) {
-    const rows = Math.ceil(count / cols);
-    const cellW = (w - gap * (cols - 1)) / cols;
-    const cellH = (h - gap * (rows - 1)) / rows;
-    const cellSize = Math.floor(Math.min(cellW, cellH));
-    if (cellSize > best.cellSize) best = { cols, rows, cellSize };
-  }
-  return best;
-}
 
 function RulesetContent() {
   const params = useSearchParams();
@@ -42,7 +27,7 @@ function RulesetContent() {
     if (!el) return;
     function measure() {
       const { width, height } = el!.getBoundingClientRect();
-      setLayout(computeLayout(
+      setLayout(computeSquareGridLayout(
         width - GAP * 2,
         height - GAP * 2 - TITLE_RESERVE,
         ITEM_COUNT,

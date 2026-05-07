@@ -636,22 +636,27 @@ function FarkleBustScreen({
   useEffect(() => {
     if (lostScore <= 0) return;
 
+    let interval: ReturnType<typeof setInterval> | null = null;
     const delay = setTimeout(() => {
       const steps = Math.min(lostScore, 30);
-      const interval = 800 / steps;
+      const tickMs = 800 / steps;
       let current = lostScore;
       const decrement = Math.ceil(lostScore / steps);
 
-      const timer = setInterval(() => {
+      interval = setInterval(() => {
         current = Math.max(0, current - decrement);
         setDisplayScore(current);
-        if (current <= 0) clearInterval(timer);
-      }, interval);
-
-      return () => clearInterval(timer);
+        if (current <= 0 && interval) {
+          clearInterval(interval);
+          interval = null;
+        }
+      }, tickMs);
     }, 1500);
 
-    return () => clearTimeout(delay);
+    return () => {
+      clearTimeout(delay);
+      if (interval) clearInterval(interval);
+    };
   }, [lostScore]);
 
   return (

@@ -29,7 +29,7 @@ function hasAllSame(dice: number[]): boolean {
 
 // ===== Player Factory =====
 
-export function makePlayers(count: number, aiIndices: number[] = []): Player[] {
+function makePlayers(count: number, aiIndices: number[] = []): Player[] {
   const colors = getPlayerColors();
   return Array.from({ length: count }, (_, i) => {
     const isCpu = aiIndices.includes(i);

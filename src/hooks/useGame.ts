@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { gameReducer, makeInitialState } from "@/lib/engine";
 import { getRuleset } from "@/lib/rulesets";
 import { makeClassicCategories } from "@/lib/rulesets/classic";
@@ -158,108 +158,104 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee", aiIn
     }
   }, [playerCount, rulesetId]);
 
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!didRestore.current) return;
     if (state.gameOver) {
+      if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
       clearState();
-    } else {
-      saveState(state);
+      return;
     }
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveState(stateRef.current);
+      saveTimer.current = null;
+    }, 200);
   }, [state]);
 
-  function roll() {
-    dispatch({ type: "ROLL" });
-  }
-
-  function toggleHold(dieId: number) {
-    dispatch({ type: "TOGGLE_HOLD", dieId });
-  }
-
-  function scoreCategory(categoryId: string) {
-    dispatch({ type: "SCORE_CATEGORY", categoryId });
-  }
-
-  function setView(view: GameView) {
-    dispatch({ type: "SET_VIEW", view });
-  }
-
-  function currentPrefs(): HouseRulesPrefs {
-    return {
-      rollBankingEnabled: state.rollBankingEnabled,
-      multipleWeetzeesEnabled: state.multipleWeetzeesEnabled,
-      sequentialTargetsEnabled: state.sequentialTargetsEnabled,
-      scoringHintsEnabled: state.scoringHintsEnabled,
-      sixDiceEnabled: state.sixDiceEnabled,
-      orderedScoringEnabled: state.orderedScoringEnabled,
-      openingThresholdEnabled: state.openingThresholdEnabled,
-      piggybackEnabled: state.piggybackEnabled,
-      aiDifficulty: state.aiDifficulty,
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        saveTimer.current = null;
+        if (!stateRef.current.gameOver) saveState(stateRef.current);
+      }
     };
-  }
+  }, []);
 
-  function toggleRollBanking() {
+  const currentPrefs = useCallback((): HouseRulesPrefs => {
+    const s = stateRef.current;
+    return {
+      rollBankingEnabled: s.rollBankingEnabled,
+      multipleWeetzeesEnabled: s.multipleWeetzeesEnabled,
+      sequentialTargetsEnabled: s.sequentialTargetsEnabled,
+      scoringHintsEnabled: s.scoringHintsEnabled,
+      sixDiceEnabled: s.sixDiceEnabled,
+      orderedScoringEnabled: s.orderedScoringEnabled,
+      openingThresholdEnabled: s.openingThresholdEnabled,
+      piggybackEnabled: s.piggybackEnabled,
+      aiDifficulty: s.aiDifficulty,
+    };
+  }, []);
+
+  const roll = useCallback(() => { dispatch({ type: "ROLL" }); }, []);
+  const toggleHold = useCallback((dieId: number) => { dispatch({ type: "TOGGLE_HOLD", dieId }); }, []);
+  const scoreCategory = useCallback((categoryId: string) => { dispatch({ type: "SCORE_CATEGORY", categoryId }); }, []);
+  const setView = useCallback((view: GameView) => { dispatch({ type: "SET_VIEW", view }); }, []);
+  const setAside = useCallback(() => { dispatch({ type: "SET_ASIDE" }); }, []);
+  const bank = useCallback(() => { dispatch({ type: "BANK" }); }, []);
+  const acceptPiggyback = useCallback(() => { dispatch({ type: "ACCEPT_PIGGYBACK" }); }, []);
+  const endGame = useCallback(() => { clearState(); }, []);
+
+  const toggleRollBanking = useCallback(() => {
     dispatch({ type: "TOGGLE_ROLL_BANKING" });
-    savePrefs({ ...currentPrefs(), rollBankingEnabled: !state.rollBankingEnabled });
-  }
+    savePrefs({ ...currentPrefs(), rollBankingEnabled: !stateRef.current.rollBankingEnabled });
+  }, [currentPrefs]);
 
-  function toggleMultipleWeetzees() {
+  const toggleMultipleWeetzees = useCallback(() => {
     dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });
-    savePrefs({ ...currentPrefs(), multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled });
-  }
+    savePrefs({ ...currentPrefs(), multipleWeetzeesEnabled: !stateRef.current.multipleWeetzeesEnabled });
+  }, [currentPrefs]);
 
-  function toggleSequentialTargets() {
+  const toggleSequentialTargets = useCallback(() => {
     dispatch({ type: "TOGGLE_SEQUENTIAL_TARGETS" });
-    savePrefs({ ...currentPrefs(), sequentialTargetsEnabled: !state.sequentialTargetsEnabled });
-  }
+    savePrefs({ ...currentPrefs(), sequentialTargetsEnabled: !stateRef.current.sequentialTargetsEnabled });
+  }, [currentPrefs]);
 
-  function setAside() {
-    dispatch({ type: "SET_ASIDE" });
-  }
-
-  function bank() {
-    dispatch({ type: "BANK" });
-  }
-
-  function toggleScoringHints() {
+  const toggleScoringHints = useCallback(() => {
     dispatch({ type: "TOGGLE_SCORING_HINTS" });
-    savePrefs({ ...currentPrefs(), scoringHintsEnabled: !state.scoringHintsEnabled });
-  }
+    savePrefs({ ...currentPrefs(), scoringHintsEnabled: !stateRef.current.scoringHintsEnabled });
+  }, [currentPrefs]);
 
-  function toggleSixDice() {
+  const toggleSixDice = useCallback(() => {
     dispatch({ type: "TOGGLE_SIX_DICE" });
-    savePrefs({ ...currentPrefs(), sixDiceEnabled: !state.sixDiceEnabled });
-  }
+    savePrefs({ ...currentPrefs(), sixDiceEnabled: !stateRef.current.sixDiceEnabled });
+  }, [currentPrefs]);
 
-  function toggleOrderedScoring() {
+  const toggleOrderedScoring = useCallback(() => {
     dispatch({ type: "TOGGLE_ORDERED_SCORING" });
-    savePrefs({ ...currentPrefs(), orderedScoringEnabled: !state.orderedScoringEnabled });
-  }
+    savePrefs({ ...currentPrefs(), orderedScoringEnabled: !stateRef.current.orderedScoringEnabled });
+  }, [currentPrefs]);
 
-  function toggleOpeningThreshold() {
+  const toggleOpeningThreshold = useCallback(() => {
     dispatch({ type: "TOGGLE_OPENING_THRESHOLD" });
-    savePrefs({ ...currentPrefs(), openingThresholdEnabled: !state.openingThresholdEnabled });
-  }
+    savePrefs({ ...currentPrefs(), openingThresholdEnabled: !stateRef.current.openingThresholdEnabled });
+  }, [currentPrefs]);
 
-  function togglePiggyback() {
+  const togglePiggyback = useCallback(() => {
     dispatch({ type: "TOGGLE_PIGGYBACK" });
-    savePrefs({ ...currentPrefs(), piggybackEnabled: !state.piggybackEnabled });
-  }
+    savePrefs({ ...currentPrefs(), piggybackEnabled: !stateRef.current.piggybackEnabled });
+  }, [currentPrefs]);
 
-  function acceptPiggyback() {
-    dispatch({ type: "ACCEPT_PIGGYBACK" });
-  }
-
-  function setAIDifficulty(difficulty: AIDifficulty) {
+  const setAIDifficulty = useCallback((difficulty: AIDifficulty) => {
     dispatch({ type: "SET_AI_DIFFICULTY", difficulty });
     savePrefs({ ...currentPrefs(), aiDifficulty: difficulty });
-  }
-
-  function endGame() {
-    clearState();
-  }
+  }, [currentPrefs]);
 
   return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, toggleSequentialTargets, setAside, bank, toggleScoringHints, toggleSixDice, toggleOrderedScoring, toggleOpeningThreshold, togglePiggyback, acceptPiggyback, setAIDifficulty, endGame };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;
-export type { GameState };
