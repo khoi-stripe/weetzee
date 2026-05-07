@@ -566,19 +566,26 @@ export function farkleShouldAcceptPiggyback(state: GameState): boolean {
   );
   const isHotDice = remainingDice.length === 0;
 
-  // Easy: rarely accepts piggyback (too risky for a cautious player)
+  // Hot dice = all 6 dice to roll, very favorable
+  // Otherwise weigh remaining dice count against inherited risk.
+  // Fewer remaining dice = higher farkle chance = need more reward to justify.
+
   if (difficulty === "easy") {
-    if (isHotDice) return offer.turnScore >= 400;
-    return remainingDice.length >= 4;
+    if (isHotDice) return offer.turnScore <= 300;
+    return remainingDice.length >= 5;
   }
 
-  // Hard: almost always accepts — it's a free advantage
   if (difficulty === "hard") {
     if (isHotDice) return true;
-    return remainingDice.length >= 1 || offer.turnScore >= 150;
+    if (remainingDice.length >= 4) return true;
+    if (remainingDice.length === 3) return offer.turnScore <= 600;
+    if (remainingDice.length === 2) return offer.turnScore <= 300;
+    return false;
   }
 
   // Medium
-  if (isHotDice) return offer.turnScore >= 200;
-  return remainingDice.length >= 2 || offer.turnScore >= 300;
+  if (isHotDice) return offer.turnScore <= 500;
+  if (remainingDice.length >= 4) return offer.turnScore <= 400;
+  if (remainingDice.length === 3) return offer.turnScore <= 250;
+  return false;
 }
