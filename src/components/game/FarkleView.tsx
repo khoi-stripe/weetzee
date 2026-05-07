@@ -664,7 +664,7 @@ function FarkleBustScreen({
       className="absolute inset-0 flex flex-col items-center justify-center"
       style={{
         background: "rgba(0, 0, 0, 0.9)",
-        zIndex: 60,
+        zIndex: 50,
         padding: 16,
         gap: 24,
         animation: exiting
