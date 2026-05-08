@@ -228,7 +228,11 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
 
   const hasRolled = state.rollsUsed > 0;
   const hotDice = !state.farkled && state.setAsideDiceIds.length === 0 && state.turnScore > 0 && hasRolled;
-  const canSetAside = !state.farkled && selectionValid && hasRolled;
+  // Hot dice has been triggered but the player hasn't pressed HOT DICE yet —
+  // dice still show their previous scoring values. Lock them so the player
+  // can't re-select them and double-score the same dice.
+  const hotDiceWaiting = hotDice && !state.mustSetAside;
+  const canSetAside = !state.farkled && selectionValid && hasRolled && !hotDiceWaiting;
   const canRoll = !state.farkled && !state.mustSetAside && (state.setAsideDiceIds.length > 0 || hotDice) && !heldDice.length;
   const playerTotal = (currentPlayer.scores["total"] as number) ?? 0;
   const needsOpening = state.openingThresholdEnabled && playerTotal === 0;
@@ -375,7 +379,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     onRoll: actionHandler,
     onToggleHold: isAITurn ? () => {} : toggleHold,
     farkleMode: true as const,
-    setAsideDiceIds: state.setAsideDiceIds,
+    setAsideDiceIds: hotDiceWaiting ? state.dice.map((d) => d.id) : state.setAsideDiceIds,
     farkled: state.farkled,
     farkleActionLabel: actionLabel,
     farkleActionEnabled: actionEnabled,
