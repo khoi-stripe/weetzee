@@ -405,73 +405,56 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
             <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
               <DiceView {...diceViewProps} />
             </div>
-            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-              <TurnScoreBar
-                turnScore={state.turnScore}
-                selectionScore={selectionValid ? selectionScore : 0}
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden" style={{ padding: "0 16px" }}>
+              <FarkleScoringSheet
+                possibilities={scoringPossibilities}
+                hintsEnabled={state.scoringHintsEnabled}
                 playerColor={currentPlayer.color}
-                finalRound={state.finalRound}
               />
-              <div style={{ padding: "0 16px" }} className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                <FarkleScoringSheet
-                  possibilities={scoringPossibilities}
-                  hintsEnabled={state.scoringHintsEnabled}
-                  playerColor={currentPlayer.color}
-                />
-              </div>
             </div>
           </div>
         </>
       ) : (
-        <>
-          <div style={{ position: "relative", zIndex: 55 }}>
-            <PlayerBar
-              players={state.players}
-              currentPlayerIndex={state.currentPlayerIndex}
-              ruleset={state.ruleset}
-            />
-          </div>
-
+        <div
+          ref={scrollRef}
+          className="flex-1 min-h-0 overflow-hidden relative"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
           <div
-            ref={scrollRef}
-            className="flex-1 min-h-0 overflow-hidden relative"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
+            className="flex flex-col w-full"
+            style={{
+              height: totalH || "300%",
+              transform: `translateY(${translateY}px)`,
+              transition: isDragging ? "none" : "transform 450ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+              willChange: "transform",
+            }}
           >
-            <div
-              className="flex flex-col w-full"
-              style={{
-                height: totalH || "300%",
-                transform: `translateY(${translateY}px)`,
-                transition: isDragging ? "none" : "transform 450ms cubic-bezier(0.25, 0.1, 0.25, 1)",
-                willChange: "transform",
-              }}
-            >
-              <div className="w-full flex flex-col overflow-hidden" style={{ height: diceH || "auto" }}>
-                <DiceView {...diceViewProps} />
-              </div>
+            <div className="w-full flex flex-col overflow-hidden" style={{ height: diceH || "auto" }}>
+              <DiceView {...diceViewProps} />
+            </div>
 
-              <div ref={barRef}>
-                <TurnScoreBar
-                  turnScore={state.turnScore}
-                  selectionScore={selectionValid ? selectionScore : 0}
-                  playerColor={currentPlayer.color}
-                  finalRound={state.finalRound}
-                  onClick={() => { playTap(); snapTo(showScoring ? 0 : 1); }}
-                />
-              </div>
+            {/* Shared PlayerBar — sits at the bottom of the dice view, top
+                of the scoring sheet. Tap toggles between the two panels. */}
+            <div ref={barRef} style={{ position: "relative", zIndex: 55 }}>
+              <PlayerBar
+                players={state.players}
+                currentPlayerIndex={state.currentPlayerIndex}
+                ruleset={state.ruleset}
+                onClick={() => { playTap(); snapTo(showScoring ? 0 : 1); }}
+              />
+            </div>
 
-              <div className="w-full flex flex-col" style={{ height: diceH || "auto", padding: "0 16px" }}>
-                <FarkleScoringSheet
-                  possibilities={scoringPossibilities}
-                  hintsEnabled={state.scoringHintsEnabled}
-                  playerColor={currentPlayer.color}
-                />
-              </div>
+            <div className="w-full flex flex-col" style={{ height: diceH || "auto", padding: "0 16px" }}>
+              <FarkleScoringSheet
+                possibilities={scoringPossibilities}
+                hintsEnabled={state.scoringHintsEnabled}
+                playerColor={currentPlayer.color}
+              />
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {showFarkleBust && (
@@ -496,54 +479,6 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
           onPiggyback={() => { playTap(); acceptPiggyback(); roll(); showInterstitial(null); }}
         />
       )}
-    </div>
-  );
-}
-
-// ===== Turn Score Bar =====
-
-function TurnScoreBar({
-  turnScore,
-  selectionScore,
-  playerColor,
-  finalRound,
-  onClick,
-}: {
-  turnScore: number;
-  selectionScore: number;
-  playerColor: string;
-  finalRound: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <div
-      className={`shrink-0 w-full${onClick ? " pressable" : ""}`}
-      onClick={onClick}
-      style={{ padding: "16px 16px" }}
-    >
-      <div
-        className="flex items-center justify-center"
-        style={{
-          padding: "8px 8px",
-          borderRadius: 4,
-          outline: "1px solid #ffffff",
-          outlineOffset: -1,
-          background: "transparent",
-          fontSize: 13,
-          fontWeight: 500,
-          gap: 6,
-        }}
-      >
-        <span style={{ color: "#ffffff" }}>
-          Turn {turnScore + selectionScore}
-        </span>
-        {selectionScore > 0 && turnScore > 0 && (
-          <span style={{ color: playerColor }}>+{selectionScore}</span>
-        )}
-        {finalRound && (
-          <span style={{ color: "#ff6b6b" }}>Final round</span>
-        )}
-      </div>
     </div>
   );
 }
