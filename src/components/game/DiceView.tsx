@@ -6,7 +6,7 @@ import type { Die as DieType } from "@/lib/types";
 import { rollValue } from "@/lib/engine";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { getAudioCtx, playBleep, playSettle, playTap } from "@/lib/sounds";
-import { hapticMedium } from "@/lib/haptics";
+import { hapticDiceRoll } from "@/lib/haptics";
 
 // ===== Rolling animation helpers =====
 
@@ -499,7 +499,7 @@ function RollButton({
 
   return (
     <button
-      onClick={canRoll ? () => { getAudioCtx(); hapticMedium(); onRoll(); } : undefined}
+      onClick={canRoll ? () => { getAudioCtx(); hapticDiceRoll(); onRoll(); } : undefined}
       disabled={!canRoll}
       className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
       onAnimationEnd={() => setIntroDone(true)}

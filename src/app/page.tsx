@@ -141,12 +141,23 @@ export default function SetupPage() {
   const [savedGame, setSavedGame] = useState<SavedGameSummary | null>(null);
   const [checked, setChecked] = useState(false);
 
+  const router = useRouter();
+
   useEffect(() => {
     setColors(shufflePlayerColors());
-    setSavedGame(peekSavedGame());
+    const saved = peekSavedGame();
+    setSavedGame(saved);
     setChecked(true);
-  }, []);
-  const router = useRouter();
+
+    const w = window as unknown as { __shortcutAction?: string };
+    if (w.__shortcutAction === "continue" && saved) {
+      w.__shortcutAction = undefined;
+      const aiParam = saved.aiIndices.length > 0 ? `&ai=${saved.aiIndices.join(",")}` : "";
+      router.push(`/game?players=${saved.playerCount}&ruleset=${saved.rulesetId}${aiParam}`);
+    } else if (w.__shortcutAction) {
+      w.__shortcutAction = undefined;
+    }
+  }, [router]);
 
   const handleChange = useCallback((n: number) => {
     setPlayerCount(n);

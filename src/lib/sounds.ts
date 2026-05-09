@@ -1,4 +1,4 @@
-import { hapticLight, hapticMedium, hapticHeavy } from "./haptics";
+import { hapticMedium, hapticSuccess, hapticError, hapticWarning } from "./haptics";
 
 let _ctx: AudioContext | null = null;
 
@@ -63,7 +63,7 @@ export function playSettle(index: number, total: number) {
 // Starts at ~600Hz and falls to ~300Hz over 60ms for a gentle, woody feel.
 
 export function playTap() {
-  hapticLight();
+  hapticMedium();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -84,7 +84,7 @@ export function playTap() {
 // Plucked triangle wave — soft ascending pitch bend.
 
 export function playSelect() {
-  hapticLight();
+  hapticMedium();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -103,7 +103,7 @@ export function playSelect() {
 // Deselecting a category — descending mirror of select.
 
 export function playDeselect() {
-  hapticLight();
+  hapticMedium();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -123,7 +123,7 @@ export function playDeselect() {
 // Two-note ascending chime — clean sine tones a major third apart.
 
 export function playConfirm() {
-  hapticLight();
+  hapticSuccess();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -146,7 +146,7 @@ export function playConfirm() {
 // Detuned dual-oscillator sweep — creates a shimmering "whoosh".
 
 export function playTurnChange() {
-  hapticLight();
+  hapticWarning();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -179,7 +179,7 @@ export function playTurnChange() {
 // Major-chord arpeggio (C5-E5-G5-C6) followed by a sustained chord.
 
 export function playWin() {
-  hapticHeavy();
+  hapticSuccess();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -217,7 +217,7 @@ export function playWin() {
 // Descending minor third slide — a deflating "wah-wah" that conveys loss.
 
 export function playFarkle() {
-  hapticHeavy();
+  hapticError();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -251,7 +251,7 @@ export function playFarkle() {
 // Quick pitch bend — up for on, down for off.
 
 export function playToggle(on: boolean) {
-  hapticLight();
+  hapticMedium();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;

@@ -1,7 +1,8 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useCallback, useRef } from "react";
+import { Suspense, useMemo, useCallback, useRef, useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useGame } from "@/hooks/useGame";
 import { useAI } from "@/hooks/useAI";
 import { Header } from "@/components/game/Header";
@@ -21,6 +22,16 @@ function GameContent() {
 
   const game = useGame(playerCount, rulesetId, aiIndices);
   const { state } = game;
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let cleanup: (() => void) | undefined;
+    import("@capacitor-community/keep-awake").then(({ KeepAwake }) => {
+      KeepAwake.keepAwake();
+      cleanup = () => { KeepAwake.allowSleep(); };
+    }).catch(() => {});
+    return () => { cleanup?.(); };
+  }, []);
 
   const gameRef = useRef(game);
   gameRef.current = game;
