@@ -43,7 +43,17 @@ function ContinuePrompt({
           : "interstitial-in 200ms ease forwards",
       }}
     >
-      <div style={{ textAlign: "center", padding: 32 }}>
+      <div
+        style={{
+          textAlign: "center",
+          padding: 32,
+          background: "#000000",
+          outline: "1px solid #ffffff",
+          outlineOffset: -1,
+          borderRadius: 4,
+          margin: 24,
+        }}
+      >
         <p style={{ fontSize: 13, fontWeight: 500, color: "#ffffff", marginBottom: 8 }}>
           Game in progress
         </p>
