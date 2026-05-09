@@ -62,22 +62,26 @@ function ContinuePrompt({
             marginBottom: 24,
           }}
         >
-          {saved.players.map((p, i) => (
-            <div
-              key={i}
-              className="flex items-center min-w-0 justify-center"
-              style={{
-                flex: 1,
-                padding: "8px 8px",
-                gap: 6,
-                color: p.color,
-                borderRight: i < saved.players.length - 1 ? "1px solid #ffffff" : "none",
-              }}
-            >
-              <span className="shrink-0">{p.name}</span>
-              <span className="shrink-0">{p.score}</span>
-            </div>
-          ))}
+          {saved.players.map((p, i) => {
+            const isActive = i === saved.currentPlayerIndex;
+            return (
+              <div
+                key={i}
+                className="flex items-center min-w-0 justify-center"
+                style={{
+                  flex: 1,
+                  padding: "8px 8px",
+                  gap: 6,
+                  background: isActive ? p.color : "transparent",
+                  color: isActive ? "#000000" : p.color,
+                  borderRight: i < saved.players.length - 1 ? "1px solid #ffffff" : "none",
+                }}
+              >
+                <span className="shrink-0">{p.name}</span>
+                <span className="shrink-0">{p.score}</span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex gap-6 justify-center">

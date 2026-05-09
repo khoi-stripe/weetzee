@@ -132,6 +132,7 @@ export type SavedGameSummary = {
   rulesetName: string;
   playerCount: number;
   players: { name: string; color: string; score: number; isComputer: boolean }[];
+  currentPlayerIndex: number;
   turn: number;
   aiIndices: number[];
 };
@@ -167,6 +168,7 @@ export function peekSavedGame(): SavedGameSummary | null {
       rulesetName: ruleset.name,
       playerCount: players.length,
       players,
+      currentPlayerIndex: saved.currentPlayerIndex ?? 0,
       turn: saved.turn ?? 1,
       aiIndices,
     };
