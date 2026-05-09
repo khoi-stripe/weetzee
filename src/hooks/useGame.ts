@@ -127,6 +127,58 @@ function clearState() {
   } catch {}
 }
 
+export type SavedGameSummary = {
+  rulesetId: string;
+  rulesetName: string;
+  playerCount: number;
+  players: { name: string; color: string; score: number; isComputer: boolean }[];
+  turn: number;
+  aiIndices: number[];
+};
+
+export function peekSavedGame(): SavedGameSummary | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (saved.savedAt && Date.now() - saved.savedAt > MAX_SAVE_AGE_MS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    if (saved.gameOver) return null;
+    const rulesetId: string = saved.rulesetId ?? "weetzee";
+    const ruleset = getRuleset(rulesetId);
+    const players = (saved.players ?? []).map((p: any, i: number) => {
+      const score = ruleset.getTotal
+        ? ruleset.getTotal(p.scores ?? {}, p.extraWeetzees ?? 0)
+        : 0;
+      return {
+        name: p.name ?? `P${i + 1}`,
+        color: p.color ?? "#ffffff",
+        score,
+        isComputer: p.isComputer ?? false,
+      };
+    });
+    const aiIndices = players
+      .map((p: { isComputer: boolean }, i: number) => (p.isComputer ? i : -1))
+      .filter((i: number) => i >= 0);
+    return {
+      rulesetId,
+      rulesetName: ruleset.name,
+      playerCount: players.length,
+      players,
+      turn: saved.turn ?? 1,
+      aiIndices,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function clearSavedGame() {
+  clearState();
+}
+
 export function useGame(playerCount: number, rulesetId: string = "weetzee", aiIndices: number[] = []) {
   const ruleset = getRuleset(rulesetId);
   const [state, dispatch] = useReducer(
