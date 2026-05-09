@@ -9,6 +9,7 @@
     "build:native": "npm run build && npx cap sync",
     "open:android": "npx cap open android",
     "open:ios": "npx cap open ios",
+    "generate:icons": "node scripts/generate-icons.mjs",
     "generate:splash": "node scripts/generate-splash.mjs",
     "start": "next start"
   },
