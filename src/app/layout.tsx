@@ -3,6 +3,7 @@ import { IBM_Plex_Mono } from "next/font/google";
 import { SerwistRegistration } from "@/components/SerwistRegistration";
 import { InstallPromptLoader } from "@/components/InstallPromptLoader";
 import { UpdatePromptLoader } from "@/components/UpdatePromptLoader";
+import { NativeInit } from "@/components/NativeInit";
 import "./globals.css";
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -51,6 +52,7 @@ export default function RootLayout({
           {children}
           <InstallPromptLoader />
           <UpdatePromptLoader />
+          <NativeInit />
         </SerwistRegistration>
       </body>
     </html>

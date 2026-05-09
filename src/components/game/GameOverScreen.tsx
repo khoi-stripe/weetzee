@@ -2,17 +2,30 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
 import type { Player, Ruleset } from "@/lib/types";
 import { getRulesetTotal } from "@/lib/rulesets";
+import { incrementGamesCompleted } from "@/lib/supporter";
 import { Header } from "./Header";
 import { PlayerBar } from "./PlayerBar";
 import { playWin, playTap } from "@/lib/sounds";
+
+function maybeRequestReview(gamesCompleted: number) {
+  if (!Capacitor.isNativePlatform()) return;
+  if (gamesCompleted === 3 || (gamesCompleted > 3 && (gamesCompleted - 3) % 10 === 0)) {
+    import("@capacitor-community/in-app-review").then(({ InAppReview }) => {
+      InAppReview.requestReview();
+    }).catch(() => {});
+  }
+}
 
 export function GameOverScreen({ players, ruleset }: { players: Player[]; ruleset: Ruleset }) {
   const router = useRouter();
 
   useEffect(() => {
     const timer = setTimeout(playWin, 300);
+    const count = incrementGamesCompleted();
+    maybeRequestReview(count);
     return () => clearTimeout(timer);
   }, []);
 

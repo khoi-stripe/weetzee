@@ -43,3 +43,9 @@ next-env.d.ts
 # Serwist (generated service worker)
 /public/sw*
 /public/swe-worker*
+
+# Capacitor native build artifacts
+android/app/build/
+android/.gradle/
+ios/App/Pods/
+ios/App/build/

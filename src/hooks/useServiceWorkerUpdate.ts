@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * Watches the Serwist instance registered on `window.serwist` and exposes a
@@ -13,6 +14,7 @@ export function useServiceWorkerUpdate() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (Capacitor.isNativePlatform()) return;
     if (!("serviceWorker" in navigator)) return;
 
     let cancelled = false;

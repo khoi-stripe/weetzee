@@ -6,15 +6,28 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && node scripts/build-sw.mjs",
+    "build:native": "npm run build && npx cap sync",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "generate:splash": "node scripts/generate-splash.mjs",
     "start": "next start"
   },
   "dependencies": {
+    "@capacitor-community/in-app-review": "^8.0.0",
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.3.0",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
+    "@revenuecat/purchases-capacitor": "^12.3.2",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.3.0",
     "@serwist/cli": "^9.5.7",
     "@serwist/next": "^9.5.7",
     "@tailwindcss/postcss": "^4",

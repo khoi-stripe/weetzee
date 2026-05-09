@@ -8,6 +8,7 @@ import { playTap } from "@/lib/sounds";
 import { PLAYER_COLORS, shufflePlayerColors } from "@/lib/types";
 import { peekSavedGame, clearSavedGame } from "@/hooks/useGame";
 import type { SavedGameSummary } from "@/hooks/useGame";
+import { SplashIntro } from "@/components/SplashIntro";
 
 function ContinuePrompt({
   saved,
@@ -213,6 +214,7 @@ export default function SetupPage() {
           onNewGame={dismissSaved}
         />
       )}
+      <SplashIntro />
     </div>
   );
 }

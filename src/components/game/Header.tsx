@@ -6,7 +6,9 @@ import { Share } from "lucide-react";
 import { VISIBLE_RULESETS } from "@/lib/rulesets";
 import { AI_DIFFICULTY_LABELS } from "@/lib/types";
 import type { AIDifficulty } from "@/lib/types";
-import { playTap, playToggle } from "@/lib/sounds";
+import { playTap, playToggle, playConfirm } from "@/lib/sounds";
+import { Capacitor } from "@capacitor/core";
+import { useSupporter } from "@/hooks/useSupporter";
 
 // ===== Header =====
 
@@ -169,9 +171,13 @@ export function Header({
         >
           <div
             style={{
-
               textAlign: "center",
               padding: 32,
+              background: "#000000",
+              outline: "1px solid #ffffff",
+              outlineOffset: -1,
+              borderRadius: 4,
+              margin: 24,
             }}
           >
             <p style={{ fontSize: 13, fontWeight: 500, color: "#ffffff", marginBottom: 24 }}>
@@ -187,7 +193,6 @@ export function Header({
                   outline: "1px solid #ffffff",
                   outlineOffset: -1,
                   background: "transparent",
-    
                   fontSize: 13,
                   fontWeight: 500,
                   color: "#ffffff",
@@ -205,7 +210,6 @@ export function Header({
                   outline: "1px solid #ffffff",
                   outlineOffset: -1,
                   background: "#ffffff",
-    
                   fontSize: 13,
                   fontWeight: 500,
                   color: "#000000",
@@ -690,6 +694,7 @@ function RulesModal({
               </div>
             )}
 
+            <SupportSection />
             <InstallSection />
           </>
         )}
@@ -698,9 +703,106 @@ function RulesModal({
   );
 }
 
+function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }) {
+  const { isSupporter, purchase, restore, loading, isNative } = useSupporter();
+  const [restoreMsg, setRestoreMsg] = useState<string | null>(null);
+
+  if (!isNative) return null;
+
+  async function handlePurchase() {
+    playTap();
+    await purchase();
+  }
+
+  async function handleRestore() {
+    playTap();
+    const ok = await restore();
+    if (ok) {
+      playConfirm();
+      setRestoreMsg("Purchases restored!");
+    } else {
+      setRestoreMsg("No purchases found");
+    }
+    setTimeout(() => setRestoreMsg(null), 3000);
+  }
+
+  return (
+    <div style={{
+      marginTop: position === "top" ? 8 : 32,
+      borderTop: position === "bottom" ? "1px solid #333333" : undefined,
+      paddingTop: position === "bottom" ? 24 : 0,
+      borderBottom: position === "top" ? "1px solid #333333" : undefined,
+      paddingBottom: position === "top" ? 24 : 0,
+    }}>
+      <h3 style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 8 }}>
+        Support Weetzee
+      </h3>
+      {isSupporter ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "12px 0",
+          }}
+        >
+          <span style={{ fontSize: 16 }}>&#10003;</span>
+          <span style={{ color: "#ffffff", fontWeight: 500, fontSize: 13 }}>Supporter</span>
+          <span style={{ color: "#999999", fontSize: 12 }}>Thank you!</span>
+        </div>
+      ) : (
+        <>
+          <p style={{ color: "#999999", fontSize: 12, marginBottom: 16 }}>
+            One-time purchase. Helps keep Weetzee free.
+          </p>
+          <button
+            onClick={handlePurchase}
+            disabled={loading}
+            className="flex items-center justify-center rounded-full pressable"
+            style={{
+              width: "100%",
+              height: 48,
+              background: "#ffffff",
+              color: "#000000",
+              fontSize: 13,
+              fontWeight: 600,
+              border: "none",
+              cursor: loading ? "default" : "pointer",
+              opacity: loading ? 0.5 : 1,
+              transition: "opacity 150ms",
+            }}
+          >
+            {loading ? "Loading..." : "Support Weetzee — $2.99"}
+          </button>
+        </>
+      )}
+      <button
+        onClick={handleRestore}
+        disabled={loading}
+        style={{
+          display: "block",
+          marginTop: 12,
+          background: "none",
+          border: "none",
+          color: "#666666",
+          fontSize: 12,
+          cursor: loading ? "default" : "pointer",
+          padding: 0,
+        }}
+      >
+        Restore Purchases
+      </button>
+      {restoreMsg && (
+        <p style={{ color: "#999999", fontSize: 11, marginTop: 6 }}>{restoreMsg}</p>
+      )}
+    </div>
+  );
+}
+
 function AboutContent() {
   return (
     <>
+      <SupportSection position="top" />
       <Section title="What is Weetzee?">
         <p>
           Weetzee is a free dice game you can play right from your phone — no app store needed.
@@ -775,7 +877,7 @@ function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
   const [standalone, setStandalone] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    if (Capacitor.isNativePlatform() || window.matchMedia("(display-mode: standalone)").matches) {
       setStandalone(true);
       return;
     }
