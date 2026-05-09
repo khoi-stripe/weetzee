@@ -35,10 +35,12 @@ function ContinuePrompt({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center"
+      className="fixed inset-0 flex flex-col items-center justify-center"
       style={{
         zIndex: 200,
         background: "rgba(0, 0, 0, 0.85)",
+        padding: 16,
+        gap: 24,
         animation: exiting
           ? "interstitial-out 300ms ease forwards"
           : "interstitial-in 200ms ease forwards",
@@ -46,89 +48,99 @@ function ContinuePrompt({
     >
       <div
         style={{
-          textAlign: "center",
-          padding: 32,
-          background: "#000000",
-          borderRadius: 4,
-          margin: 24,
+          width: "100%",
+          maxWidth: "min(80vw, 80vh, 400px)",
+          aspectRatio: "1 / 1",
         }}
       >
-        <p style={{ fontSize: 13, fontWeight: 500, color: "#ffffff", marginBottom: 8 }}>
-          Game in progress
-        </p>
-        <p style={{ fontSize: 20, fontWeight: 700, color: "#ffffff", marginBottom: 24 }}>
-          {saved.rulesetName}
-        </p>
-
         <div
-          className="flex overflow-hidden"
+          className="w-full h-full flex flex-col items-center justify-center"
           style={{
-            outline: "1px solid #ffffff",
-            outlineOffset: -1,
+            background: "#ffffff",
             borderRadius: 4,
-            fontSize: 13,
-            fontWeight: 500,
-            marginBottom: 24,
+            color: "#000000",
+            padding: "10%",
+            gap: 8,
+            textAlign: "center",
           }}
         >
-          {saved.players.map((p, i) => {
-            const isActive = i === saved.currentPlayerIndex;
-            return (
-              <div
-                key={i}
-                className="flex items-center min-w-0 justify-center"
-                style={{
-                  flex: 1,
-                  padding: "8px 8px",
-                  gap: 6,
-                  background: isActive ? p.color : "transparent",
-                  color: isActive ? "#000000" : p.color,
-                  borderRight: i < saved.players.length - 1 ? "1px solid #ffffff" : "none",
-                }}
-              >
-                <span className="shrink-0">{p.name}</span>
-                <span className="shrink-0">{p.score}</span>
-              </div>
-            );
-          })}
-        </div>
+          <p style={{ fontSize: 13, fontWeight: 500, color: "#666666" }}>
+            Game in progress
+          </p>
+          <p style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+            {saved.rulesetName}
+          </p>
 
-        <div className="flex gap-6 justify-center">
-          <button
-            onClick={handleNew}
-            className="flex items-center justify-center rounded-full pressable"
+          <div
+            className="flex overflow-hidden"
             style={{
-              width: 100,
-              height: 100,
-              outline: "1px solid #ffffff",
+              width: "100%",
+              outline: "1px solid #000000",
               outlineOffset: -1,
-              background: "transparent",
+              borderRadius: 4,
               fontSize: 13,
               fontWeight: 500,
-              color: "#ffffff",
-              cursor: "pointer",
             }}
           >
-            New game
-          </button>
-          <button
-            onClick={handleContinue}
-            className="flex items-center justify-center rounded-full pressable"
-            style={{
-              width: 100,
-              height: 100,
-              outline: "1px solid #ffffff",
-              outlineOffset: -1,
-              background: "#ffffff",
-              fontSize: 13,
-              fontWeight: 500,
-              color: "#000000",
-              cursor: "pointer",
-            }}
-          >
-            Continue
-          </button>
+            {saved.players.map((p, i) => {
+              const isActive = i === saved.currentPlayerIndex;
+              return (
+                <div
+                  key={i}
+                  className="flex items-center min-w-0 justify-center"
+                  style={{
+                    flex: 1,
+                    padding: "8px 8px",
+                    gap: 6,
+                    background: isActive ? p.color : "transparent",
+                    color: "#000000",
+                    borderRight: i < saved.players.length - 1 ? "1px solid #000000" : "none",
+                  }}
+                >
+                  <span className="shrink-0">{p.name}</span>
+                  <span className="shrink-0">{p.score}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
+      </div>
+
+      <div className="flex justify-center" style={{ gap: 16 }}>
+        <button
+          onClick={handleNew}
+          className="flex items-center justify-center rounded-full pressable"
+          style={{
+            width: 100,
+            height: 100,
+            outline: "1px solid #ffffff",
+            outlineOffset: -1,
+            background: "transparent",
+            fontSize: 13,
+            fontWeight: 500,
+            color: "#ffffff",
+            cursor: "pointer",
+          }}
+        >
+          New game
+        </button>
+        <button
+          onClick={handleContinue}
+          className="flex items-center justify-center rounded-full pressable"
+          style={{
+            width: 100,
+            height: 100,
+            outline: "1px solid #ffffff",
+            outlineOffset: -1,
+            background: "#ffffff",
+            fontSize: 13,
+            fontWeight: 500,
+            color: "#000000",
+            cursor: "pointer",
+          }}
+        >
+          Continue
+        </button>
       </div>
     </div>
   );

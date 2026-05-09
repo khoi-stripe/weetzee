@@ -162,61 +162,72 @@ export function Header({
 
       {showExitConfirm && (
         <div
-          className="fixed inset-0 flex items-center justify-center"
+          className="fixed inset-0 flex flex-col items-center justify-center"
           style={{
             zIndex: 200,
             background: "rgba(0, 0, 0, 0.85)",
+            padding: 16,
+            gap: 24,
             animation: "interstitial-in 200ms ease forwards",
           }}
         >
           <div
             style={{
-              textAlign: "center",
-              padding: 32,
-              background: "#000000",
-              borderRadius: 4,
-              margin: 24,
+              width: "100%",
+              maxWidth: "min(80vw, 80vh, 400px)",
+              aspectRatio: "1 / 1",
             }}
           >
-            <p style={{ fontSize: 13, fontWeight: 500, color: "#ffffff", marginBottom: 24 }}>
-              End this game?
-            </p>
-            <div className="flex gap-6 justify-center">
-              <button
-                onClick={() => { playTap(); setShowExitConfirm(false); }}
-                className="flex items-center justify-center rounded-full pressable"
-                style={{
-                  width: 100,
-                  height: 100,
-                  outline: "1px solid #ffffff",
-                  outlineOffset: -1,
-                  background: "transparent",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: "#ffffff",
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => { playTap(); onEndGame?.(); router.push("/"); }}
-                className="flex items-center justify-center rounded-full pressable"
-                style={{
-                  width: 100,
-                  height: 100,
-                  outline: "1px solid #ffffff",
-                  outlineOffset: -1,
-                  background: "#ffffff",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: "#000000",
-                  cursor: "pointer",
-                }}
-              >
-                End game
-              </button>
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{
+                background: "#ffffff",
+                borderRadius: 4,
+                color: "#000000",
+                padding: "10%",
+              }}
+            >
+              <p style={{ fontSize: 16, fontWeight: 500, textAlign: "center" }}>
+                End this game?
+              </p>
             </div>
+          </div>
+
+          <div className="flex justify-center" style={{ gap: 16 }}>
+            <button
+              onClick={() => { playTap(); setShowExitConfirm(false); }}
+              className="flex items-center justify-center rounded-full pressable"
+              style={{
+                width: 100,
+                height: 100,
+                outline: "1px solid #ffffff",
+                outlineOffset: -1,
+                background: "transparent",
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#ffffff",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => { playTap(); onEndGame?.(); router.push("/"); }}
+              className="flex items-center justify-center rounded-full pressable"
+              style={{
+                width: 100,
+                height: 100,
+                outline: "1px solid #ffffff",
+                outlineOffset: -1,
+                background: "#ffffff",
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#000000",
+                cursor: "pointer",
+              }}
+            >
+              End game
+            </button>
           </div>
         </div>
       )}
