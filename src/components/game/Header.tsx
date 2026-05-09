@@ -174,8 +174,6 @@ export function Header({
               textAlign: "center",
               padding: 32,
               background: "#000000",
-              outline: "1px solid #ffffff",
-              outlineOffset: -1,
               borderRadius: 4,
               margin: 24,
             }}
