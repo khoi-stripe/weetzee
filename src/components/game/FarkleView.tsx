@@ -676,7 +676,7 @@ function FarkleBustScreen({
             // dialog's own background color so every letter stays visible.
             const cycleColors = PLAYER_COLORS.filter((c) => c !== player.color);
             return "FARKLE!".split("").map((ch, i) => {
-              const tilts = [-6, 4, -3, 7, -5, 3, -8];
+              const tilts = [-6, 4, -3, 7, -5, 3, 10];
               const variants = ["a", "b", "c"] as const;
               const variant = variants[i % variants.length];
               const duration = 100 + ((i * 53) % 80); // 100–180ms
