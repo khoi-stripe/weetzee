@@ -19,25 +19,25 @@ import { DURATION } from "@/lib/motion";
 
 function ContinuePrompt({
   saved,
+  exiting,
   onContinue,
   onNewGame,
 }: {
   saved: SavedGameSummary;
+  exiting: boolean;
   onContinue: () => void;
   onNewGame: () => void;
 }) {
-  const [exiting, setExiting] = useState(false);
-
   const handleContinue = () => {
+    if (exiting) return;
     playTap();
-    setExiting(true);
-    setTimeout(onContinue, DURATION.modal);
+    onContinue();
   };
 
   const handleNew = () => {
+    if (exiting) return;
     playTap();
-    setExiting(true);
-    setTimeout(onNewGame, DURATION.modal);
+    onNewGame();
   };
 
   const chipPlayers = saved.players.map((p, i) => ({
@@ -79,6 +79,9 @@ export default function SetupPage() {
   const [colors, setColors] = useState(PLAYER_COLORS);
   const [savedGame, setSavedGame] = useState<SavedGameSummary | null>(null);
   const [checked, setChecked] = useState(false);
+  // `continue` fades both the modal AND the dice (we're navigating away).
+  // `new` only fades the modal (the user stays on this page to pick options).
+  const [exitMode, setExitMode] = useState<"continue" | "new" | null>(null);
 
   const router = useRouter();
 
@@ -126,13 +129,20 @@ export default function SetupPage() {
 
   const continueGame = useCallback(() => {
     if (!savedGame) return;
-    const aiParam = savedGame.aiIndices.length > 0 ? `&ai=${savedGame.aiIndices.join(",")}` : "";
-    router.push(`/game?players=${savedGame.playerCount}&ruleset=${savedGame.rulesetId}${aiParam}`);
+    setExitMode("continue");
+    setTimeout(() => {
+      const aiParam = savedGame.aiIndices.length > 0 ? `&ai=${savedGame.aiIndices.join(",")}` : "";
+      router.push(`/game?players=${savedGame.playerCount}&ruleset=${savedGame.rulesetId}${aiParam}`);
+    }, DURATION.modal);
   }, [savedGame, router]);
 
   const dismissSaved = useCallback(() => {
-    clearSavedGame();
-    setSavedGame(null);
+    setExitMode("new");
+    setTimeout(() => {
+      clearSavedGame();
+      setSavedGame(null);
+      setExitMode(null);
+    }, DURATION.modal);
   }, []);
 
   return (
@@ -145,19 +155,31 @@ export default function SetupPage() {
       }}
     >
       <Header showBack={false} />
-      <PlayerSelector
-        title="Choose number of players"
-        count={playerCount}
-        max={6}
-        onChange={handleChange}
-        onNext={next}
-        cpuPlayers={cpuPlayers}
-        onToggleCpu={toggleCpu}
-        colors={colors}
-      />
+      <div
+        className="flex flex-col"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          width: "100%",
+          opacity: exitMode === "continue" ? 0 : 1,
+          transition: `opacity ${DURATION.modal}ms ease`,
+        }}
+      >
+        <PlayerSelector
+          title="Choose number of players"
+          count={playerCount}
+          max={6}
+          onChange={handleChange}
+          onNext={next}
+          cpuPlayers={cpuPlayers}
+          onToggleCpu={toggleCpu}
+          colors={colors}
+        />
+      </div>
       {checked && savedGame && (
         <ContinuePrompt
           saved={savedGame}
+          exiting={exitMode !== null}
           onContinue={continueGame}
           onNewGame={dismissSaved}
         />
