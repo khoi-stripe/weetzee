@@ -784,6 +784,17 @@ function AboutContent() {
       </Section>
 
       <InstallSection alwaysShow />
+
+      <p
+        style={{
+          ...TYPE.microRegular,
+          color: COLOR.textDisabled,
+          textAlign: "center",
+          marginTop: 24,
+        }}
+      >
+        Weetzee v{process.env.NEXT_PUBLIC_APP_VERSION}
+      </p>
     </>
   );
 }
