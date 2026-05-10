@@ -29,10 +29,13 @@ export function hapticWarning() {
 
 export function hapticDiceRoll() {
   if (!isNative) return;
-  Haptics.selectionStart();
-  const ticks = [40, 90, 140, 190];
+  // Initial "throw" impact when the dice leave the cup.
+  Haptics.impact({ style: ImpactStyle.Heavy });
+  // Series of heavy thuds while the dice tumble. Spaced ~110ms so iOS's
+  // haptic engine doesn't coalesce them. Per-die Medium "land" haptics
+  // fire later from playSettle to round out the feel.
+  const ticks = [110, 220, 330];
   ticks.forEach((ms) => {
-    setTimeout(() => Haptics.selectionChanged(), ms);
+    setTimeout(() => Haptics.impact({ style: ImpactStyle.Heavy }), ms);
   });
-  setTimeout(() => Haptics.selectionEnd(), 230);
 }

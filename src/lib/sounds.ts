@@ -49,6 +49,10 @@ export function playBleep(freq?: number, duration = 0.04, volume = 0.08) {
 }
 
 export function playSettle(index: number, total: number) {
+  // Each die landing gets a medium "thud" haptic in addition to the audio
+  // click — the rolling-phase Heavy taps from hapticDiceRoll have already
+  // wound down by the time the first settle fires (~300ms in).
+  hapticMedium();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
