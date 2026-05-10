@@ -337,6 +337,8 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
   }
 
   function onTouchStart(e: React.TouchEvent) {
+    // Don't drag the drawer when an interstitial is covering the screen.
+    if (showFarkleBust || interstitialPlayer) return;
     touchStartY.current = e.touches[0].clientY;
     setIsDragging(false);
     setDragOffset(0);
@@ -345,7 +347,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
   function onTouchMove(e: React.TouchEvent) {
     if (touchStartY.current === null) return;
     let el = e.target as HTMLElement | null;
-    while (el && el !== scrollRef.current) {
+    while (el && el !== containerRef.current) {
       if (el.scrollHeight > el.clientHeight && el.clientHeight > 0) {
         const style = window.getComputedStyle(el);
         if (style.overflowY === "auto" || style.overflowY === "scroll") return;
@@ -400,7 +402,13 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
   };
 
   return (
-    <div ref={containerRef} className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
+    <div
+      ref={containerRef}
+      className="flex-1 min-h-0 flex flex-col overflow-hidden relative"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {isLandscape ? (
         <>
           <div style={{ position: "relative", zIndex: 55 }}>
@@ -424,46 +432,70 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
           </div>
         </>
       ) : (
-        <div
-          ref={scrollRef}
-          className="flex-1 min-h-0 overflow-hidden relative"
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
+        <>
           <div
-            className="flex flex-col w-full"
-            style={{
-              height: totalH || "300%",
-              transform: `translateY(${translateY}px)`,
-              transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
-              willChange: "transform",
-            }}
+            ref={scrollRef}
+            className="flex-1 min-h-0 overflow-hidden relative"
           >
-            <div className="w-full flex flex-col overflow-hidden" style={{ height: diceH || "auto" }}>
-              <DiceView {...diceViewProps} />
-            </div>
+            <div
+              className="flex flex-col w-full"
+              style={{
+                height: totalH || "300%",
+                transform: `translateY(${translateY}px)`,
+                transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
+                willChange: "transform",
+              }}
+            >
+              <div className="w-full flex flex-col overflow-hidden" style={{ height: diceH || "auto" }}>
+                <DiceView {...diceViewProps} />
+              </div>
 
-            {/* Shared PlayerBar — sits at the bottom of the dice view, top
-                of the scoring sheet. Tap toggles between the two panels. */}
-            <div ref={barRef} style={{ position: "relative", zIndex: 55 }}>
-              <PlayerBar
-                players={state.players}
-                currentPlayerIndex={state.currentPlayerIndex}
-                ruleset={state.ruleset}
-                onClick={() => { playTap(); snapTo(showScoring ? 0 : 1); }}
-              />
-            </div>
+              {/* Spacer that holds the bar's slot in the drawer's flow.
+                  The actual visible PlayerBar is rendered as an overlay
+                  outside this stacking context (see below) so it can paint
+                  above interstitial Scrims. */}
+              <div style={{ height: barH || 50 }} />
 
-            <div className="w-full flex flex-col" style={{ height: diceH || "auto", padding: "0 16px" }}>
-              <FarkleScoringSheet
-                possibilities={scoringPossibilities}
-                hintsEnabled={state.scoringHintsEnabled}
-                playerColor={currentPlayer.color}
-              />
+              <div className="w-full flex flex-col" style={{ height: diceH || "auto", padding: "0 16px" }}>
+                <FarkleScoringSheet
+                  possibilities={scoringPossibilities}
+                  hintsEnabled={state.scoringHintsEnabled}
+                  playerColor={currentPlayer.color}
+                />
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* PlayerBar overlay — lives outside scrollRef so its z-index can
+              compete with sibling Scrims (Z.interstitial = 50). Mirrors the
+              drawer's translate so it stays glued to the seam between dice
+              and scoring panels. */}
+          <div
+            ref={barRef}
+            className="absolute left-0 right-0"
+            style={{
+              top: 0,
+              transform: `translateY(${(diceH || 0) + translateY}px)`,
+              transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
+              willChange: "transform",
+              zIndex: 55,
+              // Hide the overlay until the drawer's heights are measured —
+              // otherwise it briefly paints at translateY(0) (top of screen)
+              // before snapping into place.
+              visibility: scrollH > 0 ? "visible" : "hidden",
+              // Bar is informational while an interstitial is up; taps should
+              // not snap the drawer behind the scrim.
+              pointerEvents: (showFarkleBust || interstitialPlayer) ? "none" : "auto",
+            }}
+          >
+            <PlayerBar
+              players={state.players}
+              currentPlayerIndex={state.currentPlayerIndex}
+              ruleset={state.ruleset}
+              onClick={() => { playTap(); snapTo(showScoring ? 0 : 1); }}
+            />
+          </div>
+        </>
       )}
 
       {showFarkleBust && (

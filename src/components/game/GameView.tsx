@@ -118,6 +118,8 @@ export function GameView({ game, isAITurn = false, aiPendingAction = null }: { g
 
   function onTouchStart(e: React.TouchEvent) {
     if (isLandscape) return;
+    // Don't drag the drawer when an interstitial is covering the screen.
+    if (interstitialPlayer) return;
     touchStartY.current = e.touches[0].clientY;
     touchInScrollable.current = isInsideScrollable(e.target);
     setIsDragging(false);
@@ -230,6 +232,7 @@ export function GameView({ game, isAITurn = false, aiPendingAction = null }: { g
           scoreCategory={wrappedScoreCategory}
           snapTo={snapTo}
           onShowInterstitial={showInterstitial}
+          interstitialActive={!!interstitialPlayer}
           userPrefersScorecard={userPrefersScorecard}
         />
       )}
@@ -348,6 +351,7 @@ function ContentStrip({
   scoreCategory,
   snapTo,
   onShowInterstitial,
+  interstitialActive,
   userPrefersScorecard,
 }: {
   activePanel: 0 | 1;
@@ -360,6 +364,7 @@ function ContentStrip({
   scoreCategory: (id: string) => void;
   snapTo: (panel: 0 | 1) => void;
   onShowInterstitial: (player: Player | null) => void;
+  interstitialActive: boolean;
   userPrefersScorecard: React.RefObject<boolean>;
 }) {
   const stripRef = useRef<HTMLDivElement>(null);
@@ -429,31 +434,71 @@ function ContentStrip({
   }
 
   return (
-    <div
-      ref={stripRef}
-      className="flex flex-col w-full"
-      style={{
-        height: totalH || "300%",
-        transform: `translateY(${translateY}px)`,
-        transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
-        willChange: "transform",
-      }}
-    >
-      <div className="w-full flex flex-col overflow-hidden" style={{ height: diceH || "auto" }}>
-        <DiceView
-          dice={state.dice}
-          rollsUsed={state.rollsUsed}
-          rollsPerTurn={effectiveRolls}
-          playerColor={currentPlayer.color}
-          coloredPips={!!state.ruleset.pipColors}
-          onRoll={roll}
-          onToggleHold={toggleHold}
-          dieValueMap={state.ruleset.dieValueMap}
-        />
+    <>
+      <div
+        ref={stripRef}
+        className="flex flex-col w-full"
+        style={{
+          height: totalH || "300%",
+          transform: `translateY(${translateY}px)`,
+          transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
+          willChange: "transform",
+        }}
+      >
+        <div className="w-full flex flex-col overflow-hidden" style={{ height: diceH || "auto" }}>
+          <DiceView
+            dice={state.dice}
+            rollsUsed={state.rollsUsed}
+            rollsPerTurn={effectiveRolls}
+            playerColor={currentPlayer.color}
+            coloredPips={!!state.ruleset.pipColors}
+            onRoll={roll}
+            onToggleHold={toggleHold}
+            dieValueMap={state.ruleset.dieValueMap}
+          />
+        </div>
+
+        {/* Spacer reserves the bar's slot in the drawer's flow; the actual
+            visible bar is rendered as an overlay below so its z-index can
+            sit above interstitial Scrims. */}
+        <div style={{ height: barH || 66 }} />
+
+        <div className="w-full flex flex-col" style={{ height: diceH || "auto" }}>
+          <ScorecardView
+            players={state.players}
+            currentPlayerIndex={state.currentPlayerIndex}
+            dice={state.dice}
+            ruleset={state.ruleset}
+            turn={state.turn}
+            rollsUsed={state.rollsUsed}
+            rollsPerTurn={effectiveRolls}
+            playerColor={currentPlayer.color}
+            onScoreCategory={handleScoreCategory}
+            onRoll={roll}
+            onToggleHold={toggleHold}
+            justScoredCategoryId={null}
+            justScoredPlayerIndex={null}
+            multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
+            sequentialTargetsEnabled={state.sequentialTargetsEnabled}
+          />
+        </div>
       </div>
 
-      {/* Shared PlayerBar — tapping toggles panel */}
-      <div ref={barRef}>
+      {/* PlayerBar overlay — sibling of the transformed strip so its z-index
+          competes with the PlayerInterstitial Scrim (Z.interstitial = 50). */}
+      <div
+        ref={barRef}
+        className="absolute left-0 right-0"
+        style={{
+          top: 0,
+          transform: `translateY(${(diceH || 0) + translateY}px)`,
+          transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
+          willChange: "transform",
+          zIndex: 55,
+          visibility: containerH > 0 ? "visible" : "hidden",
+          pointerEvents: interstitialActive ? "none" : "auto",
+        }}
+      >
         <PlayerBar
           players={state.players}
           currentPlayerIndex={state.currentPlayerIndex}
@@ -461,28 +506,7 @@ function ContentStrip({
           onClick={() => { playTap(); snapTo(activePanel === 0 ? 1 : 0); }}
         />
       </div>
-
-      {/* Scorecard section */}
-      <div className="w-full flex flex-col" style={{ height: diceH || "auto" }}>
-        <ScorecardView
-          players={state.players}
-          currentPlayerIndex={state.currentPlayerIndex}
-          dice={state.dice}
-          ruleset={state.ruleset}
-          turn={state.turn}
-          rollsUsed={state.rollsUsed}
-          rollsPerTurn={effectiveRolls}
-          playerColor={currentPlayer.color}
-          onScoreCategory={handleScoreCategory}
-          onRoll={roll}
-          onToggleHold={toggleHold}
-          justScoredCategoryId={null}
-          justScoredPlayerIndex={null}
-          multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
-          sequentialTargetsEnabled={state.sequentialTargetsEnabled}
-        />
-      </div>
-    </div>
+    </>
   );
 }
 
