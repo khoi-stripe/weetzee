@@ -9,6 +9,7 @@ import { incrementGamesCompleted } from "@/lib/supporter";
 import { Header } from "./Header";
 import { PlayerBar } from "./PlayerBar";
 import { playWin, playTap } from "@/lib/sounds";
+import { TYPE } from "@/lib/type";
 
 function maybeRequestReview(gamesCompleted: number) {
   if (!Capacitor.isNativePlatform()) return;
@@ -65,10 +66,10 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
               gap: 8,
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: 500 }}>
+            <span style={{ ...TYPE.body }}>
               {winner.name} wins!
             </span>
-            <span style={{ fontSize: 48, fontWeight: 700 }}>
+            <span style={{ ...TYPE.displayBold }}>
               {winner.total}
             </span>
           </div>
@@ -88,14 +89,12 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
           onClick={() => { playTap(); router.push("/"); }}
           className="flex items-center justify-center rounded-full shrink-0 pressable"
           style={{
+            ...TYPE.body,
             width: 109.67,
             height: 109.67,
             outline: "1px solid #ffffff",
             outlineOffset: -1,
             background: "transparent",
-
-            fontSize: 13,
-            fontWeight: 500,
             color: "#ffffff",
             cursor: "pointer",
           }}

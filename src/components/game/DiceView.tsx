@@ -7,6 +7,7 @@ import { rollValue } from "@/lib/engine";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { getAudioCtx, playBleep, playSettle, playTap } from "@/lib/sounds";
 import { hapticDiceRoll } from "@/lib/haptics";
+import { WEIGHT } from "@/lib/type";
 
 // ===== Rolling animation helpers =====
 
@@ -392,7 +393,7 @@ function FarkleActionButton({
         outlineOffset: -1,
         opacity: pressed ? 1 : (enabled ? 1 : 0.35),
         fontSize: "clamp(11px, 8cqi, 100px)",
-        fontWeight: 600,
+        fontWeight: WEIGHT.semibold,
         color: pressed ? "#000000" : (enabled ? color : "#ffffff"),
         background: pressed ? color : "transparent",
         cursor: enabled ? "pointer" : "default",
@@ -449,7 +450,7 @@ function FarkleBankButton({
           borderRadius: 4,
           opacity: pressed ? 1 : (enabled ? 1 : 0.35),
           fontSize: "clamp(11px, 8cqi, 100px)",
-          fontWeight: 600,
+          fontWeight: WEIGHT.semibold,
           color: (pressed || enabled) ? "#000000" : "#ffffff",
           background: (pressed || enabled) ? "#ffffff" : "transparent",
           cursor: enabled ? "pointer" : "default",
@@ -509,9 +510,8 @@ function RollButton({
         outline: `1px solid ${canRoll ? color : "#ffffff"}`,
         outlineOffset: -1,
         opacity: canRoll ? 1 : 0.35,
-
         fontSize: "clamp(11px, 8cqi, 100px)",
-        fontWeight: 500,
+        fontWeight: WEIGHT.medium,
         color: canRoll ? color : "#ffffff",
         background: "transparent",
         cursor: canRoll ? "pointer" : "default",

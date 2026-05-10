@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 import Capacitor
 
 @UIApplicationMain
@@ -8,6 +9,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var shortcutAction: String?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Configure the audio session so WKWebView's Web Audio plays reliably.
+        // .ambient respects the silent switch and mixes with other audio (e.g. music
+        // in another app), matching Apple's HIG for casual games. Without this,
+        // WKWebView falls back to inconsistent defaults that get suspended during
+        // backgrounding and after audio interruptions, causing flaky playback.
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setActive(true, options: [])
+        } catch {
+            print("Failed to configure audio session: \(error)")
+        }
+
         if let shortcutItem = launchOptions?[.shortcutItem] as? UIApplicationShortcutItem {
             shortcutAction = shortcutItem.type
         }
@@ -25,6 +38,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
+        // Audio interruptions (phone calls, alarms, Siri) deactivate the session;
+        // re-activate so Web Audio works after returning from background.
+        try? AVAudioSession.sharedInstance().setActive(true, options: [])
+
         if let action = shortcutAction {
             shortcutAction = nil
             guard let bridge = (window?.rootViewController as? CAPBridgeViewController)?.bridge else { return }

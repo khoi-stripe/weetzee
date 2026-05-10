@@ -3,6 +3,7 @@
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { Share } from "lucide-react";
 import { playTap } from "@/lib/sounds";
+import { TYPE } from "@/lib/type";
 
 export function InstallPrompt() {
   const { showPrompt, isIOS, install, dismiss } = useInstallPrompt();
@@ -42,15 +43,14 @@ export function InstallPrompt() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <p
             style={{
-              fontSize: 13,
-              fontWeight: 500,
+              ...TYPE.body,
               color: "#ffffff",
               margin: 0,
             }}
           >
             Install Weetzee
           </p>
-          <p style={{ fontSize: 11, color: "#999999", margin: "4px 0 0" }}>
+          <p style={{ ...TYPE.microRegular, color: "#999999", margin: "4px 0 0" }}>
             {isIOS ? (
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                 Tap <Share size={12} /> then &quot;Add to Home Screen&quot;
@@ -65,13 +65,11 @@ export function InstallPrompt() {
             onClick={() => { playTap(); dismiss(); }}
             className="pressable"
             style={{
+              ...TYPE.micro,
               padding: "8px 12px",
-              fontSize: 12,
-              fontWeight: 500,
               color: "#999999",
               background: "none",
               border: "none",
-    
               cursor: "pointer",
             }}
           >
@@ -82,14 +80,12 @@ export function InstallPrompt() {
               onClick={() => { playTap(); install(); }}
               className="pressable"
               style={{
+                ...TYPE.micro,
                 padding: "8px 16px",
-                fontSize: 12,
-                fontWeight: 500,
                 color: "#000000",
                 background: "#ffffff",
                 border: "none",
                 borderRadius: 6,
-      
                 cursor: "pointer",
               }}
             >

@@ -9,6 +9,7 @@ import type { UseGameReturn } from "@/hooks/useGame";
 import type { Player } from "@/lib/types";
 import { getEffectiveRollsPerTurn } from "@/lib/engine";
 import { playTap, playTurnChange } from "@/lib/sounds";
+import { TYPE } from "@/lib/type";
 
 // ===== GameView =====
 // Portrait: vertical sliding strip (DiceView → PlayerBar → ScorecardView).
@@ -499,12 +500,10 @@ function PlayerInterstitial({ player, exiting }: { player: Player; exiting: bool
       <div
         className="flex items-center justify-center rounded-full"
         style={{
+          ...TYPE.headline,
           width: "100%",
           aspectRatio: "1 / 1",
           background: player.color,
-
-          fontSize: 20,
-          fontWeight: 500,
           color: "#000000",
           animation: exiting
             ? "scale-out 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"

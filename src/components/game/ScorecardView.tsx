@@ -13,6 +13,7 @@ import { rollValue } from "@/lib/engine";
 import { playSelect, playDeselect, playConfirm, playTap } from "@/lib/sounds";
 import { hapticDiceRoll } from "@/lib/haptics";
 import type { Ruleset } from "@/lib/types";
+import { TYPE, WEIGHT } from "@/lib/type";
 
 function dimHex(hex: string, t: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -283,7 +284,7 @@ export function ScorecardView({
                           zIndex: 2,
                           color: isActive ? "#000000" : p.color,
                           background: isActive ? p.color : "#000000",
-                          fontWeight: isActive ? 500 : 400,
+                          fontWeight: isActive ? WEIGHT.medium : WEIGHT.regular,
                           ...(isLast ? { borderRight: "none" } : {}),
                         }}
                       >
@@ -360,13 +361,12 @@ export function ScorecardView({
           } : undefined}
           className="shrink-0 w-full pressable"
           style={{
+            ...TYPE.body,
             padding: "12px 0",
             outline: "1px solid #ffffff",
             outlineOffset: -1,
             borderRadius: 4,
             background: "#ffffff",
-            fontSize: 13,
-            fontWeight: 500,
             color: "#000000",
             cursor: "pointer",
             opacity: selectedCategoryId && !locked ? 1 : 0,
@@ -480,7 +480,7 @@ function TargetTable({
                   zIndex: 2,
                   color: isActive ? "#000000" : p.color,
                   background: isActive ? p.color : "#000000",
-                  fontWeight: isActive ? 500 : 400,
+                  fontWeight: isActive ? WEIGHT.medium : WEIGHT.regular,
                   ...(isLast ? { borderRight: "none" } : {}),
                 }}
               >
@@ -507,12 +507,11 @@ function TargetTable({
             >
               <td
                 style={{
+                  ...TYPE.body,
                   padding: "8px 16px",
                   borderBottom: "1px solid #ffffff",
                   borderRight: "1px solid #ffffff",
                   background: "#1a1a1a",
-                  fontSize: 13,
-                  fontWeight: 500,
                   color: "#ffffff",
                   position: "sticky",
                   left: 0,
@@ -542,12 +541,11 @@ function TargetTable({
                     key={player.id}
                     className={isPulsing ? "pulse-bg" : undefined}
                     style={{
+                      ...(isSelectedCell || isJustScoredCell ? TYPE.body : TYPE.bodyRegular),
                       padding: "8px 16px",
                       borderBottom: "1px solid #ffffff",
                       borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
                       background: bg,
-                      fontSize: 13,
-                      fontWeight: isSelectedCell || isJustScoredCell ? 500 : 400,
                       color: isSelectedCell || isJustScoredCell
                         ? "#000000"
                         : showPreview
@@ -633,13 +631,12 @@ function TargetConfirmModal({
           <div
             className="w-full h-full flex flex-col justify-center"
             style={{
+              ...TYPE.body,
               background: playerColor,
               borderRadius: 4,
               border: `1px solid ${playerColor}`,
               color: "#000000",
               padding: "10%",
-              fontSize: 13,
-              fontWeight: 500,
             }}
           >
             {sum >= target ? (
@@ -675,12 +672,11 @@ function TargetConfirmModal({
             </div>
             <div
               style={{
+                ...TYPE.headline,
                 marginTop: 12,
                 paddingTop: 12,
                 display: "flex",
                 justifyContent: "space-between",
-                fontSize: 20,
-                fontWeight: 600,
               }}
             >
               <span>{exact ? "Exact match!" : "Score"}</span>
@@ -694,13 +690,12 @@ function TargetConfirmModal({
             onClick={onCancel}
             className="flex items-center justify-center rounded-full pressable"
             style={{
+              ...TYPE.body,
               width: 100,
               height: 100,
               outline: "1px solid #ffffff",
               outlineOffset: -1,
               background: "transparent",
-              fontSize: 13,
-              fontWeight: 500,
               color: "#ffffff",
               cursor: "pointer",
             }}
@@ -711,13 +706,12 @@ function TargetConfirmModal({
             onClick={onConfirm}
             className="flex items-center justify-center rounded-full pressable"
             style={{
+              ...TYPE.body,
               width: 100,
               height: 100,
               outline: "1px solid #ffffff",
               outlineOffset: -1,
               background: "#ffffff",
-              fontSize: 13,
-              fontWeight: 500,
               color: "#000000",
               cursor: "pointer",
             }}
@@ -768,13 +762,11 @@ function ScoreRow({
       <td
         style={{
           padding: "8px 16px",
+          ...TYPE.bodyRegular,
           borderBottom: "1px solid #ffffff",
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
-
-          fontSize: 13,
           color: "#ffffff",
-          fontWeight: 400,
           transition: "background 150ms, color 150ms",
           position: "sticky",
           left: 0,
@@ -801,13 +793,11 @@ function ScoreRow({
             key={player.id}
             className={isPulsing ? "pulse-bg" : undefined}
             style={{
+              ...(isSelectedCell || isJustScoredCell ? TYPE.body : TYPE.bodyRegular),
               padding: "8px 16px",
               borderBottom: "1px solid #ffffff",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: bg,
-  
-              fontSize: 13,
-              fontWeight: isSelectedCell || isJustScoredCell ? 500 : 400,
               color: isSelectedCell || isJustScoredCell
                 ? "#000000"
                 : showPreview
@@ -844,11 +834,10 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
     <tr>
       <td
         style={{
+          ...TYPE.bodyRegular,
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
-
-          fontSize: 13,
           color: "#ffffff",
           position: "sticky",
           left: 0,
@@ -863,11 +852,10 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
           <td
             key={player.id}
             style={{
+              ...TYPE.bodyRegular,
               padding: "8px 16px",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: "#000000",
-  
-              fontSize: 13,
               color: bonus > 0 ? player.color : "#ffffff",
             }}
           >
@@ -886,11 +874,10 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
     <tr>
       <td
         style={{
+          ...TYPE.bodyRegular,
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
           background: "#1a1a1a",
-
-          fontSize: 13,
           color: "#ffffff",
           position: "sticky",
           left: 0,
@@ -906,11 +893,10 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
           <td
             key={player.id}
             style={{
+              ...TYPE.bodyRegular,
               padding: "8px 16px",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               background: "#000000",
-  
-              fontSize: 13,
               color: count > 0 ? player.color : "#ffffff",
             }}
           >
@@ -941,13 +927,11 @@ function TotalRow({
     <tr>
       <td
         style={{
+          ...TYPE.bodyEmphasis,
           padding: "8px 16px",
           borderRight: "1px solid #ffffff",
           borderTop: "1px solid #ffffff",
           background: "#000000",
-
-          fontSize: 13,
-          fontWeight: 600,
           color: "#ffffff",
           position: "sticky",
           left: 0,
@@ -968,12 +952,11 @@ function TotalRow({
           <td
             key={player.id}
             style={{
+              ...TYPE.bodyEmphasis,
               padding: "8px 16px",
               borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
               borderTop: "1px solid #ffffff",
               background: inactive ? dimHex(player.color, 0.4) : player.color,
-              fontSize: 13,
-              fontWeight: 600,
               color: "#000000",
               position: "sticky",
               bottom: 0,
@@ -1124,7 +1107,7 @@ function MiniDiceStrip({
             outlineOffset: -1,
             background: "transparent",
             fontSize: "clamp(9px, 18cqi, 14px)",
-            fontWeight: 500,
+            fontWeight: WEIGHT.medium,
             color: "#ffffff",
             opacity: canRoll ? 1 : 0.35,
             cursor: canRoll ? "pointer" : "default",
@@ -1151,13 +1134,11 @@ function Th({
   return (
     <th
       style={{
+        ...TYPE.bodyRegular,
         padding: "8px 16px",
         borderRight: "1px solid #ffffff",
         borderBottom: "1px solid #ffffff",
         background: "#000000",
-
-        fontSize: 13,
-        fontWeight: 400,
         color: "#ffffff",
         textAlign: "left",
         ...style,

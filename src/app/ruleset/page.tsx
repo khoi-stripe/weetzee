@@ -7,6 +7,7 @@ import { Die } from "@/components/game/Die";
 import { VISIBLE_RULESETS } from "@/lib/rulesets";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { playTap } from "@/lib/sounds";
+import { TYPE, WEIGHT } from "@/lib/type";
 
 const ITEM_COUNT = VISIBLE_RULESETS.length + 1;
 const TITLE_RESERVE = 48;
@@ -69,8 +70,7 @@ function RulesetContent() {
         <p
           className="shrink-0"
           style={{
-            fontSize: 16,
-            fontWeight: 400,
+            ...TYPE.title,
             color: "#ffffff",
             textAlign: "center",
             width: gridW,
@@ -121,7 +121,7 @@ function RulesetContent() {
                 outlineOffset: -1,
                 background: "transparent",
                 fontSize: "clamp(9px, 8cqi, 100px)",
-                fontWeight: 500,
+                fontWeight: WEIGHT.medium,
                 color: "#ffffff",
                 cursor: "pointer",
               }}

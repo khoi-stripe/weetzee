@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Player, Ruleset } from "@/lib/types";
 import { getRulesetTotal } from "@/lib/rulesets";
+import { TYPE } from "@/lib/type";
 
 const MIN_CELL_WIDTH_WITH_SCORE = 70;
 
@@ -58,12 +59,10 @@ export function PlayerBar({
         ref={barRef}
         className={`flex overflow-hidden ${onClick ? "pressable" : ""}`}
         style={{
+          ...TYPE.body,
           outline: "1px solid #ffffff",
           outlineOffset: -1,
           borderRadius: 4,
-
-          fontSize: 13,
-          fontWeight: 500,
         }}
       >
         {players.map((player, i) => {

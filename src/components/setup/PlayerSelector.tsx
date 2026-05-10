@@ -6,6 +6,7 @@ import { getPlayerColors } from "@/lib/types";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
 
 import { playTap, playToggle } from "@/lib/sounds";
+import { TYPE, WEIGHT } from "@/lib/type";
 
 const TITLE_RESERVE = 48;
 
@@ -109,8 +110,7 @@ export function PlayerSelector({
       <div className="shrink-0" style={{ textAlign: "center", width: gridW }}>
         <p
           style={{
-            fontSize: 16,
-            fontWeight: 400,
+            ...TYPE.title,
             color: "#ffffff",
           }}
         >
@@ -188,7 +188,7 @@ export function PlayerSelector({
               outlineOffset: -1,
               background: "transparent",
               fontSize: "clamp(9px, 8cqi, 100px)",
-              fontWeight: 500,
+              fontWeight: WEIGHT.medium,
               color: "#ffffff",
               cursor: "pointer",
             }}

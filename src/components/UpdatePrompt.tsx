@@ -2,6 +2,7 @@
 
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { playTap } from "@/lib/sounds";
+import { TYPE } from "@/lib/type";
 
 export function UpdatePrompt() {
   const { updateReady, applyUpdate, dismiss } = useServiceWorkerUpdate();
@@ -37,10 +38,10 @@ export function UpdatePrompt() {
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 13, fontWeight: 500, color: "#ffffff", margin: 0 }}>
+          <p style={{ ...TYPE.body, color: "#ffffff", margin: 0 }}>
             Update available
           </p>
-          <p style={{ fontSize: 11, color: "#999999", margin: "4px 0 0" }}>
+          <p style={{ ...TYPE.microRegular, color: "#999999", margin: "4px 0 0" }}>
             Reload to load the latest version.
           </p>
         </div>
@@ -49,9 +50,8 @@ export function UpdatePrompt() {
             onClick={() => { playTap(); dismiss(); }}
             className="pressable"
             style={{
+              ...TYPE.micro,
               padding: "8px 12px",
-              fontSize: 12,
-              fontWeight: 500,
               color: "#999999",
               background: "none",
               border: "none",
@@ -64,9 +64,8 @@ export function UpdatePrompt() {
             onClick={() => { playTap(); applyUpdate(); }}
             className="pressable"
             style={{
+              ...TYPE.micro,
               padding: "8px 16px",
-              fontSize: 12,
-              fontWeight: 500,
               color: "#000000",
               background: "#ffffff",
               border: "none",

@@ -9,6 +9,7 @@ import type { AIDifficulty } from "@/lib/types";
 import { playTap, playToggle, playConfirm } from "@/lib/sounds";
 import { Capacitor } from "@capacitor/core";
 import { useSupporter } from "@/hooks/useSupporter";
+import { TYPE, SIZE, WEIGHT } from "@/lib/type";
 
 // ===== Header =====
 
@@ -84,12 +85,10 @@ export function Header({
             onClick={handleBack}
             className="flex items-center justify-center pressable"
             style={{
+              ...TYPE.body,
               position: "absolute",
               left: 4,
               padding: "8px 12px",
-
-              fontSize: 13,
-              fontWeight: 500,
               color: "#ffffff",
               background: "none",
               border: "none",
@@ -100,13 +99,12 @@ export function Header({
           </button>
         )}
         <p
-          className="font-medium text-white text-center"
+          className="text-white text-center"
           style={{
-            fontSize: 16,
+            ...TYPE.title,
             position: "absolute",
             left: "50%",
             transform: "translateX(-50%)",
-            letterSpacing: 0,
           }}
         >
           {rulesetName ?? "Weetzee"}
@@ -115,15 +113,12 @@ export function Header({
           onClick={() => { playTap(); setShowRules(true); }}
           className="flex items-center justify-center pressable"
           style={{
+            ...TYPE.body,
             position: "absolute",
             right: 4,
             padding: "8px 12px",
             background: "none",
             border: "none",
-
-            fontSize: 13,
-            fontWeight: 500,
-            fontStyle: "normal",
             color: "#ffffff",
           }}
           aria-label="Game rules"
@@ -187,7 +182,7 @@ export function Header({
                 padding: "10%",
               }}
             >
-              <p style={{ fontSize: 16, fontWeight: 500, textAlign: "center" }}>
+              <p style={{ ...TYPE.title, textAlign: "center" }}>
                 End this game?
               </p>
             </div>
@@ -198,13 +193,12 @@ export function Header({
               onClick={() => { playTap(); setShowExitConfirm(false); }}
               className="flex items-center justify-center rounded-full pressable"
               style={{
+                ...TYPE.body,
                 width: 100,
                 height: 100,
                 outline: "1px solid #ffffff",
                 outlineOffset: -1,
                 background: "transparent",
-                fontSize: 13,
-                fontWeight: 500,
                 color: "#ffffff",
                 cursor: "pointer",
               }}
@@ -215,13 +209,12 @@ export function Header({
               onClick={() => { playTap(); onEndGame?.(); router.push("/"); }}
               className="flex items-center justify-center rounded-full pressable"
               style={{
+                ...TYPE.body,
                 width: 100,
                 height: 100,
                 outline: "1px solid #ffffff",
                 outlineOffset: -1,
                 background: "#ffffff",
-                fontSize: 13,
-                fontWeight: 500,
                 color: "#000000",
                 cursor: "pointer",
               }}
@@ -380,16 +373,14 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
     <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
       <h2
         style={{
-          fontSize: 13,
-          fontWeight: 600,
+          ...TYPE.sectionHeading,
           color: "#ffffff",
           marginBottom: 4,
-
         }}
       >
         {name}
       </h2>
-      <p style={{ color: "#999999", fontSize: 12, marginBottom: 8 }}>
+      <p style={{ ...TYPE.microRegular, color: "#999999", marginBottom: 8 }}>
         {description} — {diceCount} dice
         {id === "farkle" ? "" : ", 3 rolls per turn"}
         {id === "keep-your-head-down" ? ", lowest score wins" : ", highest score wins"}
@@ -467,13 +458,12 @@ function RulesModal({
       {/* Modal header */}
       <div className="relative shrink-0 w-full" style={{ height: 48 }}>
         <p
-          className="absolute font-medium text-white text-center"
+          className="absolute text-white text-center"
           style={{
-            fontSize: 13,
+            ...TYPE.body,
             left: "50%",
             transform: "translateX(-50%)",
             top: 13.5,
-
           }}
         >
           {isAbout ? "About" : "Rules"}
@@ -482,14 +472,13 @@ function RulesModal({
           onClick={() => { playTap(); onClose(); }}
           className="absolute flex items-center justify-center pressable"
           style={{
+            fontSize: SIZE.headline,
+            fontWeight: WEIGHT.regular,
             right: 4,
             top: 2,
             padding: "8px 12px",
             background: "none",
             border: "none",
-
-            fontSize: 20,
-            fontWeight: 400,
             color: "#ffffff",
             lineHeight: 1,
           }}
@@ -505,7 +494,7 @@ function RulesModal({
         style={{
           padding: "0 24px 48px",
 
-          fontSize: 13,
+          fontSize: SIZE.body,
           lineHeight: 1.6,
           color: "#cccccc",
           maxWidth: 640,
@@ -529,8 +518,8 @@ function RulesModal({
                 }}
               >
                 <div>
-                  <span style={{ color: "#999999", fontSize: 12 }}>Playing</span>
-                  <span style={{ color: "#ffffff", fontWeight: 500, marginLeft: 8, fontSize: 13 }}>
+                  <span style={{ ...TYPE.microRegular, color: "#999999" }}>Playing</span>
+                  <span style={{ ...TYPE.body, color: "#ffffff", marginLeft: 8 }}>
                     {rulesetName}
                   </span>
                 </div>
@@ -538,13 +527,12 @@ function RulesModal({
                   onClick={() => { playTap(); (onChangeRuleset ?? (() => router.push("/")))(); }}
                   className="pressable"
                   style={{
+                    ...TYPE.microRegular,
                     background: "none",
                     outline: "1px solid #666666",
                     outlineOffset: -1,
                     borderRadius: 4,
                     padding: "4px 10px",
-    
-                    fontSize: 12,
                     color: "#999999",
                     cursor: "pointer",
                   }}
@@ -583,11 +571,9 @@ function RulesModal({
               <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
                 <h3
                   style={{
-                    fontSize: 13,
-                    fontWeight: 600,
+                    ...TYPE.sectionHeading,
                     color: "#ffffff",
                     marginBottom: 12,
-    
                   }}
                 >
                   House rules
@@ -666,15 +652,14 @@ function RulesModal({
               <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
                 <h3
                   style={{
-                    fontSize: 13,
-                    fontWeight: 600,
+                    ...TYPE.sectionHeading,
                     color: "#ffffff",
                     marginBottom: 4,
                   }}
                 >
                   CPU difficulty
                 </h3>
-                <p style={{ fontSize: 11, color: "#999999", marginBottom: 16 }}>
+                <p style={{ ...TYPE.microRegular, color: "#999999", marginBottom: 16 }}>
                   Changes how the computer players make decisions
                 </p>
                 <div className="flex gap-2">
@@ -684,12 +669,11 @@ function RulesModal({
                       onClick={() => { playTap(); onSetAIDifficulty!(level); }}
                       className="pressable"
                       style={{
+                        ...TYPE.micro,
                         flex: 1,
                         height: 36,
                         borderRadius: 8,
                         border: "none",
-                        fontSize: 12,
-                        fontWeight: 500,
                         cursor: "pointer",
                         transition: "background 150ms, color 150ms",
                         background: aiDifficulty === level ? "#ffffff" : "#1a1a1a",
@@ -743,7 +727,7 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
       borderBottom: position === "top" ? "1px solid #333333" : undefined,
       paddingBottom: position === "top" ? 24 : 0,
     }}>
-      <h3 style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 8 }}>
+      <h3 style={{ ...TYPE.sectionHeading, color: "#ffffff", marginBottom: 8 }}>
         Support Weetzee
       </h3>
       {isSupporter ? (
@@ -755,13 +739,13 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
             padding: "12px 0",
           }}
         >
-          <span style={{ fontSize: 16 }}>&#10003;</span>
-          <span style={{ color: "#ffffff", fontWeight: 500, fontSize: 13 }}>Supporter</span>
-          <span style={{ color: "#999999", fontSize: 12 }}>Thank you!</span>
+          <span style={{ fontSize: SIZE.title }}>&#10003;</span>
+          <span style={{ ...TYPE.body, color: "#ffffff" }}>Supporter</span>
+          <span style={{ ...TYPE.microRegular, color: "#999999" }}>Thank you!</span>
         </div>
       ) : (
         <>
-          <p style={{ color: "#999999", fontSize: 12, marginBottom: 16 }}>
+          <p style={{ ...TYPE.microRegular, color: "#999999", marginBottom: 16 }}>
             One-time purchase. Helps keep Weetzee free.
           </p>
           <button
@@ -769,12 +753,11 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
             disabled={loading}
             className="flex items-center justify-center rounded-full pressable"
             style={{
+              ...TYPE.bodyEmphasis,
               width: "100%",
               height: 48,
               background: "#ffffff",
               color: "#000000",
-              fontSize: 13,
-              fontWeight: 600,
               border: "none",
               cursor: loading ? "default" : "pointer",
               opacity: loading ? 0.5 : 1,
@@ -789,12 +772,12 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
         onClick={handleRestore}
         disabled={loading}
         style={{
+          ...TYPE.microRegular,
           display: "block",
           marginTop: 12,
           background: "none",
           border: "none",
           color: "#666666",
-          fontSize: 12,
           cursor: loading ? "default" : "pointer",
           padding: 0,
         }}
@@ -802,7 +785,7 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
         Restore Purchases
       </button>
       {restoreMsg && (
-        <p style={{ color: "#999999", fontSize: 11, marginTop: 6 }}>{restoreMsg}</p>
+        <p style={{ ...TYPE.microRegular, color: "#999999", marginTop: 6 }}>{restoreMsg}</p>
       )}
     </div>
   );
@@ -830,7 +813,7 @@ function AboutContent() {
       <Section title="Games">
         {VISIBLE_RULESETS.map((r) => (
           <div key={r.id} style={{ marginTop: 10 }}>
-            <span style={{ color: "#ffffff", fontWeight: 500 }}>{r.name}</span>
+            <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>{r.name}</span>
             <span style={{ color: "#999999" }}>
               {r.id === "weetzee" && " — The standard game. 5 dice, 13 categories, highest score wins."}
               {r.id === "keep-your-head-down" && " — Same categories, but lowest score wins. You must use all 3 rolls and score your highest available category."}
@@ -862,19 +845,19 @@ function HouseRulesInfo() {
     <Section title="House rules">
       <p>Optional rules for Weetzee and Kismet. Toggle them from the settings menu during play.</p>
       <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#ffffff", fontWeight: 500 }}>Roll banking</span>
+        <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>Roll banking</span>
         <span style={{ color: "#999999" }}> — Bank unused rolls for future turns, up to 3 extra.</span>
       </div>
       <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#ffffff", fontWeight: 500 }}>Multiple Weetzees</span>
+        <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>Multiple Weetzees</span>
         <span style={{ color: "#999999" }}> — Score extra Weetzees for 100 bonus points each.</span>
       </div>
       <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#ffffff", fontWeight: 500 }}>6 dice</span>
+        <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>6 dice</span>
         <span style={{ color: "#999999" }}> — Play with 6 dice instead of 5. Must be set before the game starts.</span>
       </div>
       <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#ffffff", fontWeight: 500 }}>Ordered scoring</span>
+        <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>Ordered scoring</span>
         <span style={{ color: "#999999" }}> — Must score categories from top to bottom. Must be set before the game starts.</span>
       </div>
     </Section>
@@ -905,11 +888,9 @@ function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
     <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
       <h3
         style={{
-          fontSize: 13,
-          fontWeight: 600,
+          ...TYPE.sectionHeading,
           color: "#ffffff",
           marginBottom: 12,
-
         }}
       >
         Add to home screen
@@ -923,19 +904,19 @@ function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
             1. Tap the <Share size={14} style={{ flexShrink: 0 }} /> share button in Safari
           </p>
           <p style={{ marginTop: 8 }}>
-            2. Scroll down and tap <span style={{ fontWeight: 500 }}>&quot;Add to Home Screen&quot;</span>
+            2. Scroll down and tap <span style={{ fontWeight: WEIGHT.medium }}>&quot;Add to Home Screen&quot;</span>
           </p>
           <p style={{ marginTop: 8 }}>
-            3. Tap <span style={{ fontWeight: 500 }}>&quot;Add&quot;</span>
+            3. Tap <span style={{ fontWeight: WEIGHT.medium }}>&quot;Add&quot;</span>
           </p>
         </div>
       ) : (
         <div style={{ marginTop: 12, color: "#ffffff" }}>
           <p>
-            1. Tap the <span style={{ fontWeight: 500 }}>⋮</span> menu in your browser
+            1. Tap the <span style={{ fontWeight: WEIGHT.medium }}>⋮</span> menu in your browser
           </p>
           <p style={{ marginTop: 8 }}>
-            2. Tap <span style={{ fontWeight: 500 }}>&quot;Add to Home screen&quot;</span> or <span style={{ fontWeight: 500 }}>&quot;Install app&quot;</span>
+            2. Tap <span style={{ fontWeight: WEIGHT.medium }}>&quot;Add to Home screen&quot;</span> or <span style={{ fontWeight: WEIGHT.medium }}>&quot;Install app&quot;</span>
           </p>
         </div>
       )}
@@ -948,11 +929,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div style={{ marginTop: 24 }}>
       <h3
         style={{
-          fontSize: 13,
-          fontWeight: 600,
+          ...TYPE.sectionHeading,
           color: "#ffffff",
           marginBottom: 8,
-
         }}
       >
         {title}
@@ -965,7 +944,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function RuleRow({ name, desc }: { name: string; desc: string }) {
   return (
     <div style={{ marginTop: 6 }}>
-      <span style={{ color: "#ffffff", fontWeight: 500 }}>{name}</span>
+      <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>{name}</span>
       <span style={{ color: "#999999" }}> — {desc}</span>
     </div>
   );
@@ -982,8 +961,8 @@ function ScoreTable({ children }: { children: React.ReactNode }) {
 function ScoreRow({ name, value }: { name: string; value: string }) {
   return (
     <tr>
-      <td style={{ color: "#ffffff", fontWeight: 400, padding: "4px 8px 4px 0", fontSize: 13, whiteSpace: "nowrap", borderBottom: "1px solid #1a1a1a" }}>{name}</td>
-      <td style={{ color: "#999999", padding: "4px 0", fontSize: 13, textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", borderBottom: "1px solid #1a1a1a" }}>{value}</td>
+      <td style={{ ...TYPE.bodyRegular, color: "#ffffff", padding: "4px 8px 4px 0", whiteSpace: "nowrap", borderBottom: "1px solid #1a1a1a" }}>{name}</td>
+      <td style={{ ...TYPE.bodyRegular, color: "#999999", padding: "4px 0", textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", borderBottom: "1px solid #1a1a1a" }}>{value}</td>
     </tr>
   );
 }
@@ -1014,8 +993,8 @@ function ToggleRow({
       }}
     >
       <div>
-        <div style={{ color: "#ffffff", fontWeight: 500, fontSize: 13 }}>{label}</div>
-        <div style={{ color: "#999999", fontSize: 11, marginTop: 2 }}>{desc}</div>
+        <div style={{ ...TYPE.body, color: "#ffffff" }}>{label}</div>
+        <div style={{ ...TYPE.microRegular, color: "#999999", marginTop: 2 }}>{desc}</div>
       </div>
       <div
         className="pressable"

@@ -1,5 +1,7 @@
 "use client";
 
+import { WEIGHT } from "@/lib/type";
+
 // ===== Die Component =====
 // Renders a single die face with pips drawn via CSS.
 // Matches Figma: 1px solid white border, 4px radius, black bg, white pips.
@@ -103,9 +105,8 @@ export function Die({
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{
-
             fontSize: "clamp(11px, 8cqi, 100px)",
-            fontWeight: 500,
+            fontWeight: WEIGHT.medium,
             color: held ? "#000000" : "#ffffff",
             transform: "rotate(-45deg)",
             lineHeight: 1.1,

@@ -8,6 +8,7 @@ import type { Die, Player } from "@/lib/types";
 import { isValidSelection, scoreDice, getScoringPossibilities } from "@/lib/rulesets/farkle";
 import { farkleShouldAcceptPiggyback } from "@/lib/ai";
 import { playTap, playTurnChange, playConfirm, playFarkle, getAudioCtx } from "@/lib/sounds";
+import { TYPE } from "@/lib/type";
 
 export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: { game: UseGameReturn; isAITurn?: boolean; aiPendingAction?: string | null }) {
   const { state, roll, toggleHold, setAside, bank, acceptPiggyback } = game;
@@ -496,13 +497,13 @@ function FarkleScoringSheet({
 }) {
   return (
     <div className="flex-1 overflow-y-auto" style={{ paddingTop: 8, paddingBottom: 32 }}>
-      <h3 style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 16 }}>
+      <h3 style={{ ...TYPE.sectionHeading, color: "#ffffff", marginBottom: 16 }}>
         Scoring Reference
       </h3>
 
       {hintsEnabled && possibilities.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <h4 style={{ fontSize: 11, fontWeight: 500, color: "#999999", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>
+          <h4 style={{ ...TYPE.eyebrow, color: "#999999", marginBottom: 8 }}>
             Available now
           </h4>
           {possibilities.map((p, i) => (
@@ -511,15 +512,15 @@ function FarkleScoringSheet({
               className="flex items-center justify-between"
               style={{ padding: "6px 0", borderBottom: "1px solid #1a1a1a" }}
             >
-              <span style={{ color: playerColor, fontSize: 13 }}>{p.label}</span>
-              <span style={{ color: playerColor, fontSize: 13, fontWeight: 600 }}>{p.score}</span>
+              <span style={{ ...TYPE.body, color: playerColor }}>{p.label}</span>
+              <span style={{ ...TYPE.bodyEmphasis, color: playerColor }}>{p.score}</span>
             </div>
           ))}
         </div>
       )}
 
       <div>
-        <h4 style={{ fontSize: 11, fontWeight: 500, color: "#999999", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>
+        <h4 style={{ ...TYPE.eyebrow, color: "#999999", marginBottom: 8 }}>
           All combinations
         </h4>
         {FARKLE_REFERENCE.map((item, i) => (
@@ -528,8 +529,8 @@ function FarkleScoringSheet({
             className="flex items-center justify-between"
             style={{ padding: "6px 0", borderBottom: "1px solid #1a1a1a" }}
           >
-            <span style={{ color: "#999999", fontSize: 13 }}>{item.label}</span>
-            <span style={{ color: "#999999", fontSize: 13 }}>{item.score}</span>
+            <span style={{ ...TYPE.body, color: "#999999" }}>{item.label}</span>
+            <span style={{ ...TYPE.body, color: "#999999" }}>{item.score}</span>
           </div>
         ))}
       </div>
@@ -631,10 +632,10 @@ function FarkleBustScreen({
               : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
           }}
         >
-          <span style={{ fontSize: 16, fontWeight: 700 }}>
+          <span style={{ ...TYPE.titleBold }}>
             {player.name}
           </span>
-          <span style={{ fontSize: 13, fontWeight: 500 }}>
+          <span style={{ ...TYPE.headline }}>
             FARKLE!
           </span>
 
@@ -650,7 +651,7 @@ function FarkleBustScreen({
             </div>
           )}
 
-          <span style={{ fontSize: 48, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+          <span style={{ ...TYPE.display, fontVariantNumeric: "tabular-nums" }}>
             {displayScore}
           </span>
         </div>
@@ -660,13 +661,12 @@ function FarkleBustScreen({
         onClick={() => { playTap(); onDone(); }}
         className="flex items-center justify-center rounded-full shrink-0 pressable"
         style={{
+          ...TYPE.body,
           width: 100,
           height: 100,
           outline: "1px solid #ffffff",
           outlineOffset: -1,
           background: "transparent",
-          fontSize: 13,
-          fontWeight: 500,
           color: "#ffffff",
           cursor: "pointer",
           animation: exiting ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 400ms both",
@@ -693,6 +693,12 @@ function BustDie({ value, failed, index = 0, animate = true }: { value: number; 
   const pips = BUST_PIP_LAYOUTS[value] ?? [];
   const pipSize = "17%";
 
+  const entryDelay = 500 + index * 80;
+  const entryDuration = 300;
+  const entry = `bust-die-in ${entryDuration}ms cubic-bezier(0.34, 1.56, 0.64, 1) ${entryDelay}ms both`;
+  // Failed dice shake right after their entry settles, expressing the bust.
+  const shake = `bust-die-shake 550ms ease-in-out ${entryDelay + entryDuration}ms forwards`;
+
   return (
     <div
       className="relative"
@@ -705,7 +711,7 @@ function BustDie({ value, failed, index = 0, animate = true }: { value: number; 
         background: "transparent",
         flexShrink: 0,
         opacity: failed ? 0.4 : 1,
-        animation: animate ? `bust-die-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) ${500 + index * 80}ms both` : undefined,
+        animation: animate ? (failed ? `${entry}, ${shake}` : entry) : undefined,
       }}
     >
       {pips.map(([x, y], i) => (
@@ -813,15 +819,15 @@ function PlayerInterstitial({
                 : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
             }}
           >
-            <span style={{ fontSize: 16, fontWeight: 700 }}>
+            <span style={{ ...TYPE.titleBold }}>
               {player.name}
             </span>
             {lastTurn && (
-              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(0, 0, 0, 0.6)" }}>
+              <span style={{ ...TYPE.bodyEmphasis, color: "rgba(0, 0, 0, 0.6)" }}>
                 Final round
               </span>
             )}
-            <span style={{ fontSize: 16, fontWeight: 500, marginBottom: 4 }}>
+            <span style={{ ...TYPE.title, marginBottom: 4 }}>
               +{piggyback.score} piggyback
             </span>
             <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 2 }}>
@@ -838,13 +844,12 @@ function PlayerInterstitial({
             onAnimationEnd={() => setFreshIntroDone(true)}
             className="flex items-center justify-center rounded-full shrink-0 pressable"
             style={{
+              ...TYPE.body,
               width: 100,
               height: 100,
               outline: "1px solid #ffffff",
               outlineOffset: -1,
               background: aiChoice === "fresh" ? "#ffffff" : "transparent",
-              fontSize: 13,
-              fontWeight: 500,
               color: aiChoice === "fresh" ? "#000000" : "#ffffff",
               opacity: aiChoice === "piggyback" ? 0.4 : 1,
               cursor: aiChoice ? "default" : "pointer",
@@ -860,13 +865,12 @@ function PlayerInterstitial({
             onAnimationEnd={() => setPiggyIntroDone(true)}
             className="flex items-center justify-center rounded-full shrink-0 pressable"
             style={{
+              ...TYPE.body,
               width: 100,
               height: 100,
               outline: "1px solid #ffffff",
               outlineOffset: -1,
               background: aiChoice === "piggyback" || !aiChoice ? "#ffffff" : "transparent",
-              fontSize: 13,
-              fontWeight: 500,
               color: aiChoice === "piggyback" || !aiChoice ? "#000000" : "#ffffff",
               opacity: aiChoice === "fresh" ? 0.4 : 1,
               cursor: aiChoice ? "default" : "pointer",
@@ -897,12 +901,11 @@ function PlayerInterstitial({
       <div
         className="flex flex-col items-center justify-center rounded-full"
         style={{
+          ...TYPE.headline,
           width: "100%",
           maxWidth: "min(80vw, 80vh, 400px)",
           aspectRatio: "1 / 1",
           background: player.color,
-          fontSize: 20,
-          fontWeight: 500,
           color: "#000000",
           gap: 4,
           animation: exiting
@@ -912,7 +915,7 @@ function PlayerInterstitial({
       >
         {player.name}
         {lastTurn && (
-          <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(0, 0, 0, 0.6)" }}>
+          <span style={{ ...TYPE.bodyEmphasis, color: "rgba(0, 0, 0, 0.6)" }}>
             Final round
           </span>
         )}

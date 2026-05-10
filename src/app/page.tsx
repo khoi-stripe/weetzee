@@ -9,6 +9,7 @@ import { PLAYER_COLORS, shufflePlayerColors } from "@/lib/types";
 import { peekSavedGame, clearSavedGame } from "@/hooks/useGame";
 import type { SavedGameSummary } from "@/hooks/useGame";
 import { SplashIntro } from "@/components/SplashIntro";
+import { TYPE } from "@/lib/type";
 
 function ContinuePrompt({
   saved,
@@ -64,22 +65,21 @@ function ContinuePrompt({
             textAlign: "center",
           }}
         >
-          <p style={{ fontSize: 13, fontWeight: 500, color: "#666666" }}>
+          <p style={{ ...TYPE.body, color: "#666666" }}>
             Game in progress
           </p>
-          <p style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+          <p style={{ ...TYPE.headline, marginBottom: 16 }}>
             {saved.rulesetName}
           </p>
 
           <div
             className="flex overflow-hidden"
             style={{
+              ...TYPE.body,
               width: "100%",
               outline: "1px solid #000000",
               outlineOffset: -1,
               borderRadius: 4,
-              fontSize: 13,
-              fontWeight: 500,
             }}
           >
             {saved.players.map((p, i) => {
@@ -111,13 +111,12 @@ function ContinuePrompt({
           onClick={handleNew}
           className="flex items-center justify-center rounded-full pressable"
           style={{
+            ...TYPE.body,
             width: 100,
             height: 100,
             outline: "1px solid #ffffff",
             outlineOffset: -1,
             background: "transparent",
-            fontSize: 13,
-            fontWeight: 500,
             color: "#ffffff",
             cursor: "pointer",
           }}
@@ -128,13 +127,12 @@ function ContinuePrompt({
           onClick={handleContinue}
           className="flex items-center justify-center rounded-full pressable"
           style={{
+            ...TYPE.body,
             width: 100,
             height: 100,
             outline: "1px solid #ffffff",
             outlineOffset: -1,
             background: "#ffffff",
-            fontSize: 13,
-            fontWeight: 500,
             color: "#000000",
             cursor: "pointer",
           }}
