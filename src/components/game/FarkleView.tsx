@@ -234,7 +234,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
   // can't re-select them and double-score the same dice.
   const hotDiceWaiting = hotDice && !state.mustSetAside;
   const canSetAside = !state.farkled && selectionValid && hasRolled && !hotDiceWaiting;
-  const canRoll = !state.farkled && !state.mustSetAside && (state.setAsideDiceIds.length > 0 || hotDice) && !heldDice.length;
+  const canRoll = !state.farkled && !state.mustSetAside && (state.setAsideDiceIds.length > 0 || hotDiceWaiting) && !heldDice.length;
   const playerTotal = (currentPlayer.scores["total"] as number) ?? 0;
   const needsOpening = state.openingThresholdEnabled && playerTotal === 0;
   const belowThreshold = needsOpening && state.turnScore < 500;
@@ -253,7 +253,9 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     actionLabel = `SET ASIDE +${selectionScore}`;
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { playTap(); setAside(); };
-  } else if (hotDice) {
+  } else if (hotDiceWaiting) {
+    // Single-shot: pressing HOT DICE! rolls and sets mustSetAside=true,
+    // so the next render falls through to the "SELECT DICE" branch below.
     actionLabel = isAITurn ? "THINKING..." : "HOT DICE!";
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
