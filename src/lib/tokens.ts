@@ -11,10 +11,13 @@
 export const Z = {
   /** Sticky table headers / footers within a scroll container. */
   sticky: 3,
-  /** Toasts and bottom prompts (UpdatePrompt, InstallPrompt). */
-  toast: 50,
   /** In-game interstitials (player turn, Farkle bust, piggyback). */
   interstitial: 50,
+  /** Player score bar — must sit above interstitials so it stays visible. */
+  playerBar: 55,
+  /** Toasts and bottom prompts (UpdatePrompt, InstallPrompt) — must sit
+   *  above the player bar so a "Reload" prompt is never hidden behind it. */
+  toast: 75,
   /** Top-level modals (Rules, settings sheet, exit confirm). */
   modal: 100,
   /** Modals that sit *above* other modals (Continue prompt, Score confirm). */

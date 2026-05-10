@@ -494,7 +494,7 @@ function ContentStrip({
           transform: `translateY(${(diceH || 0) + translateY}px)`,
           transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
           willChange: "transform",
-          zIndex: 55,
+          zIndex: Z.playerBar,
           visibility: containerH > 0 ? "visible" : "hidden",
           pointerEvents: interstitialActive ? "none" : "auto",
         }}

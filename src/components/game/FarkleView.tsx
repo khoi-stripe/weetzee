@@ -411,7 +411,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     >
       {isLandscape ? (
         <>
-          <div style={{ position: "relative", zIndex: 55 }}>
+          <div style={{ position: "relative", zIndex: Z.playerBar }}>
             <PlayerBar
               players={state.players}
               currentPlayerIndex={state.currentPlayerIndex}
@@ -478,7 +478,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
               transform: `translateY(${(diceH || 0) + translateY}px)`,
               transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
               willChange: "transform",
-              zIndex: 55,
+              zIndex: Z.playerBar,
               // Hide the overlay until the drawer's heights are measured —
               // otherwise it briefly paints at translateY(0) (top of screen)
               // before snapping into place.
