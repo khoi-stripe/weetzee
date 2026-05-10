@@ -15,13 +15,14 @@ export const Z = {
   interstitial: 50,
   /** Player score bar — must sit above interstitials so it stays visible. */
   playerBar: 55,
-  /** Toasts and bottom prompts (UpdatePrompt, InstallPrompt) — must sit
-   *  above the player bar so a "Reload" prompt is never hidden behind it. */
-  toast: 75,
   /** Top-level modals (Rules, settings sheet, exit confirm). */
   modal: 100,
   /** Modals that sit *above* other modals (Continue prompt, Score confirm). */
   modalAbove: 200,
+  /** Toasts and bottom prompts (UpdatePrompt, InstallPrompt) — sit above
+   *  every in-app surface so a "Reload to update" prompt is always
+   *  reachable. (Splash/landscape lock still cover them as expected.) */
+  toast: 300,
   /** Splash screen (must cover everything during boot). */
   splash: 9000,
   /** Landscape-lock takeover (highest of all). */
