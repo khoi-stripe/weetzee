@@ -757,14 +757,6 @@ function AboutContent() {
         </p>
       </Section>
 
-      <Section title="How it works">
-        <p>
-          Pick how many players, choose a game, and start rolling.
-          Each turn you get up to 3 rolls — hold the dice you like and re-roll the rest, then pick a
-          scoring category. Play through all categories and the highest score wins.
-        </p>
-      </Section>
-
       <Section title="Games">
         {VISIBLE_RULESETS.map((r) => (
           <div key={r.id} style={{ marginTop: 10 }}>
