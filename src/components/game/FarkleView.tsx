@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DiceView } from "./DiceView";
 import { PlayerBar } from "./PlayerBar";
 import type { UseGameReturn } from "@/hooks/useGame";
-import { PLAYER_COLORS, type Die, type Player } from "@/lib/types";
+import type { Die, Player } from "@/lib/types";
 import { isValidSelection, scoreDice, getScoringPossibilities } from "@/lib/rulesets/farkle";
 import { farkleShouldAcceptPiggyback } from "@/lib/ai";
 import { playTap, playTurnChange, playConfirm, playFarkle, getAudioCtx } from "@/lib/sounds";
@@ -612,13 +612,6 @@ function FarkleBustScreen({
   keptDice: { value: number }[];
 }) {
   const [displayScore, setDisplayScore] = useState(lostScore);
-  const [colorTick, setColorTick] = useState(0);
-
-  // Rotate the FARKLE! letter colors through the dice palette while visible.
-  useEffect(() => {
-    const id = setInterval(() => setColorTick((t) => t + 1), 180);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (lostScore <= 0) return;
@@ -671,36 +664,30 @@ function FarkleBustScreen({
           }}
           aria-label="FARKLE!"
         >
-          {(() => {
-            // Cycle letters through the 6 dice/player colors, skipping the
-            // dialog's own background color so every letter stays visible.
-            const cycleColors = PLAYER_COLORS.filter((c) => c !== player.color);
-            return "FARKLE!".split("").map((ch, i) => {
-              const tilts = [-6, 4, -3, 7, -5, 3, 10];
-              const variants = ["a", "b", "c"] as const;
-              const variant = variants[i % variants.length];
-              const duration = 100 + ((i * 53) % 80); // 100–180ms
-              const delay = 200 + i * 47;
-              const tilt = tilts[i % tilts.length];
-              const letterColor = cycleColors[(colorTick + i) % cycleColors.length];
-              return (
-                <span
-                  key={i}
-                  aria-hidden="true"
-                  style={{
-                    display: "inline-block",
-                    transformOrigin: "50% 60%",
-                    color: letterColor,
-                    ["--tilt" as string]: `${tilt}deg`,
-                    transform: `rotate(${tilt}deg)`,
-                    animation: `farkle-letter-shake-${variant} ${duration}ms ease-in-out ${delay}ms infinite`,
-                  }}
-                >
-                  {ch}
-                </span>
-              );
-            });
-          })()}
+          {"FARKLE!".split("").map((ch, i) => {
+            const tilts = [-6, 4, -3, 7, -5, 3, 10];
+            const variants = ["a", "b", "c"] as const;
+            const variant = variants[i % variants.length];
+            const duration = 100 + ((i * 53) % 80); // 100–180ms
+            const delay = 200 + i * 47;
+            const tilt = tilts[i % tilts.length];
+            return (
+              <span
+                key={i}
+                aria-hidden="true"
+                style={{
+                  display: "inline-block",
+                  transformOrigin: "50% 60%",
+                  color: COLOR.surfaceBg,
+                  ["--tilt" as string]: `${tilt}deg`,
+                  transform: `rotate(${tilt}deg)`,
+                  animation: `farkle-letter-shake-${variant} ${duration}ms ease-in-out ${delay}ms infinite`,
+                }}
+              >
+                {ch}
+              </span>
+            );
+          })}
         </span>
 
         {(keptDice.length > 0 || failedDice.length > 0) && (
