@@ -5,6 +5,7 @@ import { InstallPromptLoader } from "@/components/InstallPromptLoader";
 import { UpdatePromptLoader } from "@/components/UpdatePromptLoader";
 import { NativeInit } from "@/components/NativeInit";
 import "./globals.css";
+import { COLOR } from "@/lib/color";
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -37,7 +38,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#000000",
+  themeColor: COLOR.surfaceBg,
 };
 
 export default function RootLayout({

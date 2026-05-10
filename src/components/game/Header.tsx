@@ -10,6 +10,12 @@ import { playTap, playToggle, playConfirm } from "@/lib/sounds";
 import { Capacitor } from "@capacitor/core";
 import { useSupporter } from "@/hooks/useSupporter";
 import { TYPE, SIZE, WEIGHT } from "@/lib/type";
+import { COLOR } from "@/lib/color";
+import { Scrim } from "@/components/ui/Scrim";
+import { DialogCard } from "@/components/ui/DialogCard";
+import { RoundButton } from "@/components/ui/RoundButton";
+import { EASE } from "@/lib/motion";
+import { RADIUS, Z } from "@/lib/tokens";
 
 // ===== Header =====
 
@@ -89,7 +95,7 @@ export function Header({
               position: "absolute",
               left: 4,
               padding: "8px 12px",
-              color: "#ffffff",
+              color: COLOR.textPrimary,
               background: "none",
               border: "none",
             }}
@@ -119,7 +125,7 @@ export function Header({
             padding: "8px 12px",
             background: "none",
             border: "none",
-            color: "#ffffff",
+            color: COLOR.textPrimary,
           }}
           aria-label="Game rules"
         >
@@ -156,73 +162,22 @@ export function Header({
       )}
 
       {showExitConfirm && (
-        <div
-          className="fixed inset-0 flex flex-col items-center justify-center"
-          style={{
-            zIndex: 200,
-            background: "rgba(0, 0, 0, 0.85)",
-            padding: 16,
-            gap: 24,
-            animation: "interstitial-in 200ms ease forwards",
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "min(80vw, 80vh, 400px)",
-              aspectRatio: "1 / 1",
-            }}
-          >
-            <div
-              className="w-full h-full flex items-center justify-center"
-              style={{
-                background: "#ffffff",
-                borderRadius: 4,
-                color: "#000000",
-                padding: "10%",
-              }}
-            >
-              <p style={{ ...TYPE.title, textAlign: "center" }}>
-                End this game?
-              </p>
-            </div>
-          </div>
-
+        <Scrim>
+          <DialogCard>
+            <p style={{ ...TYPE.title }}>End this game?</p>
+          </DialogCard>
           <div className="flex justify-center" style={{ gap: 16 }}>
-            <button
-              onClick={() => { playTap(); setShowExitConfirm(false); }}
-              className="flex items-center justify-center rounded-full pressable"
-              style={{
-                ...TYPE.body,
-                width: 100,
-                height: 100,
-                outline: "1px solid #ffffff",
-                outlineOffset: -1,
-                background: "transparent",
-                color: "#ffffff",
-                cursor: "pointer",
-              }}
-            >
+            <RoundButton onClick={() => { playTap(); setShowExitConfirm(false); }}>
               Cancel
-            </button>
-            <button
+            </RoundButton>
+            <RoundButton
+              variant="filled"
               onClick={() => { playTap(); onEndGame?.(); router.push("/"); }}
-              className="flex items-center justify-center rounded-full pressable"
-              style={{
-                ...TYPE.body,
-                width: 100,
-                height: 100,
-                outline: "1px solid #ffffff",
-                outlineOffset: -1,
-                background: "#ffffff",
-                color: "#000000",
-                cursor: "pointer",
-              }}
             >
               End game
-            </button>
+            </RoundButton>
           </div>
-        </div>
+        </Scrim>
       )}
     </>
   );
@@ -237,7 +192,7 @@ function ClassicRules() {
         <ScoreTable>
           <ScoreRow name="Ones – Sixes" value="Sum of matching face" />
         </ScoreTable>
-        <p style={{ marginTop: 8, color: "#999999" }}>
+        <p style={{ marginTop: 8, color: COLOR.textMuted }}>
           Bonus: Score 35 extra points if upper section totals 63 or more.
         </p>
       </Section>
@@ -267,13 +222,13 @@ function KeepYourHeadDownRules() {
       </Section>
       <Section title="Dice">
         <p>5 dice. Face <b>3 = 0 points</b>; all others score at face value (1, 2, 4, 5, 6).</p>
-        <p style={{ marginTop: 8, color: "#999999" }}>The sum of all 5 dice determines your score each round.</p>
+        <p style={{ marginTop: 8, color: COLOR.textMuted }}>The sum of all 5 dice determines your score each round.</p>
       </Section>
       <Section title="Rolling">
         <RuleRow name="Roll all 5" desc="Start each round by rolling all dice" />
         <RuleRow name="Hold & re-roll" desc="Hold any dice, then re-roll the rest" />
         <RuleRow name="Stop anytime" desc="After any roll, you can stop and score" />
-        <p style={{ marginTop: 8, color: "#999999" }}>Maximum 3 rolls per round.</p>
+        <p style={{ marginTop: 8, color: COLOR.textMuted }}>Maximum 3 rolls per round.</p>
       </Section>
       <Section title="Scoring">
         <p>After rolling, choose an unused target to assign your total against.</p>
@@ -283,7 +238,7 @@ function KeepYourHeadDownRules() {
         </ScoreTable>
       </Section>
       <Section title="Strategy">
-        <p style={{ color: "#999999" }}>Threes are worth 0 — great for low targets, but they make high targets harder to reach.</p>
+        <p style={{ color: COLOR.textMuted }}>Threes are worth 0 — great for low targets, but they make high targets harder to reach.</p>
       </Section>
     </>
   );
@@ -353,7 +308,7 @@ function FarkleRules() {
         </ScoreTable>
       </Section>
       <Section title="Strategy">
-        <p style={{ color: "#999999" }}>
+        <p style={{ color: COLOR.textMuted }}>
           Set aside high-scoring dice, then decide whether to push your luck
           or bank what you have. A farkle wipes your entire turn.
         </p>
@@ -370,17 +325,17 @@ function FarkleRules() {
 
 function GameRulesBlock({ id, name, diceCount, description }: { id: string; name: string; diceCount: number; description: string }) {
   return (
-    <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+    <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
       <h2
         style={{
           ...TYPE.sectionHeading,
-          color: "#ffffff",
+          color: COLOR.textPrimary,
           marginBottom: 4,
         }}
       >
         {name}
       </h2>
-      <p style={{ ...TYPE.microRegular, color: "#999999", marginBottom: 8 }}>
+      <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 8 }}>
         {description} — {diceCount} dice
         {id === "farkle" ? "" : ", 3 rolls per turn"}
         {id === "keep-your-head-down" ? ", lowest score wins" : ", highest score wins"}
@@ -449,8 +404,8 @@ function RulesModal({
     <div
       className="fixed inset-0 flex flex-col"
       style={{
-        zIndex: 100,
-        background: "#000000",
+        zIndex: Z.modal,
+        background: COLOR.surfaceBg,
         paddingTop: "env(safe-area-inset-top, 0px)",
         animation: "interstitial-in 200ms ease forwards",
       }}
@@ -479,7 +434,7 @@ function RulesModal({
             padding: "8px 12px",
             background: "none",
             border: "none",
-            color: "#ffffff",
+            color: COLOR.textPrimary,
             lineHeight: 1,
           }}
           aria-label="Close"
@@ -496,7 +451,7 @@ function RulesModal({
 
           fontSize: SIZE.body,
           lineHeight: 1.6,
-          color: "#cccccc",
+          color: COLOR.textReadable,
           maxWidth: 640,
           margin: "0 auto",
           width: "100%",
@@ -514,12 +469,12 @@ function RulesModal({
                   justifyContent: "space-between",
                   marginTop: 16,
                   padding: "12px 0",
-                  borderBottom: "1px solid #333333",
+                  borderBottom: `1px solid ${COLOR.borderSubtle}`,
                 }}
               >
                 <div>
-                  <span style={{ ...TYPE.microRegular, color: "#999999" }}>Playing</span>
-                  <span style={{ ...TYPE.body, color: "#ffffff", marginLeft: 8 }}>
+                  <span style={{ ...TYPE.microRegular, color: COLOR.textMuted }}>Playing</span>
+                  <span style={{ ...TYPE.body, color: COLOR.textPrimary, marginLeft: 8 }}>
                     {rulesetName}
                   </span>
                 </div>
@@ -529,11 +484,11 @@ function RulesModal({
                   style={{
                     ...TYPE.microRegular,
                     background: "none",
-                    outline: "1px solid #666666",
+                    outline: `1px solid ${COLOR.textDisabled}`,
                     outlineOffset: -1,
-                    borderRadius: 4,
+                    borderRadius: RADIUS.sm,
                     padding: "4px 10px",
-                    color: "#999999",
+                    color: COLOR.textMuted,
                     cursor: "pointer",
                   }}
                 >
@@ -568,11 +523,11 @@ function RulesModal({
             )}
 
             {(onToggleRollBanking || onToggleMultipleWeetzees || onToggleSequentialTargets || onToggleScoringHints || onToggleSixDice !== undefined || onToggleOrderedScoring !== undefined || onToggleOpeningThreshold || onTogglePiggyback) && (
-              <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+              <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
                 <h3
                   style={{
                     ...TYPE.sectionHeading,
-                    color: "#ffffff",
+                    color: COLOR.textPrimary,
                     marginBottom: 12,
                   }}
                 >
@@ -649,17 +604,17 @@ function RulesModal({
             )}
 
             {onSetAIDifficulty && aiDifficulty && (
-              <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+              <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
                 <h3
                   style={{
                     ...TYPE.sectionHeading,
-                    color: "#ffffff",
+                    color: COLOR.textPrimary,
                     marginBottom: 4,
                   }}
                 >
                   CPU difficulty
                 </h3>
-                <p style={{ ...TYPE.microRegular, color: "#999999", marginBottom: 16 }}>
+                <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 16 }}>
                   Changes how the computer players make decisions
                 </p>
                 <div className="flex gap-2">
@@ -672,12 +627,12 @@ function RulesModal({
                         ...TYPE.micro,
                         flex: 1,
                         height: 36,
-                        borderRadius: 8,
+                        borderRadius: RADIUS.lg,
                         border: "none",
                         cursor: "pointer",
                         transition: "background 150ms, color 150ms",
-                        background: aiDifficulty === level ? "#ffffff" : "#1a1a1a",
-                        color: aiDifficulty === level ? "#000000" : "#999999",
+                        background: aiDifficulty === level ? COLOR.textPrimary : COLOR.surfaceRaised,
+                        color: aiDifficulty === level ? COLOR.surfaceBg : COLOR.textMuted,
                       }}
                     >
                       {AI_DIFFICULTY_LABELS[level]}
@@ -722,12 +677,12 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
   return (
     <div style={{
       marginTop: position === "top" ? 8 : 32,
-      borderTop: position === "bottom" ? "1px solid #333333" : undefined,
+      borderTop: position === "bottom" ? `1px solid ${COLOR.borderSubtle}` : undefined,
       paddingTop: position === "bottom" ? 24 : 0,
-      borderBottom: position === "top" ? "1px solid #333333" : undefined,
+      borderBottom: position === "top" ? `1px solid ${COLOR.borderSubtle}` : undefined,
       paddingBottom: position === "top" ? 24 : 0,
     }}>
-      <h3 style={{ ...TYPE.sectionHeading, color: "#ffffff", marginBottom: 8 }}>
+      <h3 style={{ ...TYPE.sectionHeading, color: COLOR.textPrimary, marginBottom: 8 }}>
         Support Weetzee
       </h3>
       {isSupporter ? (
@@ -740,12 +695,12 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
           }}
         >
           <span style={{ fontSize: SIZE.title }}>&#10003;</span>
-          <span style={{ ...TYPE.body, color: "#ffffff" }}>Supporter</span>
-          <span style={{ ...TYPE.microRegular, color: "#999999" }}>Thank you!</span>
+          <span style={{ ...TYPE.body, color: COLOR.textPrimary }}>Supporter</span>
+          <span style={{ ...TYPE.microRegular, color: COLOR.textMuted }}>Thank you!</span>
         </div>
       ) : (
         <>
-          <p style={{ ...TYPE.microRegular, color: "#999999", marginBottom: 16 }}>
+          <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 16 }}>
             One-time purchase. Helps keep Weetzee free.
           </p>
           <button
@@ -756,8 +711,8 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
               ...TYPE.bodyEmphasis,
               width: "100%",
               height: 48,
-              background: "#ffffff",
-              color: "#000000",
+              background: COLOR.textPrimary,
+              color: COLOR.surfaceBg,
               border: "none",
               cursor: loading ? "default" : "pointer",
               opacity: loading ? 0.5 : 1,
@@ -777,7 +732,7 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
           marginTop: 12,
           background: "none",
           border: "none",
-          color: "#666666",
+          color: COLOR.textDisabled,
           cursor: loading ? "default" : "pointer",
           padding: 0,
         }}
@@ -785,7 +740,7 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
         Restore Purchases
       </button>
       {restoreMsg && (
-        <p style={{ ...TYPE.microRegular, color: "#999999", marginTop: 6 }}>{restoreMsg}</p>
+        <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 6 }}>{restoreMsg}</p>
       )}
     </div>
   );
@@ -813,8 +768,8 @@ function AboutContent() {
       <Section title="Games">
         {VISIBLE_RULESETS.map((r) => (
           <div key={r.id} style={{ marginTop: 10 }}>
-            <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>{r.name}</span>
-            <span style={{ color: "#999999" }}>
+            <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>{r.name}</span>
+            <span style={{ color: COLOR.textMuted }}>
               {r.id === "weetzee" && " — The standard game. 5 dice, 13 categories, highest score wins."}
               {r.id === "keep-your-head-down" && " — Same categories, but lowest score wins. You must use all 3 rolls and score your highest available category."}
               {r.id === "kismet" && " — Dice have colored pips. New color-based categories like flushes and same-color full houses."}
@@ -845,20 +800,20 @@ function HouseRulesInfo() {
     <Section title="House rules">
       <p>Optional rules for Weetzee and Kismet. Toggle them from the settings menu during play.</p>
       <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>Roll banking</span>
-        <span style={{ color: "#999999" }}> — Bank unused rolls for future turns, up to 3 extra.</span>
+        <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Roll banking</span>
+        <span style={{ color: COLOR.textMuted }}> — Bank unused rolls for future turns, up to 3 extra.</span>
       </div>
       <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>Multiple Weetzees</span>
-        <span style={{ color: "#999999" }}> — Score extra Weetzees for 100 bonus points each.</span>
+        <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Multiple Weetzees</span>
+        <span style={{ color: COLOR.textMuted }}> — Score extra Weetzees for 100 bonus points each.</span>
       </div>
       <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>6 dice</span>
-        <span style={{ color: "#999999" }}> — Play with 6 dice instead of 5. Must be set before the game starts.</span>
+        <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>6 dice</span>
+        <span style={{ color: COLOR.textMuted }}> — Play with 6 dice instead of 5. Must be set before the game starts.</span>
       </div>
       <div style={{ marginTop: 10 }}>
-        <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>Ordered scoring</span>
-        <span style={{ color: "#999999" }}> — Must score categories from top to bottom. Must be set before the game starts.</span>
+        <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Ordered scoring</span>
+        <span style={{ color: COLOR.textMuted }}> — Must score categories from top to bottom. Must be set before the game starts.</span>
       </div>
     </Section>
   );
@@ -885,11 +840,11 @@ function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
   const showIos = platform === "ios" || (!platform && alwaysShow);
 
   return (
-    <div style={{ marginTop: 32, borderTop: "1px solid #333333", paddingTop: 24 }}>
+    <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
       <h3
         style={{
           ...TYPE.sectionHeading,
-          color: "#ffffff",
+          color: COLOR.textPrimary,
           marginBottom: 12,
         }}
       >
@@ -899,7 +854,7 @@ function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
         Play Weetzee like a real app — full screen, no browser bar.
       </p>
       {showIos ? (
-        <div style={{ marginTop: 12, color: "#ffffff" }}>
+        <div style={{ marginTop: 12, color: COLOR.textPrimary }}>
           <p style={{ display: "flex", alignItems: "center", gap: 6 }}>
             1. Tap the <Share size={14} style={{ flexShrink: 0 }} /> share button in Safari
           </p>
@@ -911,7 +866,7 @@ function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
           </p>
         </div>
       ) : (
-        <div style={{ marginTop: 12, color: "#ffffff" }}>
+        <div style={{ marginTop: 12, color: COLOR.textPrimary }}>
           <p>
             1. Tap the <span style={{ fontWeight: WEIGHT.medium }}>⋮</span> menu in your browser
           </p>
@@ -930,7 +885,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h3
         style={{
           ...TYPE.sectionHeading,
-          color: "#ffffff",
+          color: COLOR.textPrimary,
           marginBottom: 8,
         }}
       >
@@ -944,8 +899,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function RuleRow({ name, desc }: { name: string; desc: string }) {
   return (
     <div style={{ marginTop: 6 }}>
-      <span style={{ color: "#ffffff", fontWeight: WEIGHT.medium }}>{name}</span>
-      <span style={{ color: "#999999" }}> — {desc}</span>
+      <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>{name}</span>
+      <span style={{ color: COLOR.textMuted }}> — {desc}</span>
     </div>
   );
 }
@@ -961,8 +916,8 @@ function ScoreTable({ children }: { children: React.ReactNode }) {
 function ScoreRow({ name, value }: { name: string; value: string }) {
   return (
     <tr>
-      <td style={{ ...TYPE.bodyRegular, color: "#ffffff", padding: "4px 8px 4px 0", whiteSpace: "nowrap", borderBottom: "1px solid #1a1a1a" }}>{name}</td>
-      <td style={{ ...TYPE.bodyRegular, color: "#999999", padding: "4px 0", textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", borderBottom: "1px solid #1a1a1a" }}>{value}</td>
+      <td style={{ ...TYPE.bodyRegular, color: COLOR.textPrimary, padding: "4px 8px 4px 0", whiteSpace: "nowrap", borderBottom: `1px solid ${COLOR.surfaceRaised}` }}>{name}</td>
+      <td style={{ ...TYPE.bodyRegular, color: COLOR.textMuted, padding: "4px 0", textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", borderBottom: `1px solid ${COLOR.surfaceRaised}` }}>{value}</td>
     </tr>
   );
 }
@@ -993,8 +948,8 @@ function ToggleRow({
       }}
     >
       <div>
-        <div style={{ ...TYPE.body, color: "#ffffff" }}>{label}</div>
-        <div style={{ ...TYPE.microRegular, color: "#999999", marginTop: 2 }}>{desc}</div>
+        <div style={{ ...TYPE.body, color: COLOR.textPrimary }}>{label}</div>
+        <div style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 2 }}>{desc}</div>
       </div>
       <div
         className="pressable"
@@ -1002,7 +957,7 @@ function ToggleRow({
           width: 40,
           height: 22,
           borderRadius: 11,
-          background: enabled ? "#34c759" : "#333333",
+          background: enabled ? "#34c759" : COLOR.borderSubtle,
           position: "relative",
           transition: "background 200ms",
           flexShrink: 0,
@@ -1014,11 +969,11 @@ function ToggleRow({
             width: 18,
             height: 18,
             borderRadius: 9,
-            background: "#ffffff",
+            background: COLOR.textPrimary,
             position: "absolute",
             top: 2,
             left: enabled ? 20 : 2,
-            transition: "left 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+            transition: `left 200ms ${EASE.spring}`,
           }}
         />
       </div>

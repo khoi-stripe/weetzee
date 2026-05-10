@@ -8,6 +8,8 @@ import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { getAudioCtx, playBleep, playSettle, playTap } from "@/lib/sounds";
 import { hapticDiceRoll } from "@/lib/haptics";
 import { WEIGHT } from "@/lib/type";
+import { COLOR } from "@/lib/color";
+import { RADIUS } from "@/lib/tokens";
 
 // ===== Rolling animation helpers =====
 
@@ -389,12 +391,12 @@ function FarkleActionButton({
       style={{
         width: "100%",
         height: "100%",
-        outline: `1px solid ${pressed ? color : (enabled ? color : "#ffffff")}`,
+        outline: `1px solid ${pressed ? color : (enabled ? color : COLOR.textPrimary)}`,
         outlineOffset: -1,
         opacity: pressed ? 1 : (enabled ? 1 : 0.35),
         fontSize: "clamp(11px, 8cqi, 100px)",
         fontWeight: WEIGHT.semibold,
-        color: pressed ? "#000000" : (enabled ? color : "#ffffff"),
+        color: pressed ? COLOR.surfaceBg : (enabled ? color : COLOR.textPrimary),
         background: pressed ? color : "transparent",
         cursor: enabled ? "pointer" : "default",
         transform: pressed ? "scale(0.85)" : (showButton ? undefined : "scale(0)"),
@@ -445,14 +447,14 @@ function FarkleBankButton({
           width: "71%",
           height: "71%",
           transform: pressed ? "rotate(45deg) scale(0.85)" : "rotate(45deg)",
-          outline: "1px solid #ffffff",
+          outline: `1px solid ${COLOR.textPrimary}`,
           outlineOffset: -1,
-          borderRadius: 4,
+          borderRadius: RADIUS.sm,
           opacity: pressed ? 1 : (enabled ? 1 : 0.35),
           fontSize: "clamp(11px, 8cqi, 100px)",
           fontWeight: WEIGHT.semibold,
-          color: (pressed || enabled) ? "#000000" : "#ffffff",
-          background: (pressed || enabled) ? "#ffffff" : "transparent",
+          color: (pressed || enabled) ? COLOR.surfaceBg : COLOR.textPrimary,
+          background: (pressed || enabled) ? COLOR.textPrimary : "transparent",
           cursor: enabled ? "pointer" : "default",
           lineHeight: 1.2,
           padding: "4%",
@@ -475,7 +477,7 @@ function RollButton({
   onRoll,
   showButton,
   allHeld = false,
-  color = "#ffffff",
+  color = COLOR.textPrimary,
 }: {
   rollsUsed: number;
   rollsPerTurn: number;
@@ -507,12 +509,12 @@ function RollButton({
       style={{
         width: "100%",
         height: "100%",
-        outline: `1px solid ${canRoll ? color : "#ffffff"}`,
+        outline: `1px solid ${canRoll ? color : COLOR.textPrimary}`,
         outlineOffset: -1,
         opacity: canRoll ? 1 : 0.35,
         fontSize: "clamp(11px, 8cqi, 100px)",
         fontWeight: WEIGHT.medium,
-        color: canRoll ? color : "#ffffff",
+        color: canRoll ? color : COLOR.textPrimary,
         background: "transparent",
         cursor: canRoll ? "pointer" : "default",
         transform: showButton ? undefined : "scale(0)",

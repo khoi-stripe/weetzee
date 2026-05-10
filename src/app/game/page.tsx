@@ -9,6 +9,7 @@ import { Header } from "@/components/game/Header";
 import { GameView } from "@/components/game/GameView";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import type { GameAction } from "@/lib/types";
+import { COLOR } from "@/lib/color";
 
 function GameContent() {
   const params = useSearchParams();
@@ -65,7 +66,7 @@ function GameContent() {
   return (
     <div
       className="flex flex-col"
-      style={{ height: "100%", background: "#000000", overflow: "hidden" }}
+      style={{ height: "100%", background: COLOR.surfaceBg, overflow: "hidden" }}
     >
       <Header
         rulesetId={state.ruleset.id}

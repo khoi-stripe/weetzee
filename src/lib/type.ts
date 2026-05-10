@@ -6,7 +6,7 @@
  *
  * Use semantic styles by spreading them into an inline style prop:
  *
- *   <p style={{ ...TYPE.body, color: "#ffffff" }}>Hello</p>
+ *   <p style={{ ...TYPE.body, color: COLOR.textPrimary }}>Hello</p>
  *
  * Drop down to the SIZE / WEIGHT primitives only when you need a one-off
  * combination not covered by a semantic.

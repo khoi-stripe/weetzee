@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Die } from "@/components/game/Die";
 import { getPlayerColors } from "@/lib/types";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
+import { COLOR } from "@/lib/color";
+import { EASE } from "@/lib/motion";
 
 import { playTap, playToggle } from "@/lib/sounds";
 import { TYPE, WEIGHT } from "@/lib/type";
@@ -111,7 +113,7 @@ export function PlayerSelector({
         <p
           style={{
             ...TYPE.title,
-            color: "#ffffff",
+            color: COLOR.textPrimary,
           }}
         >
           {title}
@@ -134,7 +136,7 @@ export function PlayerSelector({
           const playerNum = i + 1;
           const isSelected = playerNum <= count;
           const isCpu = cpuPlayers?.has(i) ?? false;
-          const color = playerColors[i] ?? "#ffffff";
+          const color = playerColors[i] ?? COLOR.textPrimary;
 
           return (
             <div
@@ -146,7 +148,7 @@ export function PlayerSelector({
                 transform: pressedIndex === i ? "scale(0.88)" : "scale(1)",
                 transition: pressedIndex === i
                   ? "transform 400ms cubic-bezier(0.2, 0, 0.2, 1)"
-                  : "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  : `transform 200ms ${EASE.spring}`,
               }}
               onPointerDown={() => handlePointerDown(i)}
               onPointerUp={() => handlePointerUp(i)}
@@ -184,12 +186,12 @@ export function PlayerSelector({
             style={{
               width: "100%",
               height: "100%",
-              outline: "1px solid #ffffff",
+              outline: `1px solid ${COLOR.textPrimary}`,
               outlineOffset: -1,
               background: "transparent",
               fontSize: "clamp(9px, 8cqi, 100px)",
               fontWeight: WEIGHT.medium,
-              color: "#ffffff",
+              color: COLOR.textPrimary,
               cursor: "pointer",
             }}
           >

@@ -9,6 +9,12 @@ import { isValidSelection, scoreDice, getScoringPossibilities } from "@/lib/rule
 import { farkleShouldAcceptPiggyback } from "@/lib/ai";
 import { playTap, playTurnChange, playConfirm, playFarkle, getAudioCtx } from "@/lib/sounds";
 import { TYPE } from "@/lib/type";
+import { COLOR } from "@/lib/color";
+import { DURATION, EASE } from "@/lib/motion";
+import { RADIUS, Z } from "@/lib/tokens";
+import { Scrim } from "@/components/ui/Scrim";
+import { DialogCard } from "@/components/ui/DialogCard";
+import { RoundButton } from "@/components/ui/RoundButton";
 
 export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: { game: UseGameReturn; isAITurn?: boolean; aiPendingAction?: string | null }) {
   const { state, roll, toggleHold, setAside, bank, acceptPiggyback } = game;
@@ -430,7 +436,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
             style={{
               height: totalH || "300%",
               transform: `translateY(${translateY}px)`,
-              transition: isDragging ? "none" : "transform 450ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+              transition: isDragging ? "none" : `transform 450ms ${EASE.exit}`,
               willChange: "transform",
             }}
           >
@@ -499,20 +505,20 @@ function FarkleScoringSheet({
 }) {
   return (
     <div className="flex-1 overflow-y-auto" style={{ paddingTop: 8, paddingBottom: 32 }}>
-      <h3 style={{ ...TYPE.sectionHeading, color: "#ffffff", marginBottom: 16 }}>
+      <h3 style={{ ...TYPE.sectionHeading, color: COLOR.textPrimary, marginBottom: 16 }}>
         Scoring Reference
       </h3>
 
       {hintsEnabled && possibilities.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <h4 style={{ ...TYPE.eyebrow, color: "#999999", marginBottom: 8 }}>
+          <h4 style={{ ...TYPE.eyebrow, color: COLOR.textMuted, marginBottom: 8 }}>
             Available now
           </h4>
           {possibilities.map((p, i) => (
             <div
               key={i}
               className="flex items-center justify-between"
-              style={{ padding: "6px 0", borderBottom: "1px solid #1a1a1a" }}
+              style={{ padding: "6px 0", borderBottom: `1px solid ${COLOR.surfaceRaised}` }}
             >
               <span style={{ ...TYPE.body, color: playerColor }}>{p.label}</span>
               <span style={{ ...TYPE.bodyEmphasis, color: playerColor }}>{p.score}</span>
@@ -522,17 +528,17 @@ function FarkleScoringSheet({
       )}
 
       <div>
-        <h4 style={{ ...TYPE.eyebrow, color: "#999999", marginBottom: 8 }}>
+        <h4 style={{ ...TYPE.eyebrow, color: COLOR.textMuted, marginBottom: 8 }}>
           All combinations
         </h4>
         {FARKLE_REFERENCE.map((item, i) => (
           <div
             key={i}
             className="flex items-center justify-between"
-            style={{ padding: "6px 0", borderBottom: "1px solid #1a1a1a" }}
+            style={{ padding: "6px 0", borderBottom: `1px solid ${COLOR.surfaceRaised}` }}
           >
-            <span style={{ ...TYPE.body, color: "#999999" }}>{item.label}</span>
-            <span style={{ ...TYPE.body, color: "#999999" }}>{item.score}</span>
+            <span style={{ ...TYPE.body, color: COLOR.textMuted }}>{item.label}</span>
+            <span style={{ ...TYPE.body, color: COLOR.textMuted }}>{item.score}</span>
           </div>
         ))}
       </div>
@@ -602,81 +608,51 @@ function FarkleBustScreen({
   }, [lostScore]);
 
   return (
-    <div
-      className="absolute inset-0 flex flex-col items-center justify-center"
-      style={{
-        background: "rgba(0, 0, 0, 0.9)",
-        zIndex: 50,
-        padding: 16,
-        gap: 24,
-        animation: exiting
-          ? "interstitial-out 400ms ease forwards"
-          : "interstitial-in 300ms ease forwards",
-      }}
+    <Scrim
+      exiting={exiting}
+      position="absolute"
+      zIndex={Z.interstitial}
+      enterDuration={DURATION.modal}
+      exitDuration={DURATION.slow}
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "min(80vw, 80vh, 400px)",
-          aspectRatio: "1 / 1",
-        }}
+      <DialogCard
+        background={player.color}
+        enter="spinIn"
+        exiting={exiting}
       >
-        <div
-          className="w-full h-full flex flex-col items-center justify-center"
-          style={{
-            background: player.color,
-            borderRadius: 4,
-            color: "#000000",
-            padding: "10%",
-            gap: 8,
-            animation: exiting
-              ? "scale-out 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
-              : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
-          }}
-        >
-          <span style={{ ...TYPE.titleBold }}>
-            {player.name}
-          </span>
-          <span style={{ ...TYPE.headline }}>
-            FARKLE!
-          </span>
+        <span style={{ ...TYPE.titleBold }}>
+          {player.name}
+        </span>
+        <span style={{ ...TYPE.headline }}>
+          FARKLE!
+        </span>
 
-          {/* Dice rows: kept (success) then failed */}
-          {(keptDice.length > 0 || failedDice.length > 0) && (
-            <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 4, marginBottom: 4, flexWrap: "wrap" }}>
-              {keptDice.map((d, i) => (
-                <BustDie key={`k${i}`} value={d.value} failed={false} index={i} />
-              ))}
-              {failedDice.map((d, i) => (
-                <BustDie key={`f${i}`} value={d.value} failed={true} index={keptDice.length + i} />
-              ))}
-            </div>
-          )}
+        {(keptDice.length > 0 || failedDice.length > 0) && (
+          <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 4, marginBottom: 4, flexWrap: "wrap" }}>
+            {keptDice.map((d, i) => (
+              <BustDie key={`k${i}`} value={d.value} failed={false} index={i} />
+            ))}
+            {failedDice.map((d, i) => (
+              <BustDie key={`f${i}`} value={d.value} failed={true} index={keptDice.length + i} />
+            ))}
+          </div>
+        )}
 
-          <span style={{ ...TYPE.display, fontVariantNumeric: "tabular-nums" }}>
-            {displayScore}
-          </span>
-        </div>
-      </div>
+        <span style={{ ...TYPE.display, fontVariantNumeric: "tabular-nums" }}>
+          {displayScore}
+        </span>
+      </DialogCard>
 
-      <button
+      <RoundButton
+        className="shrink-0"
         onClick={() => { playTap(); onDone(); }}
-        className="flex items-center justify-center rounded-full shrink-0 pressable"
         style={{
-          ...TYPE.body,
-          width: 100,
-          height: 100,
-          outline: "1px solid #ffffff",
-          outlineOffset: -1,
-          background: "transparent",
-          color: "#ffffff",
-          cursor: "pointer",
-          animation: exiting ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 400ms both",
+          animation: exiting ? undefined : `scale-in ${DURATION.slow + 50}ms ${EASE.spring} ${DURATION.slow}ms both`,
         }}
       >
         Done
-      </button>
-    </div>
+      </RoundButton>
+    </Scrim>
   );
 }
 
@@ -697,7 +673,7 @@ function BustDie({ value, failed, index = 0, animate = true }: { value: number; 
 
   const entryDelay = 500 + index * 80;
   const entryDuration = 300;
-  const entry = `bust-die-in ${entryDuration}ms cubic-bezier(0.34, 1.56, 0.64, 1) ${entryDelay}ms both`;
+  const entry = `bust-die-in ${entryDuration}ms ${EASE.spring} ${entryDelay}ms both`;
   // Failed dice shake right after their entry settles, expressing the bust.
   const shake = `bust-die-shake 550ms ease-in-out ${entryDelay + entryDuration}ms forwards`;
 
@@ -707,8 +683,8 @@ function BustDie({ value, failed, index = 0, animate = true }: { value: number; 
       style={{
         width: 36,
         height: 36,
-        borderRadius: 4,
-        outline: "1px solid #000000",
+        borderRadius: RADIUS.sm,
+        outline: `1px solid ${COLOR.surfaceBg}`,
         outlineOffset: -1,
         background: "transparent",
         flexShrink: 0,
@@ -725,21 +701,21 @@ function BustDie({ value, failed, index = 0, animate = true }: { value: number; 
             height: pipSize,
             left: `calc(${x}% - ${pipSize} / 2)`,
             top: `calc(${y}% - ${pipSize} / 2)`,
-            background: "#000000",
+            background: COLOR.surfaceBg,
           }}
         />
       ))}
       {failed && (
         <div
           className="absolute inset-0"
-          style={{ overflow: "hidden", borderRadius: 4 }}
+          style={{ overflow: "hidden", borderRadius: RADIUS.sm }}
         >
           <div
             className="absolute"
             style={{
               width: "141%",
               height: 0,
-              borderTop: "1px solid #000000",
+              borderTop: `1px solid ${COLOR.surfaceBg}`,
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%) rotate(45deg)",
@@ -751,7 +727,7 @@ function BustDie({ value, failed, index = 0, animate = true }: { value: number; 
             style={{
               width: "141%",
               height: 0,
-              borderTop: "1px solid #000000",
+              borderTop: `1px solid ${COLOR.surfaceBg}`,
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%) rotate(-45deg)",
@@ -790,101 +766,73 @@ function PlayerInterstitial({
     const remainingDice = piggyback.dice.filter(d => !piggyback.setAsideDiceIds.includes(d.id));
     const diceToShow = remainingDice.length === 0 ? piggyback.dice : remainingDice;
 
+    const buttonTransition = `transform ${DURATION.expressive + 50}ms ${EASE.pressable}, opacity ${DURATION.modal}ms ease, background ${DURATION.modal}ms ease, color ${DURATION.modal}ms ease`;
+
     return (
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-center"
-        style={{
-          background: "rgba(0, 0, 0, 0.85)",
-          zIndex: 50,
-          padding: 16,
-          gap: 24,
-          animation: exiting
-            ? "interstitial-out 400ms ease forwards"
-            : "interstitial-in 300ms ease forwards",
-        }}
+      <Scrim
+        exiting={exiting}
+        position="absolute"
+        zIndex={Z.interstitial}
+        enterDuration={DURATION.modal}
+        exitDuration={DURATION.slow}
       >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "min(80vw, 80vh, 400px)",
-            aspectRatio: "1 / 1",
-          }}
+        <DialogCard
+          background={player.color}
+          enter="spinIn"
+          exiting={exiting}
+          padding={0}
         >
-          <div
-            className="w-full h-full flex flex-col items-center justify-center rounded"
-            style={{
-              background: player.color,
-              color: "#000000",
-              gap: 8,
-              animation: exiting
-                ? "scale-out 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
-                : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
-            }}
-          >
-            <span style={{ ...TYPE.titleBold }}>
-              {player.name}
+          <span style={{ ...TYPE.titleBold }}>
+            {player.name}
+          </span>
+          {lastTurn && (
+            <span style={{ ...TYPE.bodyEmphasis, color: "rgba(0, 0, 0, 0.6)" }}>
+              Final round
             </span>
-            {lastTurn && (
-              <span style={{ ...TYPE.bodyEmphasis, color: "rgba(0, 0, 0, 0.6)" }}>
-                Final round
-              </span>
-            )}
-            <span style={{ ...TYPE.title, marginBottom: 4 }}>
-              +{piggyback.score} piggyback
-            </span>
-            <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 2 }}>
-              {diceToShow.map((d, i) => (
-                <BustDie key={i} value={d.value} failed={false} animate={false} />
-              ))}
-            </div>
+          )}
+          <span style={{ ...TYPE.title, marginBottom: 4 }}>
+            +{piggyback.score} piggyback
+          </span>
+          <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 2 }}>
+            {diceToShow.map((d, i) => (
+              <BustDie key={i} value={d.value} failed={false} animate={false} />
+            ))}
           </div>
-        </div>
+        </DialogCard>
 
         <div className="flex items-center justify-center" style={{ gap: 16 }}>
-          <button
+          <RoundButton
+            className="shrink-0"
+            variant={aiChoice === "fresh" ? "filled" : "outline"}
             onClick={onFreshRoll}
             onAnimationEnd={() => setFreshIntroDone(true)}
-            className="flex items-center justify-center rounded-full shrink-0 pressable"
+            disabled={aiChoice !== null}
             style={{
-              ...TYPE.body,
-              width: 100,
-              height: 100,
-              outline: "1px solid #ffffff",
-              outlineOffset: -1,
-              background: aiChoice === "fresh" ? "#ffffff" : "transparent",
-              color: aiChoice === "fresh" ? "#000000" : "#ffffff",
               opacity: aiChoice === "piggyback" ? 0.4 : 1,
-              cursor: aiChoice ? "default" : "pointer",
-              animation: (freshIntroDone || exiting) ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 400ms both",
-              transition: freshIntroDone ? "transform 550ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 300ms ease, background 300ms ease, color 300ms ease" : undefined,
+              animation: (freshIntroDone || exiting) ? undefined : `scale-in ${DURATION.slow + 50}ms ${EASE.spring} ${DURATION.slow}ms both`,
+              transition: freshIntroDone ? buttonTransition : undefined,
               transform: aiChoice === "fresh" ? "scale(0.85)" : undefined,
             }}
           >
             Fresh roll
-          </button>
-          <button
+          </RoundButton>
+          <RoundButton
+            className="shrink-0"
+            variant={aiChoice === "piggyback" || !aiChoice ? "filled" : "outline"}
             onClick={onPiggyback}
             onAnimationEnd={() => setPiggyIntroDone(true)}
-            className="flex items-center justify-center rounded-full shrink-0 pressable"
+            disabled={aiChoice !== null}
             style={{
-              ...TYPE.body,
-              width: 100,
-              height: 100,
-              outline: "1px solid #ffffff",
-              outlineOffset: -1,
-              background: aiChoice === "piggyback" || !aiChoice ? "#ffffff" : "transparent",
-              color: aiChoice === "piggyback" || !aiChoice ? "#000000" : "#ffffff",
               opacity: aiChoice === "fresh" ? 0.4 : 1,
-              cursor: aiChoice ? "default" : "pointer",
-              animation: (piggyIntroDone || exiting) ? undefined : "scale-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 500ms both",
-              transition: piggyIntroDone ? "transform 550ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 300ms ease, background 300ms ease, color 300ms ease" : undefined,
+              animation: (piggyIntroDone || exiting) ? undefined : `scale-in ${DURATION.slow + 50}ms ${EASE.spring} ${DURATION.expressive}ms both`,
+              transition: piggyIntroDone ? buttonTransition : undefined,
               transform: aiChoice === "piggyback" ? "scale(0.85)" : undefined,
             }}
           >
             Piggyback
-          </button>
+          </RoundButton>
         </div>
-      </div>
+      </Scrim>
     );
   }
 
@@ -892,8 +840,8 @@ function PlayerInterstitial({
     <div
       className="absolute inset-0 flex items-center justify-center"
       style={{
-        background: "rgba(0, 0, 0, 0.85)",
-        zIndex: 50,
+        background: COLOR.surfaceOverlay,
+        zIndex: Z.interstitial,
         padding: 16,
         animation: exiting
           ? "interstitial-out 400ms ease forwards"
@@ -908,11 +856,11 @@ function PlayerInterstitial({
           maxWidth: "min(80vw, 80vh, 400px)",
           aspectRatio: "1 / 1",
           background: player.color,
-          color: "#000000",
+          color: COLOR.surfaceBg,
           gap: 4,
           animation: exiting
-            ? "scale-out 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
-            : "spin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both",
+            ? `scale-out ${DURATION.slow}ms ${EASE.spring} forwards`
+            : `spin-in ${DURATION.expressive}ms ${EASE.standard} 150ms both`,
         }}
       >
         {player.name}

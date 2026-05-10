@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { COLOR } from "@/lib/color";
+import { EASE } from "@/lib/motion";
+import { Z } from "@/lib/tokens";
 
 const SESSION_KEY = "weetzee-splash-shown";
 
@@ -37,8 +40,8 @@ export function SplashIntro() {
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 9000,
-        background: "#000000",
+        zIndex: Z.splash,
+        background: COLOR.surfaceBg,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -62,7 +65,7 @@ export function SplashIntro() {
             maxWidth: "calc(100vh - 80px)",
             maxHeight: "calc(100vh - 80px)",
             animation: phase === "intro"
-              ? "splash-spin-scale 1600ms cubic-bezier(0.22, 1, 0.36, 1) forwards"
+              ? `splash-spin-scale 1600ms ${EASE.standard} forwards`
               : undefined,
             transform: phase !== "intro" ? "rotate(0deg) scale(1)" : "rotate(-540deg) scale(0)",
             opacity: phase === "intro" ? 0 : 1,

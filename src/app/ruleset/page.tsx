@@ -8,6 +8,7 @@ import { VISIBLE_RULESETS } from "@/lib/rulesets";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { playTap } from "@/lib/sounds";
 import { TYPE, WEIGHT } from "@/lib/type";
+import { COLOR } from "@/lib/color";
 
 const ITEM_COUNT = VISIBLE_RULESETS.length + 1;
 const TITLE_RESERVE = 48;
@@ -56,7 +57,7 @@ function RulesetContent() {
       className="flex flex-col"
       style={{
         height: "100%",
-        background: "#000000",
+        background: COLOR.surfaceBg,
         overflow: "hidden",
       }}
     >
@@ -71,7 +72,7 @@ function RulesetContent() {
           className="shrink-0"
           style={{
             ...TYPE.title,
-            color: "#ffffff",
+            color: COLOR.textPrimary,
             textAlign: "center",
             width: gridW,
           }}
@@ -117,12 +118,12 @@ function RulesetContent() {
               style={{
                 width: "100%",
                 height: "100%",
-                outline: "1px solid #ffffff",
+                outline: `1px solid ${COLOR.textPrimary}`,
                 outlineOffset: -1,
                 background: "transparent",
                 fontSize: "clamp(9px, 8cqi, 100px)",
                 fontWeight: WEIGHT.medium,
-                color: "#ffffff",
+                color: COLOR.textPrimary,
                 cursor: "pointer",
               }}
             >

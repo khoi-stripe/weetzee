@@ -1,6 +1,7 @@
 "use client";
 
 import { WEIGHT } from "@/lib/type";
+import { COLOR } from "@/lib/color";
 
 // ===== Die Component =====
 // Renders a single die face with pips drawn via CSS.
@@ -17,7 +18,7 @@ const PIP_LAYOUTS: Record<number, [number, number][]> = {
 };
 
 const KISMET_PIP_COLORS: Record<string, string> = {
-  white: "#ffffff",
+  white: COLOR.textPrimary,
   red: "#ef4444",
   green: "#22c55e",
 };
@@ -31,7 +32,7 @@ function kismetPipColor(value: number): string {
 export function Die({
   value,
   held = false,
-  heldColor = "#ffffff",
+  heldColor = COLOR.textPrimary,
   size = "full",
   onClick,
   disabled = false,
@@ -63,7 +64,7 @@ export function Die({
 
   const accent = flash && !held ? heldColor : null;
   const kismetColor = coloredPips ? kismetPipColor(value) : null;
-  const strokeColor = kismetColor ?? accent ?? "#ffffff";
+  const strokeColor = kismetColor ?? accent ?? COLOR.textPrimary;
   const heldFill = kismetColor ?? heldColor;
 
   let borderColor: string;
@@ -73,14 +74,14 @@ export function Die({
   if (setAside && setAsideColor) {
     borderColor = setAsideColor;
     bg = setAsideColor;
-    pipColor = "#000000";
+    pipColor = COLOR.surfaceBg;
   } else if (held) {
     borderColor = heldFill;
     bg = heldFill;
-    pipColor = "#000000";
+    pipColor = COLOR.surfaceBg;
   } else {
     borderColor = strokeColor;
-    bg = "#000000";
+    bg = COLOR.surfaceBg;
     pipColor = strokeColor;
   }
 
@@ -107,7 +108,7 @@ export function Die({
           style={{
             fontSize: "clamp(11px, 8cqi, 100px)",
             fontWeight: WEIGHT.medium,
-            color: held ? "#000000" : "#ffffff",
+            color: held ? COLOR.surfaceBg : COLOR.textPrimary,
             transform: "rotate(-45deg)",
             lineHeight: 1.1,
             textAlign: "center",

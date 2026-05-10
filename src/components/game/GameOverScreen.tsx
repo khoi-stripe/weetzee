@@ -10,6 +10,9 @@ import { Header } from "./Header";
 import { PlayerBar } from "./PlayerBar";
 import { playWin, playTap } from "@/lib/sounds";
 import { TYPE } from "@/lib/type";
+import { COLOR } from "@/lib/color";
+import { DialogCard } from "@/components/ui/DialogCard";
+import { RoundButton } from "@/components/ui/RoundButton";
 
 function maybeRequestReview(gamesCompleted: number) {
   if (!Capacitor.isNativePlatform()) return;
@@ -39,7 +42,7 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
   return (
     <div
       className="flex flex-col"
-      style={{ height: "100%", background: "#000000", overflow: "hidden" }}
+      style={{ height: "100%", background: COLOR.surfaceBg, overflow: "hidden" }}
     >
       <Header />
 
@@ -47,33 +50,13 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
         className="flex flex-col flex-1 min-h-0 items-center justify-center"
         style={{ padding: 16, gap: 24 }}
       >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "calc(100dvh - 48px - 109.67px - 24px - 32px - 32px)",
-            aspectRatio: "1 / 1",
-          }}
+        <DialogCard
+          background={winner.color}
+          maxWidth="calc(100dvh - 48px - 109.67px - 24px - 32px - 32px)"
         >
-          <div
-            className="w-full h-full flex flex-col items-center justify-center"
-            style={{
-              background: winner.color,
-              borderRadius: 4,
-              border: `1px solid ${winner.color}`,
-
-              color: "#000000",
-              padding: "10%",
-              gap: 8,
-            }}
-          >
-            <span style={{ ...TYPE.body }}>
-              {winner.name} wins!
-            </span>
-            <span style={{ ...TYPE.displayBold }}>
-              {winner.total}
-            </span>
-          </div>
-        </div>
+          <span style={{ ...TYPE.body }}>{winner.name} wins!</span>
+          <span style={{ ...TYPE.displayBold }}>{winner.total}</span>
+        </DialogCard>
 
         {ranked.length > 1 && (
           <div className="w-full" style={{ animation: "fade-in 400ms ease 200ms both" }}>
@@ -85,22 +68,13 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
           </div>
         )}
 
-        <button
+        <RoundButton
+          className="shrink-0"
+          size={109.67}
           onClick={() => { playTap(); router.push("/"); }}
-          className="flex items-center justify-center rounded-full shrink-0 pressable"
-          style={{
-            ...TYPE.body,
-            width: 109.67,
-            height: 109.67,
-            outline: "1px solid #ffffff",
-            outlineOffset: -1,
-            background: "transparent",
-            color: "#ffffff",
-            cursor: "pointer",
-          }}
         >
           Play again
-        </button>
+        </RoundButton>
       </div>
     </div>
   );

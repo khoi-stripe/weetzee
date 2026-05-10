@@ -14,6 +14,11 @@ import { playSelect, playDeselect, playConfirm, playTap } from "@/lib/sounds";
 import { hapticDiceRoll } from "@/lib/haptics";
 import type { Ruleset } from "@/lib/types";
 import { TYPE, WEIGHT } from "@/lib/type";
+import { COLOR } from "@/lib/color";
+import { Scrim } from "@/components/ui/Scrim";
+import { DialogCard } from "@/components/ui/DialogCard";
+import { RoundButton } from "@/components/ui/RoundButton";
+import { RADIUS, Z } from "@/lib/tokens";
 
 function dimHex(hex: string, t: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -224,7 +229,7 @@ export function ScorecardView({
 
       {/* Scrollable table with fade */}
       <div className="min-h-0 flex-1 flex flex-col">
-        <div className="relative rounded overflow-hidden min-h-0 flex flex-col" style={{ border: "1px solid #ffffff" }}>
+        <div className="relative rounded overflow-hidden min-h-0 flex flex-col" style={{ border: `1px solid ${COLOR.textPrimary}` }}>
           <div
             ref={scrollRef}
             className="overflow-y-auto overflow-x-auto scrollbar-visible flex-auto min-h-0"
@@ -271,7 +276,7 @@ export function ScorecardView({
               </colgroup>
               <thead>
                 <tr>
-                  <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>{""}</Th>
+                  <Th style={{ position: "sticky", top: 0, left: 0, zIndex: Z.sticky, background: COLOR.surfaceBg }}>{""}</Th>
                   {players.map((p, i) => {
                     const isActive = landscapeHeader && i === currentPlayerIndex;
                     const isLast = i === players.length - 1;
@@ -282,8 +287,8 @@ export function ScorecardView({
                           position: "sticky",
                           top: 0,
                           zIndex: 2,
-                          color: isActive ? "#000000" : p.color,
-                          background: isActive ? p.color : "#000000",
+                          color: isActive ? COLOR.surfaceBg : p.color,
+                          background: isActive ? p.color : COLOR.surfaceBg,
                           fontWeight: isActive ? WEIGHT.medium : WEIGHT.regular,
                           ...(isLast ? { borderRight: "none" } : {}),
                         }}
@@ -363,11 +368,11 @@ export function ScorecardView({
           style={{
             ...TYPE.body,
             padding: "12px 0",
-            outline: "1px solid #ffffff",
+            outline: `1px solid ${COLOR.textPrimary}`,
             outlineOffset: -1,
-            borderRadius: 4,
-            background: "#ffffff",
-            color: "#000000",
+            borderRadius: RADIUS.sm,
+            background: COLOR.textPrimary,
+            color: COLOR.surfaceBg,
             cursor: "pointer",
             opacity: selectedCategoryId && !locked ? 1 : 0,
             pointerEvents: selectedCategoryId && !locked ? "auto" : "none",
@@ -467,7 +472,7 @@ function TargetTable({
       </colgroup>
       <thead>
         <tr>
-          <Th style={{ position: "sticky", top: 0, left: 0, zIndex: 3, background: "#000000" }}>Target</Th>
+          <Th style={{ position: "sticky", top: 0, left: 0, zIndex: Z.sticky, background: COLOR.surfaceBg }}>Target</Th>
           {players.map((p, i) => {
             const isActive = landscapeHeader && i === currentPlayerIndex;
             const isLast = i === players.length - 1;
@@ -478,8 +483,8 @@ function TargetTable({
                   position: "sticky",
                   top: 0,
                   zIndex: 2,
-                  color: isActive ? "#000000" : p.color,
-                  background: isActive ? p.color : "#000000",
+                  color: isActive ? COLOR.surfaceBg : p.color,
+                  background: isActive ? p.color : COLOR.surfaceBg,
                   fontWeight: isActive ? WEIGHT.medium : WEIGHT.regular,
                   ...(isLast ? { borderRight: "none" } : {}),
                 }}
@@ -509,10 +514,10 @@ function TargetTable({
                 style={{
                   ...TYPE.body,
                   padding: "8px 16px",
-                  borderBottom: "1px solid #ffffff",
-                  borderRight: "1px solid #ffffff",
-                  background: "#1a1a1a",
-                  color: "#ffffff",
+                  borderBottom: `1px solid ${COLOR.textPrimary}`,
+                  borderRight: `1px solid ${COLOR.textPrimary}`,
+                  background: COLOR.surfaceRaised,
+                  color: COLOR.textPrimary,
                   position: "sticky",
                   left: 0,
                   zIndex: 1,
@@ -532,7 +537,7 @@ function TargetTable({
                   ? player.color
                   : isJustScoredCell
                     ? player.color
-                    : "#000000";
+                    : COLOR.surfaceBg;
 
                 const displayPenalty = isSelectedCell ? penalty : showPreview ? penalty : scored;
 
@@ -543,16 +548,16 @@ function TargetTable({
                     style={{
                       ...(isSelectedCell || isJustScoredCell ? TYPE.body : TYPE.bodyRegular),
                       padding: "8px 16px",
-                      borderBottom: "1px solid #ffffff",
-                      borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
+                      borderBottom: `1px solid ${COLOR.textPrimary}`,
+                      borderRight: i < players.length - 1 ? `1px solid ${COLOR.textPrimary}` : "none",
                       background: bg,
                       color: isSelectedCell || isJustScoredCell
-                        ? "#000000"
+                        ? COLOR.surfaceBg
                         : showPreview
                           ? player.color
                           : scored !== undefined && scored !== null
-                            ? "#ffffff"
-                            : "#333333",
+                            ? COLOR.textPrimary
+                            : COLOR.borderSubtle,
                       transition: "background 150ms, color 150ms",
                       ...isPulsing ? { "--pulse-color": player.color } as React.CSSProperties : {},
                     }}
@@ -608,119 +613,66 @@ function TargetConfirmModal({
   const exact = diff === 0;
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center"
-      style={{
-        zIndex: 200,
-        background: "rgba(0, 0, 0, 0.85)",
-        animation: "interstitial-in 200ms ease forwards",
-        padding: 16,
-      }}
-    >
-      <div
-        className="flex flex-col items-center"
-        style={{ gap: 24, width: "100%", padding: 16 }}
+    <Scrim>
+      <DialogCard
+        background={playerColor}
+        textAlign="left"
+        gap={0}
+        maxWidth="calc(100dvh - 100px - 24px - 32px)"
+        style={{ ...TYPE.body }}
       >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "calc(100dvh - 100px - 24px - 32px)",
-            aspectRatio: "1 / 1",
-          }}
-        >
-          <div
-            className="w-full h-full flex flex-col justify-center"
-            style={{
-              ...TYPE.body,
-              background: playerColor,
-              borderRadius: 4,
-              border: `1px solid ${playerColor}`,
-              color: "#000000",
-              padding: "10%",
-            }}
-          >
-            {sum >= target ? (
-              <>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Rolled</span>
-                  <span>{sum}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingBottom: 8, borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
-                  <span>Target</span>
-                  <span>−{target}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Target</span>
-                  <span>{target}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingBottom: 8, borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
-                  <span>Rolled</span>
-                  <span>−{sum}</span>
-                </div>
-              </>
-            )}
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-              <span>Difference</span>
-              <span>{diff}</span>
+        {sum >= target ? (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Rolled</span>
+              <span>{sum}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingBottom: 8, borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
-              <span>Penalty</span>
-              <span>×3</span>
+              <span>Target</span>
+              <span>−{target}</span>
             </div>
-            <div
-              style={{
-                ...TYPE.headline,
-                marginTop: 12,
-                paddingTop: 12,
-                display: "flex",
-                justifyContent: "space-between",
-              }}
-            >
-              <span>{exact ? "Exact match!" : "Score"}</span>
-              <span>{penaltyLabel(penalty)}</span>
+          </>
+        ) : (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Target</span>
+              <span>{target}</span>
             </div>
-          </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingBottom: 8, borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
+              <span>Rolled</span>
+              <span>−{sum}</span>
+            </div>
+          </>
+        )}
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+          <span>Difference</span>
+          <span>{diff}</span>
         </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingBottom: 8, borderBottom: "1px solid rgba(0,0,0,0.3)" }}>
+          <span>Penalty</span>
+          <span>×3</span>
+        </div>
+        <div
+          style={{
+            ...TYPE.headline,
+            marginTop: 12,
+            paddingTop: 12,
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>{exact ? "Exact match!" : "Score"}</span>
+          <span>{penaltyLabel(penalty)}</span>
+        </div>
+      </DialogCard>
 
-        <div className="flex gap-6 justify-center">
-          <button
-            onClick={onCancel}
-            className="flex items-center justify-center rounded-full pressable"
-            style={{
-              ...TYPE.body,
-              width: 100,
-              height: 100,
-              outline: "1px solid #ffffff",
-              outlineOffset: -1,
-              background: "transparent",
-              color: "#ffffff",
-              cursor: "pointer",
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex items-center justify-center rounded-full pressable"
-            style={{
-              ...TYPE.body,
-              width: 100,
-              height: 100,
-              outline: "1px solid #ffffff",
-              outlineOffset: -1,
-              background: "#ffffff",
-              color: "#000000",
-              cursor: "pointer",
-            }}
-          >
-            Confirm
-          </button>
-        </div>
+      <div className="flex gap-6 justify-center">
+        <RoundButton onClick={onCancel}>Cancel</RoundButton>
+        <RoundButton variant="filled" onClick={onConfirm}>
+          Confirm
+        </RoundButton>
       </div>
-    </div>
+    </Scrim>
   );
 }
 
@@ -763,10 +715,10 @@ function ScoreRow({
         style={{
           padding: "8px 16px",
           ...TYPE.bodyRegular,
-          borderBottom: "1px solid #ffffff",
-          borderRight: "1px solid #ffffff",
-          background: "#1a1a1a",
-          color: "#ffffff",
+          borderBottom: `1px solid ${COLOR.textPrimary}`,
+          borderRight: `1px solid ${COLOR.textPrimary}`,
+          background: COLOR.surfaceRaised,
+          color: COLOR.textPrimary,
           transition: "background 150ms, color 150ms",
           position: "sticky",
           left: 0,
@@ -786,7 +738,7 @@ function ScoreRow({
           ? player.color
           : isJustScoredCell
             ? player.color
-            : "#000000";
+            : COLOR.surfaceBg;
 
         return (
           <td
@@ -795,14 +747,14 @@ function ScoreRow({
             style={{
               ...(isSelectedCell || isJustScoredCell ? TYPE.body : TYPE.bodyRegular),
               padding: "8px 16px",
-              borderBottom: "1px solid #ffffff",
-              borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
+              borderBottom: `1px solid ${COLOR.textPrimary}`,
+              borderRight: i < players.length - 1 ? `1px solid ${COLOR.textPrimary}` : "none",
               background: bg,
               color: isSelectedCell || isJustScoredCell
-                ? "#000000"
+                ? COLOR.surfaceBg
                 : showPreview
                   ? isSelectable ? player.color : `${player.color}55`
-                  : "#ffffff",
+                  : COLOR.textPrimary,
               transition: "background 150ms, color 150ms",
               ...isPulsing ? { "--pulse-color": player.color } as React.CSSProperties : {},
             }}
@@ -836,9 +788,9 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
         style={{
           ...TYPE.bodyRegular,
           padding: "8px 16px",
-          borderRight: "1px solid #ffffff",
-          background: "#1a1a1a",
-          color: "#ffffff",
+          borderRight: `1px solid ${COLOR.textPrimary}`,
+          background: COLOR.surfaceRaised,
+          color: COLOR.textPrimary,
           position: "sticky",
           left: 0,
           zIndex: 1,
@@ -854,9 +806,9 @@ function BonusRow({ players, ruleset }: { players: Player[]; ruleset: Ruleset })
             style={{
               ...TYPE.bodyRegular,
               padding: "8px 16px",
-              borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
-              background: "#000000",
-              color: bonus > 0 ? player.color : "#ffffff",
+              borderRight: i < players.length - 1 ? `1px solid ${COLOR.textPrimary}` : "none",
+              background: COLOR.surfaceBg,
+              color: bonus > 0 ? player.color : COLOR.textPrimary,
             }}
           >
             {bonus > 0 ? bonus : "—"}
@@ -876,9 +828,9 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
         style={{
           ...TYPE.bodyRegular,
           padding: "8px 16px",
-          borderRight: "1px solid #ffffff",
-          background: "#1a1a1a",
-          color: "#ffffff",
+          borderRight: `1px solid ${COLOR.textPrimary}`,
+          background: COLOR.surfaceRaised,
+          color: COLOR.textPrimary,
           position: "sticky",
           left: 0,
           zIndex: 1,
@@ -895,9 +847,9 @@ function WeetzeeBonusRow({ players }: { players: Player[] }) {
             style={{
               ...TYPE.bodyRegular,
               padding: "8px 16px",
-              borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
-              background: "#000000",
-              color: count > 0 ? player.color : "#ffffff",
+              borderRight: i < players.length - 1 ? `1px solid ${COLOR.textPrimary}` : "none",
+              background: COLOR.surfaceBg,
+              color: count > 0 ? player.color : COLOR.textPrimary,
             }}
           >
             {count > 0 ? points : "—"}
@@ -929,14 +881,14 @@ function TotalRow({
         style={{
           ...TYPE.bodyEmphasis,
           padding: "8px 16px",
-          borderRight: "1px solid #ffffff",
-          borderTop: "1px solid #ffffff",
-          background: "#000000",
-          color: "#ffffff",
+          borderRight: `1px solid ${COLOR.textPrimary}`,
+          borderTop: `1px solid ${COLOR.textPrimary}`,
+          background: COLOR.surfaceBg,
+          color: COLOR.textPrimary,
           position: "sticky",
           left: 0,
           bottom: 0,
-          zIndex: 3,
+          zIndex: Z.sticky,
         }}
       >
         Total
@@ -954,10 +906,10 @@ function TotalRow({
             style={{
               ...TYPE.bodyEmphasis,
               padding: "8px 16px",
-              borderRight: i < players.length - 1 ? "1px solid #ffffff" : "none",
-              borderTop: "1px solid #ffffff",
+              borderRight: i < players.length - 1 ? `1px solid ${COLOR.textPrimary}` : "none",
+              borderTop: `1px solid ${COLOR.textPrimary}`,
               background: inactive ? dimHex(player.color, 0.4) : player.color,
-              color: "#000000",
+              color: COLOR.surfaceBg,
               position: "sticky",
               bottom: 0,
               zIndex: 2,
@@ -1103,12 +1055,12 @@ function MiniDiceStrip({
           disabled={!canRoll}
           className="w-full h-full flex items-center justify-center rounded-full pressable"
           style={{
-            outline: "1px solid #ffffff",
+            outline: `1px solid ${COLOR.textPrimary}`,
             outlineOffset: -1,
             background: "transparent",
             fontSize: "clamp(9px, 18cqi, 14px)",
             fontWeight: WEIGHT.medium,
-            color: "#ffffff",
+            color: COLOR.textPrimary,
             opacity: canRoll ? 1 : 0.35,
             cursor: canRoll ? "pointer" : "default",
             transition: "opacity 200ms",
@@ -1136,10 +1088,10 @@ function Th({
       style={{
         ...TYPE.bodyRegular,
         padding: "8px 16px",
-        borderRight: "1px solid #ffffff",
-        borderBottom: "1px solid #ffffff",
-        background: "#000000",
-        color: "#ffffff",
+        borderRight: `1px solid ${COLOR.textPrimary}`,
+        borderBottom: `1px solid ${COLOR.textPrimary}`,
+        background: COLOR.surfaceBg,
+        color: COLOR.textPrimary,
         textAlign: "left",
         ...style,
       }}

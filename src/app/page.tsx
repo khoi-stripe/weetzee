@@ -10,6 +10,12 @@ import { peekSavedGame, clearSavedGame } from "@/hooks/useGame";
 import type { SavedGameSummary } from "@/hooks/useGame";
 import { SplashIntro } from "@/components/SplashIntro";
 import { TYPE } from "@/lib/type";
+import { COLOR } from "@/lib/color";
+import { Scrim } from "@/components/ui/Scrim";
+import { DialogCard } from "@/components/ui/DialogCard";
+import { RoundButton } from "@/components/ui/RoundButton";
+import { PlayerChipStrip } from "@/components/ui/PlayerChipStrip";
+import { DURATION } from "@/lib/motion";
 
 function ContinuePrompt({
   saved,
@@ -25,122 +31,45 @@ function ContinuePrompt({
   const handleContinue = () => {
     playTap();
     setExiting(true);
-    setTimeout(onContinue, 300);
+    setTimeout(onContinue, DURATION.modal);
   };
 
   const handleNew = () => {
     playTap();
     setExiting(true);
-    setTimeout(onNewGame, 300);
+    setTimeout(onNewGame, DURATION.modal);
   };
 
-  return (
-    <div
-      className="fixed inset-0 flex flex-col items-center justify-center"
-      style={{
-        zIndex: 200,
-        background: "rgba(0, 0, 0, 0.85)",
-        padding: 16,
-        gap: 24,
-        animation: exiting
-          ? "interstitial-out 300ms ease forwards"
-          : "interstitial-in 200ms ease forwards",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "min(80vw, 80vh, 400px)",
-          aspectRatio: "1 / 1",
-        }}
-      >
-        <div
-          className="w-full h-full flex flex-col items-center justify-center"
-          style={{
-            background: "#ffffff",
-            borderRadius: 4,
-            color: "#000000",
-            padding: "10%",
-            gap: 8,
-            textAlign: "center",
-          }}
-        >
-          <p style={{ ...TYPE.body, color: "#666666" }}>
-            Game in progress
-          </p>
-          <p style={{ ...TYPE.headline, marginBottom: 16 }}>
-            {saved.rulesetName}
-          </p>
+  const chipPlayers = saved.players.map((p, i) => ({
+    id: i,
+    name: p.name,
+    color: p.color,
+    score: p.score,
+  }));
 
-          <div
-            className="flex overflow-hidden"
-            style={{
-              ...TYPE.body,
-              width: "100%",
-              outline: "1px solid #000000",
-              outlineOffset: -1,
-              borderRadius: 4,
-            }}
-          >
-            {saved.players.map((p, i) => {
-              const isActive = i === saved.currentPlayerIndex;
-              return (
-                <div
-                  key={i}
-                  className="flex items-center min-w-0 justify-center"
-                  style={{
-                    flex: 1,
-                    padding: "8px 8px",
-                    gap: 6,
-                    background: isActive ? p.color : "transparent",
-                    color: "#000000",
-                    borderRight: i < saved.players.length - 1 ? "1px solid #000000" : "none",
-                  }}
-                >
-                  <span className="shrink-0">{p.name}</span>
-                  <span className="shrink-0">{p.score}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+  return (
+    <Scrim exiting={exiting}>
+      <DialogCard>
+        <p style={{ ...TYPE.body, color: COLOR.textDisabled }}>
+          Game in progress
+        </p>
+        <p style={{ ...TYPE.headline, marginBottom: 16 }}>
+          {saved.rulesetName}
+        </p>
+        <PlayerChipStrip
+          players={chipPlayers}
+          currentIndex={saved.currentPlayerIndex}
+          variant="light"
+        />
+      </DialogCard>
 
       <div className="flex justify-center" style={{ gap: 16 }}>
-        <button
-          onClick={handleNew}
-          className="flex items-center justify-center rounded-full pressable"
-          style={{
-            ...TYPE.body,
-            width: 100,
-            height: 100,
-            outline: "1px solid #ffffff",
-            outlineOffset: -1,
-            background: "transparent",
-            color: "#ffffff",
-            cursor: "pointer",
-          }}
-        >
-          New game
-        </button>
-        <button
-          onClick={handleContinue}
-          className="flex items-center justify-center rounded-full pressable"
-          style={{
-            ...TYPE.body,
-            width: 100,
-            height: 100,
-            outline: "1px solid #ffffff",
-            outlineOffset: -1,
-            background: "#ffffff",
-            color: "#000000",
-            cursor: "pointer",
-          }}
-        >
+        <RoundButton onClick={handleNew}>New game</RoundButton>
+        <RoundButton variant="filled" onClick={handleContinue}>
           Continue
-        </button>
+        </RoundButton>
       </div>
-    </div>
+    </Scrim>
   );
 }
 
@@ -211,7 +140,7 @@ export default function SetupPage() {
       className="flex flex-col"
       style={{
         height: "100%",
-        background: "#000000",
+        background: COLOR.surfaceBg,
         overflow: "hidden",
       }}
     >

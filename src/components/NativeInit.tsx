@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
+import { COLOR } from "@/lib/color";
 
 const RC_IOS_KEY = "test_yehjPiFCypshgzXG5BGWFgvIIee";
 const RC_ANDROID_KEY = "test_yehjPiFCypshgzXG5BGWFgvIIee";
@@ -16,7 +17,7 @@ export function NativeInit() {
 
     import("@capacitor/status-bar").then(({ StatusBar, Style }) => {
       StatusBar.setStyle({ style: Style.Dark });
-      StatusBar.setBackgroundColor({ color: "#000000" });
+      StatusBar.setBackgroundColor({ color: COLOR.surfaceBg });
     }).catch(() => {});
 
     import("@revenuecat/purchases-capacitor").then(({ Purchases }) => {
