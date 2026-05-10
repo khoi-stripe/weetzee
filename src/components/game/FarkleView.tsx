@@ -706,24 +706,10 @@ function FarkleBustScreen({
         {(keptDice.length > 0 || failedDice.length > 0) && (
           <div className="flex items-center justify-center" style={{ gap: 6, marginTop: 4, marginBottom: 4, flexWrap: "wrap" }}>
             {keptDice.map((d, i) => (
-              <BustDie
-                key={`k${i}`}
-                value={d.value}
-                failed={false}
-                index={i}
-                colorTick={colorTick}
-                dialogBg={player.color}
-              />
+              <BustDie key={`k${i}`} value={d.value} failed={false} index={i} />
             ))}
             {failedDice.map((d, i) => (
-              <BustDie
-                key={`f${i}`}
-                value={d.value}
-                failed={true}
-                index={keptDice.length + i}
-                colorTick={colorTick}
-                dialogBg={player.color}
-              />
+              <BustDie key={`f${i}`} value={d.value} failed={true} index={keptDice.length + i} />
             ))}
           </div>
         )}
@@ -762,15 +748,11 @@ function BustDie({
   failed,
   index = 0,
   animate = true,
-  colorTick,
-  dialogBg,
 }: {
   value: number;
   failed: boolean;
   index?: number;
   animate?: boolean;
-  colorTick?: number;
-  dialogBg?: string;
 }) {
   const pips = BUST_PIP_LAYOUTS[value] ?? [];
   const pipSize = "17%";
@@ -787,18 +769,6 @@ function BustDie({
   const jitterDelay = entryDelay + entryDuration;
   const jitter = `farkle-letter-shake-${variant} ${jitterDuration}ms ease-in-out ${jitterDelay}ms infinite`;
 
-  // Cycle through the dice palette, skipping the dialog's own background
-  // colour so dice never blend into the card. Falls back to the default
-  // black-on-player-color treatment when no tick is supplied (piggyback
-  // recap reuses this component statically).
-  const cycleColors = dialogBg
-    ? PLAYER_COLORS.filter((c) => c !== dialogBg)
-    : PLAYER_COLORS;
-  const dieColor =
-    typeof colorTick === "number"
-      ? cycleColors[(colorTick + index) % cycleColors.length] ?? COLOR.surfaceBg
-      : COLOR.surfaceBg;
-
   return (
     <div
       className="relative"
@@ -806,13 +776,12 @@ function BustDie({
         width: 36,
         height: 36,
         borderRadius: RADIUS.sm,
-        outline: `1px solid ${dieColor}`,
+        outline: `1px solid ${COLOR.surfaceBg}`,
         outlineOffset: -1,
         background: "transparent",
         flexShrink: 0,
         opacity: failed ? 0.4 : 1,
         ["--tilt" as string]: "0deg",
-        transition: "outline-color 180ms ease",
         animation: animate ? `${entry}, ${jitter}` : undefined,
       }}
     >
@@ -825,8 +794,7 @@ function BustDie({
             height: pipSize,
             left: `calc(${x}% - ${pipSize} / 2)`,
             top: `calc(${y}% - ${pipSize} / 2)`,
-            background: dieColor,
-            transition: "background 180ms ease",
+            background: COLOR.surfaceBg,
           }}
         />
       ))}
@@ -840,12 +808,11 @@ function BustDie({
             style={{
               width: "141%",
               height: 0,
-              borderTop: `1px solid ${dieColor}`,
+              borderTop: `1px solid ${COLOR.surfaceBg}`,
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%) rotate(45deg)",
               transformOrigin: "center",
-              transition: "border-top-color 180ms ease",
             }}
           />
           <div
@@ -853,12 +820,11 @@ function BustDie({
             style={{
               width: "141%",
               height: 0,
-              borderTop: `1px solid ${dieColor}`,
+              borderTop: `1px solid ${COLOR.surfaceBg}`,
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%) rotate(-45deg)",
               transformOrigin: "center",
-              transition: "border-top-color 180ms ease",
             }}
           />
         </div>
