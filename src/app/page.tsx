@@ -20,13 +20,11 @@ import { DURATION } from "@/lib/motion";
 function ContinuePrompt({
   saved,
   exiting,
-  exitDuration,
   onContinue,
   onNewGame,
 }: {
   saved: SavedGameSummary;
   exiting: boolean;
-  exitDuration?: number;
   onContinue: () => void;
   onNewGame: () => void;
 }) {
@@ -50,7 +48,7 @@ function ContinuePrompt({
   }));
 
   return (
-    <Scrim exiting={exiting} exitDuration={exitDuration}>
+    <Scrim exiting={exiting}>
       <DialogCard>
         <p style={{ ...TYPE.body, color: COLOR.textDisabled }}>
           Game in progress
@@ -129,9 +127,8 @@ export default function SetupPage() {
     router.push(`/ruleset?players=${playerCount}${aiParam}`);
   }
 
-  // Continue flow: snap modal+dice out fast (150ms), hold black for another
+  // Continue flow: modal+dice disappear instantly (no fade), hold black for
   // 150ms so the swap to /game feels deliberate, then navigate.
-  const CONTINUE_FADE_MS = 150;
   const CONTINUE_HOLD_MS = 150;
 
   const continueGame = useCallback(() => {
@@ -140,7 +137,7 @@ export default function SetupPage() {
     setTimeout(() => {
       const aiParam = savedGame.aiIndices.length > 0 ? `&ai=${savedGame.aiIndices.join(",")}` : "";
       router.push(`/game?players=${savedGame.playerCount}&ruleset=${savedGame.rulesetId}${aiParam}`);
-    }, CONTINUE_FADE_MS + CONTINUE_HOLD_MS);
+    }, CONTINUE_HOLD_MS);
   }, [savedGame, router]);
 
   const dismissSaved = useCallback(() => {
@@ -168,8 +165,9 @@ export default function SetupPage() {
           flex: 1,
           minHeight: 0,
           width: "100%",
-          opacity: exitMode === "continue" ? 0 : 1,
-          transition: `opacity ${CONTINUE_FADE_MS}ms ease`,
+          // No transition — when continuing, dice vanish instantly and the
+          // page sits black for the hold period before /game takes over.
+          visibility: exitMode === "continue" ? "hidden" : "visible",
         }}
       >
         <PlayerSelector
@@ -183,11 +181,10 @@ export default function SetupPage() {
           colors={colors}
         />
       </div>
-      {checked && savedGame && (
+      {checked && savedGame && exitMode !== "continue" && (
         <ContinuePrompt
           saved={savedGame}
-          exiting={exitMode !== null}
-          exitDuration={exitMode === "continue" ? CONTINUE_FADE_MS : DURATION.modal}
+          exiting={exitMode === "new"}
           onContinue={continueGame}
           onNewGame={dismissSaved}
         />
