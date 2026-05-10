@@ -35,7 +35,7 @@ function makePlayers(count: number, aiIndices: number[] = []): Player[] {
     const isCpu = aiIndices.includes(i);
     return {
       id: `p${i + 1}`,
-      name: isCpu ? `CPU${i + 1}` : `P${i + 1}`,
+      name: isCpu ? `CP${i + 1}` : `P${i + 1}`,
       color: colors[i] ?? "#ffffff",
       scores: {},
       bankedRolls: 0,

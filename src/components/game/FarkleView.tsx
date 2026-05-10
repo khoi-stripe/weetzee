@@ -161,7 +161,26 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     return () => { if (bustAutoTimer.current) { clearTimeout(bustAutoTimer.current); bustAutoTimer.current = null; } };
   }, [showFarkleBust, isAITurn]);
 
+  // Re-entry guard: handleBustDone can be invoked from the auto-timer (CPU bust),
+  // the bust screen's Done button, and the human's "NEXT" bank button. If the
+  // auto-timer fires and the user then taps Done before the 400ms exit completes,
+  // a second handleBustDone double-banks and skips the next player's turn — the
+  // human's roll button looks disabled because the CPU silently got the turn back.
+  const bustDoneInFlight = useRef(false);
   function handleBustDone() {
+    if (bustDoneInFlight.current) return;
+    bustDoneInFlight.current = true;
+    if (bustAutoTimer.current) {
+      clearTimeout(bustAutoTimer.current);
+      bustAutoTimer.current = null;
+    }
+    // Human can tap "NEXT" before the 2s pre-bust delay completes; cancel the
+    // pending bust reveal so it doesn't pop on the next player's turn.
+    if (farkleTimer.current) {
+      clearTimeout(farkleTimer.current);
+      farkleTimer.current = null;
+    }
+
     setBustExiting(true);
     const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
     const nextPlayer = state.players[nextPlayerIndex];
@@ -173,6 +192,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
 
       const isLastTurn = state.finalRound;
       bank();
+      bustDoneInFlight.current = false;
 
       if (!isSinglePlayer) {
         setInterstitialLastTurn(isLastTurn);

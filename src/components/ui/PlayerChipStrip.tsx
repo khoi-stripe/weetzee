@@ -78,7 +78,7 @@ export function PlayerChipStrip({
 
   // Pick the largest font-size (capped at body) that fits every cell's worst-case
   // content — including the active cell's wider "name + score" layout.
-  // This is what keeps "CPU6 10000" inside its cell instead of overflowing.
+  // This is what keeps "CP6 10000" inside its cell instead of overflowing.
   const fontSize = (() => {
     if (stripWidth === 0) return BASE_FONT_SIZE;
     const expanded = !showScores ? 2 : 1; // matches the `flex` value used below
@@ -114,7 +114,10 @@ export function PlayerChipStrip({
   }, []);
 
   const isLight = variant === "light";
-  const outlineColor = isLight ? COLOR.inverse : COLOR.borderStrong;
+  // Both variants outline in white: it's the strong border on dark surfaces,
+  // and on the light card it stands out against the player-color active cell
+  // and the black inactive cells.
+  const outlineColor = COLOR.borderStrong;
   const dividerColor = outlineColor;
 
   return (

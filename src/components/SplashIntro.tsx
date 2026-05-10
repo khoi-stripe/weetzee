@@ -11,13 +11,18 @@ export function SplashIntro() {
   const [phase, setPhase] = useState<"blank" | "intro" | "hold" | "fade" | "done">("blank");
 
   useEffect(() => {
+    // Dev/QA preview: any URL with #splash always replays the intro and
+    // skips the session-shown flag, so reloading keeps replaying as long
+    // as the hash is present. Remove the hash to resume normal behavior.
+    const forceReplay = typeof window !== "undefined" && window.location.hash === "#splash";
+
     let alreadyShown = false;
     try {
       alreadyShown = sessionStorage.getItem(SESSION_KEY) === "1";
-      if (!alreadyShown) sessionStorage.setItem(SESSION_KEY, "1");
+      if (!alreadyShown && !forceReplay) sessionStorage.setItem(SESSION_KEY, "1");
     } catch {}
 
-    if (alreadyShown) {
+    if (alreadyShown && !forceReplay) {
       setPhase("done");
       return;
     }
@@ -67,7 +72,7 @@ export function SplashIntro() {
             animation: phase === "intro"
               ? `splash-spin-scale 1600ms ${EASE.standard} forwards`
               : undefined,
-            transform: phase !== "intro" ? "rotate(0deg) scale(1)" : "rotate(-540deg) scale(0)",
+            transform: phase !== "intro" ? "rotate(0deg) scale(1)" : "rotate(-1260deg) scale(0)",
             opacity: phase === "intro" ? 0 : 1,
           }}
         >

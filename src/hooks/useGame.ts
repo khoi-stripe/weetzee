@@ -95,6 +95,11 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
     const sessionColors = getPlayerColors();
     const players = rest.players.map((p: any, i: number) => ({
       ...p,
+      // Migrate legacy "CPU1" etc. names to the new "CP1" form so a continued
+      // game doesn't show stale labels alongside fresh games.
+      name: typeof p.name === "string" && /^CPU(\d+)$/.test(p.name)
+        ? p.name.replace(/^CPU/, "CP")
+        : p.name,
       color: p.color ?? sessionColors[i],
       isComputer: p.isComputer ?? false,
     }));
