@@ -136,11 +136,16 @@ export function PlayerChipStrip({
         const isPeeked = peekedIndex === i;
         const showScore = isActive || isPeeked || showScores;
         const expanded = (isActive || isPeeked) && !showScores;
-        const cellTextColor = isActive
-          ? COLOR.inverse
+        // Inactive cells (both variants) show the player color as text on a
+        // black background. In the light variant this means the strip
+        // becomes a black block dotted with player-colored names — same
+        // treatment as the in-game bar so all colors are recognizable.
+        const cellTextColor = isActive ? COLOR.inverse : p.color;
+        const cellBg = isActive
+          ? p.color
           : isLight
-            ? COLOR.inverse
-            : p.color;
+            ? COLOR.surfaceBg
+            : "transparent";
 
         const peekable = !isActive && !showScores;
 
@@ -152,7 +157,7 @@ export function PlayerChipStrip({
               flex: expanded ? 2 : 1,
               padding: "8px 8px",
               gap: 6,
-              background: isActive ? p.color : "transparent",
+              background: cellBg,
               color: cellTextColor,
               borderRight: i < players.length - 1 ? `1px solid ${dividerColor}` : "none",
               transition: `flex ${DURATION.slow}ms ${EASE.spring}`,
