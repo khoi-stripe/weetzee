@@ -89,10 +89,13 @@ function loadState(playerCount: number, rulesetId: string): GameState | null {
     if (orderedScoring) {
       ruleset = { ...ruleset, orderedScoring: true };
     }
+    // Preserve the player colors from when this game was last saved so a
+    // continued game keeps the same color assignments. Fall back to the
+    // current session colors only if a legacy save lacks color info.
     const sessionColors = getPlayerColors();
     const players = rest.players.map((p: any, i: number) => ({
       ...p,
-      color: sessionColors[i] ?? p.color,
+      color: p.color ?? sessionColors[i],
       isComputer: p.isComputer ?? false,
     }));
     return {
