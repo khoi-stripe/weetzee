@@ -747,14 +747,6 @@ function BustDie({
   const entryDelay = 500 + index * 80;
   const entryDuration = 300;
   const entry = `bust-die-in ${entryDuration}ms ${EASE.spring} ${entryDelay}ms both`;
-  // After the entry settles, the die keeps jittering forever using the same
-  // a/b/c keyframes that drive the FARKLE! letters — staggered per-die so
-  // neighbours are out of phase.
-  const variants = ["a", "b", "c"] as const;
-  const variant = variants[index % variants.length];
-  const jitterDuration = 110 + ((index * 47) % 90);
-  const jitterDelay = entryDelay + entryDuration;
-  const jitter = `farkle-letter-shake-${variant} ${jitterDuration}ms ease-in-out ${jitterDelay}ms infinite`;
 
   return (
     <div
@@ -768,8 +760,7 @@ function BustDie({
         background: "transparent",
         flexShrink: 0,
         opacity: failed ? 0.4 : 1,
-        ["--tilt" as string]: "0deg",
-        animation: animate ? `${entry}, ${jitter}` : undefined,
+        animation: animate ? entry : undefined,
       }}
     >
       {pips.map(([x, y], i) => (
