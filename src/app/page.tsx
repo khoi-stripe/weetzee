@@ -20,11 +20,13 @@ import { DURATION } from "@/lib/motion";
 function ContinuePrompt({
   saved,
   exiting,
+  exitDuration,
   onContinue,
   onNewGame,
 }: {
   saved: SavedGameSummary;
   exiting: boolean;
+  exitDuration?: number;
   onContinue: () => void;
   onNewGame: () => void;
 }) {
@@ -48,7 +50,7 @@ function ContinuePrompt({
   }));
 
   return (
-    <Scrim exiting={exiting}>
+    <Scrim exiting={exiting} exitDuration={exitDuration}>
       <DialogCard>
         <p style={{ ...TYPE.body, color: COLOR.textDisabled }}>
           Game in progress
@@ -127,13 +129,18 @@ export default function SetupPage() {
     router.push(`/ruleset?players=${playerCount}${aiParam}`);
   }
 
+  // Continue flow: snap modal+dice out fast (150ms), hold black for another
+  // 150ms so the swap to /game feels deliberate, then navigate.
+  const CONTINUE_FADE_MS = 150;
+  const CONTINUE_HOLD_MS = 150;
+
   const continueGame = useCallback(() => {
     if (!savedGame) return;
     setExitMode("continue");
     setTimeout(() => {
       const aiParam = savedGame.aiIndices.length > 0 ? `&ai=${savedGame.aiIndices.join(",")}` : "";
       router.push(`/game?players=${savedGame.playerCount}&ruleset=${savedGame.rulesetId}${aiParam}`);
-    }, DURATION.modal);
+    }, CONTINUE_FADE_MS + CONTINUE_HOLD_MS);
   }, [savedGame, router]);
 
   const dismissSaved = useCallback(() => {
@@ -162,7 +169,7 @@ export default function SetupPage() {
           minHeight: 0,
           width: "100%",
           opacity: exitMode === "continue" ? 0 : 1,
-          transition: `opacity ${DURATION.modal}ms ease`,
+          transition: `opacity ${CONTINUE_FADE_MS}ms ease`,
         }}
       >
         <PlayerSelector
@@ -180,6 +187,7 @@ export default function SetupPage() {
         <ContinuePrompt
           saved={savedGame}
           exiting={exitMode !== null}
+          exitDuration={exitMode === "continue" ? CONTINUE_FADE_MS : DURATION.modal}
           onContinue={continueGame}
           onNewGame={dismissSaved}
         />
