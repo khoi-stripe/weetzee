@@ -752,8 +752,9 @@ function AboutContent() {
       <SupportSection position="top" />
       <Section title="What is Weetzee?">
         <p>
-          Weetzee is a free dice game you can play right from your phone — no app store needed.
-          Pass the phone with friends or play solo.
+          Weetzee is a collection of dice games — pass-and-play with friends or
+          solo against the CPU. Pick a ruleset, roll, score, and try to beat
+          everyone else.
         </p>
       </Section>
 
