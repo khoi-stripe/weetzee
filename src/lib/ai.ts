@@ -279,7 +279,54 @@ export function farkleChooseSetAside(state: GameState): FarkleSetAsideDecision {
     return { holdIds: findMinimalFarkleSelection(activeDice) };
   }
 
+  // Check whether the CPU would bank immediately after this set-aside.
+  // If so, the "remaining dice to roll" weight is irrelevant — take every
+  // scoring die to avoid leaving points on the table.
+  const allScoringIds = findAllScoringDice(activeDice);
+  const effectiveDiceCount = state.sixDiceEnabled ? 6 : state.ruleset.diceCount;
+  const projectedSetAside = [...state.setAsideDiceIds, ...allScoringIds];
+  const projectedActiveDice = effectiveDiceCount - projectedSetAside.length;
+  const projectedScore = state.turnScore + scoreDice(
+    activeDice.filter(d => allScoringIds.includes(d.id)).map(d => d.value)
+  );
+  const wouldBank = farkleShouldBank({
+    ...state,
+    turnScore: projectedScore,
+    setAsideDiceIds: projectedActiveDice <= 0 ? [] : projectedSetAside,
+  });
+  if (wouldBank && allScoringIds.length > 0) {
+    return { holdIds: allScoringIds };
+  }
+
   return { holdIds: findBestFarkleSelection(activeDice, difficulty) };
+}
+
+/**
+ * Returns every die that contributes to score in the current roll.
+ * Used when the CPU is about to bank — no point leaving scoring dice behind.
+ */
+function findAllScoringDice(dice: Die[]): number[] {
+  const faceCounts = [0, 0, 0, 0, 0, 0, 0];
+  for (const d of dice) faceCounts[d.value]++;
+
+  // Straight or three pairs: all dice score.
+  if (dice.length === 6) {
+    const isStraight = faceCounts.slice(1).every(c => c === 1);
+    if (isStraight) return dice.map(d => d.id);
+    let pairs = 0;
+    for (let f = 1; f <= 6; f++) {
+      if (faceCounts[f] === 2) pairs++;
+      else if (faceCounts[f] === 4) pairs += 2;
+      else if (faceCounts[f] === 6) pairs += 3;
+    }
+    if (pairs === 3) return dice.map(d => d.id);
+  }
+
+  // All dice of a face that appear 3+ times score (the full set of that face).
+  // Remaining 1s and 5s (not part of a triple) also score individually.
+  return dice
+    .filter(d => faceCounts[d.value] >= 3 || d.value === 1 || d.value === 5)
+    .map(d => d.id);
 }
 
 /**
