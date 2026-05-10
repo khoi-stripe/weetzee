@@ -660,7 +660,7 @@ function FarkleBustScreen({
             ...TYPE.displayBold,
             display: "inline-flex",
             justifyContent: "center",
-            letterSpacing: "0.12em",
+            letterSpacing: "0.04em",
           }}
           aria-label="FARKLE!"
         >
