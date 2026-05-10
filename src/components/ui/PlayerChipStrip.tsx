@@ -24,6 +24,15 @@ import { TYPE } from "@/lib/type";
 const MIN_CELL_WIDTH_WITH_SCORE = 70;
 const PEEK_DURATION_MS = 2000;
 
+/** Approx average glyph width as a fraction of font-size for IBM Plex Mono. */
+const MONO_CHAR_RATIO = 0.6;
+/** Per-cell horizontal padding (8px each side) + gap between name and score (6px). */
+const CELL_INNER_PADDING_PX = 22;
+/** Default text size (matches TYPE.body); also the upper bound so we never *grow* text. */
+const BASE_FONT_SIZE = 13;
+/** Lower bound — below this the strip becomes hard to read. */
+const MIN_FONT_SIZE = 10;
+
 export type PlayerChip = {
   /** Stable identifier for React key. */
   id: string | number;
@@ -48,7 +57,7 @@ export function PlayerChipStrip({
   onClick?: () => void;
 }) {
   const stripRef = useRef<HTMLDivElement>(null);
-  const [showScores, setShowScores] = useState(true);
+  const [stripWidth, setStripWidth] = useState(0);
   const [peekedIndex, setPeekedIndex] = useState<number | null>(null);
   const peekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -56,14 +65,40 @@ export function PlayerChipStrip({
     const el = stripRef.current;
     if (!el) return;
     function measure() {
-      const w = el!.getBoundingClientRect().width;
-      setShowScores(w / players.length >= MIN_CELL_WIDTH_WITH_SCORE);
+      setStripWidth(el!.getBoundingClientRect().width);
     }
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [players.length]);
+  }, []);
+
+  const showScores = stripWidth === 0
+    || stripWidth / players.length >= MIN_CELL_WIDTH_WITH_SCORE;
+
+  // Pick the largest font-size (capped at body) that fits every cell's worst-case
+  // content — including the active cell's wider "name + score" layout.
+  // This is what keeps "CPU6 10000" inside its cell instead of overflowing.
+  const fontSize = (() => {
+    if (stripWidth === 0) return BASE_FONT_SIZE;
+    const expanded = !showScores ? 2 : 1; // matches the `flex` value used below
+    const inactiveCellPx = stripWidth / (players.length - 1 + expanded);
+    const activeCellPx = inactiveCellPx * expanded;
+    const longestActiveChars = Math.max(
+      ...players.map((p) => `${p.name} ${p.score}`.length),
+      1,
+    );
+    const longestInactiveChars = showScores
+      ? longestActiveChars
+      : Math.max(...players.map((p) => p.name.length), 1);
+    const fitFor = (w: number, chars: number) =>
+      (w - CELL_INNER_PADDING_PX) / (chars * MONO_CHAR_RATIO);
+    const fit = Math.min(
+      fitFor(activeCellPx, longestActiveChars),
+      fitFor(inactiveCellPx, longestInactiveChars),
+    );
+    return Math.max(MIN_FONT_SIZE, Math.min(BASE_FONT_SIZE, Math.floor(fit)));
+  })();
 
   useEffect(() => {
     return () => { if (peekTimer.current) clearTimeout(peekTimer.current); };
@@ -88,6 +123,7 @@ export function PlayerChipStrip({
       className={`flex overflow-hidden ${onClick ? "pressable" : ""}`}
       style={{
         ...TYPE.body,
+        fontSize,
         width: "100%",
         outline: `1px solid ${outlineColor}`,
         outlineOffset: -1,
@@ -124,7 +160,7 @@ export function PlayerChipStrip({
             }}
             onClick={peekable ? (e) => { e.stopPropagation(); peekPlayer(i); } : undefined}
           >
-            <span className="shrink-0">{p.name}</span>
+            <span className="min-w-0 truncate">{p.name}</span>
             {showScore && <span className="shrink-0">{p.score}</span>}
           </div>
         );
