@@ -675,39 +675,8 @@ function FarkleBustScreen({
         <span style={{ ...TYPE.titleBold }}>
           {player.name}
         </span>
-        <span
-          style={{
-            ...TYPE.displayBold,
-            display: "inline-flex",
-            justifyContent: "center",
-            letterSpacing: "0.04em",
-          }}
-          aria-label="FARKLE!"
-        >
-          {"FARKLE!".split("").map((ch, i) => {
-            const tilts = [-6, 4, -3, 7, -5, 3, 10];
-            const variants = ["a", "b", "c"] as const;
-            const variant = variants[i % variants.length];
-            const duration = 100 + ((i * 53) % 80); // 100–180ms
-            const delay = 200 + i * 47;
-            const tilt = tilts[i % tilts.length];
-            return (
-              <span
-                key={i}
-                aria-hidden="true"
-                style={{
-                  display: "inline-block",
-                  transformOrigin: "50% 60%",
-                  color: COLOR.surfaceBg,
-                  ["--tilt" as string]: `${tilt}deg`,
-                  transform: `rotate(${tilt}deg)`,
-                  animation: `farkle-letter-shake-${variant} ${duration}ms ease-in-out ${delay}ms infinite`,
-                }}
-              >
-                {ch}
-              </span>
-            );
-          })}
+        <span style={{ ...TYPE.displayBold, color: COLOR.surfaceBg, textAlign: "center" }}>
+          FARKLE!
         </span>
 
         {(keptDice.length > 0 || failedDice.length > 0) && (
