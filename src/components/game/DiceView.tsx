@@ -469,7 +469,7 @@ function FarkleActionButton({
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <WavyBorder color={color} active={showWavy} />
       <button
-        onClick={enabled ? onAction : undefined}
+        onClick={enabled ? () => { getAudioCtx(); hapticDiceRoll(); onAction(); } : undefined}
         disabled={!enabled && !pressed}
         className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
         onAnimationEnd={() => setIntroDone(true)}
