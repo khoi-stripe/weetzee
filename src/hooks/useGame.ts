@@ -207,6 +207,8 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee", aiIn
       dispatch({ type: "RESTORE", state: saved });
     } else {
       clearState();
+      const storedColors = getPlayerColors();
+      dispatch({ type: "SET_PLAYER_COLORS", colors: storedColors });
       const prefs = loadPrefs();
       if (prefs.rollBankingEnabled && !ruleset.forcedRolls && !ruleset.targetAssignment) dispatch({ type: "TOGGLE_ROLL_BANKING" });
       if (prefs.multipleWeetzeesEnabled) dispatch({ type: "TOGGLE_MULTIPLE_WEETZEES" });

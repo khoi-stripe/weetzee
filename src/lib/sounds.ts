@@ -1,4 +1,4 @@
-import { hapticMedium, hapticSuccess, hapticError, hapticWarning } from "./haptics";
+import { hapticMedium, hapticError } from "./haptics";
 
 let _ctx: AudioContext | null = null;
 
@@ -130,7 +130,6 @@ export function playDeselect() {
 // Two-note ascending chime — clean sine tones a major third apart.
 
 export function playConfirm() {
-  hapticSuccess();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -153,7 +152,6 @@ export function playConfirm() {
 // Detuned dual-oscillator sweep — creates a shimmering "whoosh".
 
 export function playTurnChange() {
-  hapticWarning();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;
@@ -186,7 +184,6 @@ export function playTurnChange() {
 // Major-chord arpeggio (C5-E5-G5-C6) followed by a sustained chord.
 
 export function playWin() {
-  hapticSuccess();
   const ctx = getAudioCtx();
   if (!ctx) return;
   const t = ctx.currentTime;

@@ -1,5 +1,5 @@
 import type { Die, GameState, GameAction, Player, Ruleset } from "./types";
-import { getPlayerColors } from "./types";
+import { PLAYER_COLORS } from "./types";
 
 import { hasScoring, scoreDice, isValidSelection } from "./rulesets/farkle";
 import { makeClassicCategories } from "./rulesets/classic";
@@ -29,8 +29,7 @@ function hasAllSame(dice: number[]): boolean {
 
 // ===== Player Factory =====
 
-function makePlayers(count: number, aiIndices: number[] = []): Player[] {
-  const colors = getPlayerColors();
+function makePlayers(count: number, aiIndices: number[] = [], colors = PLAYER_COLORS): Player[] {
   return Array.from({ length: count }, (_, i) => {
     const isCpu = aiIndices.includes(i);
     return {
@@ -457,6 +456,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "RESTORE": {
       return action.state;
+    }
+
+    case "SET_PLAYER_COLORS": {
+      return {
+        ...state,
+        players: state.players.map((p, i) => ({ ...p, color: action.colors[i] ?? p.color })),
+      };
     }
 
     default:

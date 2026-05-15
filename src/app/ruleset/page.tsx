@@ -7,8 +7,9 @@ import { Die } from "@/components/game/Die";
 import { VISIBLE_RULESETS } from "@/lib/rulesets";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { playTap } from "@/lib/sounds";
-import { TYPE, WEIGHT } from "@/lib/type";
+import { TYPE } from "@/lib/type";
 import { COLOR } from "@/lib/color";
+import { RoundButton } from "@/components/ui/RoundButton";
 
 const ITEM_COUNT = VISIBLE_RULESETS.length + 1;
 const TITLE_RESERVE = 48;
@@ -112,23 +113,12 @@ function RulesetContent() {
             );
           })}
           <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
-            <button
+            <RoundButton
               onClick={startGame}
-              className="flex items-center justify-center rounded-full pressable"
-              style={{
-                width: "100%",
-                height: "100%",
-                outline: `1px solid ${COLOR.textPrimary}`,
-                outlineOffset: -1,
-                background: "transparent",
-                fontSize: "clamp(9px, 8cqi, 100px)",
-                fontWeight: WEIGHT.medium,
-                color: COLOR.textPrimary,
-                cursor: "pointer",
-              }}
+              style={{ width: "100%", height: "100%", fontSize: "clamp(9px, 8cqi, 100px)" }}
             >
               Start
-            </button>
+            </RoundButton>
           </div>
         </div>
       </div>

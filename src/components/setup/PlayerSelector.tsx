@@ -8,7 +8,8 @@ import { COLOR } from "@/lib/color";
 import { EASE } from "@/lib/motion";
 
 import { playTap, playToggle } from "@/lib/sounds";
-import { TYPE, WEIGHT } from "@/lib/type";
+import { TYPE } from "@/lib/type";
+import { RoundButton } from "@/components/ui/RoundButton";
 
 const TITLE_RESERVE = 48;
 
@@ -180,23 +181,12 @@ export function PlayerSelector({
           );
         })}
         <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
-          <button
+          <RoundButton
             onClick={onNext}
-            className="flex items-center justify-center rounded-full pressable"
-            style={{
-              width: "100%",
-              height: "100%",
-              outline: `1px solid ${COLOR.textPrimary}`,
-              outlineOffset: -1,
-              background: "transparent",
-              fontSize: "clamp(9px, 8cqi, 100px)",
-              fontWeight: WEIGHT.medium,
-              color: COLOR.textPrimary,
-              cursor: "pointer",
-            }}
+            style={{ width: "100%", height: "100%", fontSize: "clamp(9px, 8cqi, 100px)" }}
           >
             Next
-          </button>
+          </RoundButton>
         </div>
       </div>
 
