@@ -8,8 +8,8 @@ import { RADIUS } from "@/lib/tokens";
 
 const DEFAULTS = {
   exitDuration: 400,
-  pausePct: 40,      // % of exit animation spent "hanging" before drop
-  pauseDrift: 3,     // % translateY during the hang (slight upward bob)
+  pausePct: 40,
+  pauseDrift: 3,
   scoreDuration: 260,
   flashDelay: 600,
   flashDuration: 200,
@@ -17,6 +17,43 @@ const DEFAULTS = {
   showHole: 1,
   score: 350,
 };
+
+// The mask is a rectangle (full width, top portion) + ellipse bump at bottom.
+// Applied to the diamond so it's only visible through the hole-shaped aperture.
+// mask-position-y tracks -translateY so the aperture stays fixed in container space.
+function buildStyles(pausePct: number, pauseDrift: number, size: number, holeRy: number) {
+  const midPct = pausePct + (100 - pausePct) * 0.3;
+
+  const frames: [number, number][] = [
+    [0,             0],
+    [pausePct * 0.5, -pauseDrift],
+    [pausePct,       -pauseDrift * 0.5],
+    [midPct,         20],
+    [100,            130],
+  ];
+
+  // mask-position-y = -(translateY in px), but only once falling (keep 0 during hang/drift)
+  const keyframeLines = frames.map(([pct, ty]) => {
+    const maskY = ty > 0 ? `${(-(ty / 100) * size).toFixed(1)}px` : "0px";
+    return `${pct.toFixed(1)}% { transform: translateY(${ty}%); mask-position: 0px ${maskY}; -webkit-mask-position: 0px ${maskY}; }`;
+  }).join("\n      ");
+
+  return `
+    @keyframes dev-diamond-drop { ${keyframeLines} }
+    @keyframes dev-bank-rise {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes dev-bank-exit {
+      from { transform: translateY(0);    opacity: 1; }
+      to   { transform: translateY(-40%); opacity: 0; }
+    }
+    @keyframes dev-hole-in {
+      from { transform: scale(0); }
+      to   { transform: scale(1); }
+    }
+  `;
+}
 
 function Slider({ label, value, min, max, step = 1, onChange }: {
   label: string; value: number; min: number; max: number; step?: number;
@@ -38,40 +75,7 @@ function Slider({ label, value, min, max, step = 1, onChange }: {
   );
 }
 
-function buildExitKeyframes(pausePct: number, pauseDrift: number) {
-  // Looney Tunes: hangs at top, drifts slightly, then gravity catches up fast
-  const midPct = pausePct + (100 - pausePct) * 0.3;
-  return `
-    @keyframes dev-diamond-drop {
-      0%         { transform: translateY(0); }
-      ${pausePct * 0.5}%  { transform: translateY(-${pauseDrift}%); }
-      ${pausePct}%       { transform: translateY(-${pauseDrift * 0.5}%); }
-      ${midPct.toFixed(0)}%  { transform: translateY(20%); }
-      100%       { transform: translateY(130%); }
-    }
-    @keyframes dev-bank-rise {
-      from { transform: translateY(100%); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
-    }
-    @keyframes dev-bank-exit {
-      from { transform: translateY(0);    opacity: 1; }
-      to   { transform: translateY(-40%); opacity: 0; }
-    }
-    @keyframes dev-hole-in {
-      from { transform: scale(0); }
-      to   { transform: scale(1); }
-    }
-    @keyframes dev-floor-appear {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-  `;
-}
-
-function BankButtonPreview({ vars, playing }: {
-  vars: typeof DEFAULTS;
-  playing: boolean;
-}) {
+function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: boolean }) {
   const [phase, setPhase] = useState<"idle" | "exit" | "score" | "flash">("idle");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -87,39 +91,46 @@ function BankButtonPreview({ vars, playing }: {
     return () => { timers.current.forEach(clearTimeout); };
   }, [playing, vars]);
 
+  const SIZE = 160;
+  const HOLE_RY = 12.5;
+  const HOLE_CY = SIZE - HOLE_RY;
+  const hangDelay = Math.round((vars.pausePct / 100) * vars.exitDuration);
   const isExiting = phase !== "idle";
   const showScore = phase === "score" || phase === "flash";
   const label = `BANK ${vars.score}`;
-  const SIZE = 160;
 
-  // Hole geometry in the 160×160 container (proportional to Figma 258×42 in 268px height)
-  const HOLE_RY = 12.5;
-  const HOLE_CY = SIZE - HOLE_RY;
+  // Mask: full-width rectangle (y=0..SIZE) + ellipse bump (cy=SIZE, ry=HOLE_RY).
+  // Applied to diamond so it's only visible through the hole aperture as it falls.
+  const maskSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE + HOLE_RY}"><rect width="${SIZE}" height="${SIZE}" fill="black"/><ellipse cx="${SIZE / 2}" cy="${SIZE}" rx="${SIZE / 2}" ry="${HOLE_RY}" fill="black"/></svg>`;
+  const maskUrl = `url("data:image/svg+xml,${encodeURIComponent(maskSvg)}")`;
+  const maskSize = `${SIZE}px ${SIZE + HOLE_RY}px`;
 
   return (
     <div style={{ width: SIZE, height: SIZE, overflow: "hidden", position: "relative" }}>
-      <style>{buildExitKeyframes(vars.pausePct, vars.pauseDrift)}</style>
+      <style>{buildStyles(vars.pausePct, vars.pauseDrift, SIZE, HOLE_RY)}</style>
 
-      {/* z=0 — grey hole, behind everything (diamond falls through this) */}
+      {/* z=0 — grey hole, behind diamond */}
       {isExiting && vars.showHole > 0 && (
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
           style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
           <ellipse
             cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
-            fill="#1A1A1A"
-            opacity={vars.showHole}
+            fill="#1A1A1A" opacity={vars.showHole}
             style={{
-              animation: "dev-hole-in 150ms ease-out forwards",
-              animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
+              animation: `dev-hole-in 150ms ease-out ${hangDelay}ms forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />
         </svg>
       )}
 
-      {/* z=1 — diamond, falls (visible through hole against grey background) */}
+      {/* z=1 — diamond with CSS mask-image tracking the hole aperture */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 1,
+        WebkitMaskImage: maskUrl, maskImage: maskUrl,
+        WebkitMaskSize: maskSize, maskSize,
+        WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+        WebkitMaskPosition: "0px 0px", maskPosition: "0px 0px",
         animation: phase === "exit"
           ? `dev-diamond-drop ${vars.exitDuration}ms cubic-bezier(0.3, 0, 1, 1) forwards`
           : undefined,
@@ -138,14 +149,9 @@ function BankButtonPreview({ vars, playing }: {
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <span style={{
-              transform: "rotate(-45deg)",
-              display: "block",
-              textAlign: "center",
-              fontSize: 13,
-              fontWeight: WEIGHT.semibold,
-              color: COLOR.surfaceBg,
-              lineHeight: 1.2,
-              fontFamily: "inherit",
+              transform: "rotate(-45deg)", display: "block", textAlign: "center",
+              fontSize: 13, fontWeight: WEIGHT.semibold,
+              color: COLOR.surfaceBg, lineHeight: 1.2, fontFamily: "inherit",
             }}>
               {label}
             </span>
@@ -153,34 +159,13 @@ function BankButtonPreview({ vars, playing }: {
         </div>
       </div>
 
-      {/* z=2 — black floor with ellipse cutout, clips diamond to hole area */}
-      {isExiting && (
-        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
-          style={{
-            position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none",
-            opacity: 0,
-            animation: `dev-floor-appear 60ms ease-out forwards`,
-            animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
-          }}>
-          <defs>
-            <mask id="dev-floor-mask">
-              <rect width={SIZE} height={SIZE} fill="white" />
-              <ellipse cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY} fill="black" />
-            </mask>
-          </defs>
-          <rect width={SIZE} height={SIZE} fill="#000" mask="url(#dev-floor-mask)" />
-        </svg>
-      )}
-
-      {/* z=3 — rising score */}
+      {/* z=2 — rising score */}
       {showScore && (
         <div style={{
-          position: "absolute", inset: 0, zIndex: 3,
+          position: "absolute", inset: 0, zIndex: 2,
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 28,
-          fontWeight: WEIGHT.semibold,
-          color: COLOR.textPrimary,
-          fontFamily: "inherit",
+          fontSize: 28, fontWeight: WEIGHT.semibold,
+          color: COLOR.textPrimary, fontFamily: "inherit",
           animation: phase === "score"
             ? `dev-bank-rise ${vars.scoreDuration}ms cubic-bezier(0, 0, 0.2, 1) forwards`
             : `dev-bank-exit ${vars.flashDuration}ms ease-out forwards`,
@@ -196,15 +181,11 @@ export default function BankDevPage() {
   const [vars, setVars] = useState(DEFAULTS);
   const [playKey, setPlayKey] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-
   const set = (key: keyof typeof DEFAULTS) => (v: number) => setVars((p) => ({ ...p, [key]: v }));
 
   function replay() {
     setIsPlaying(false);
-    setTimeout(() => {
-      setPlayKey((k) => k + 1);
-      setIsPlaying(true);
-    }, 50);
+    setTimeout(() => { setPlayKey((k) => k + 1); setIsPlaying(true); }, 50);
   }
 
   useEffect(() => {
