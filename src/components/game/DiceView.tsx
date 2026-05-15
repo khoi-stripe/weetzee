@@ -512,43 +512,91 @@ function FarkleBankButton({
   pressed?: boolean;
 }) {
   const [introDone, setIntroDone] = useState(false);
+  const [bankAnim, setBankAnim] = useState<"idle" | "exit" | "score" | "flash">("idle");
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
   const animating = showButton && !introDone;
+  const scoreOnly = label.replace(/[^0-9]/g, "");
+
+  function runBankAnim() {
+    timers.current.forEach(clearTimeout);
+    setBankAnim("exit");
+    timers.current = [
+      setTimeout(() => setBankAnim("score"), 220),
+      setTimeout(() => setBankAnim("flash"), 500),
+      setTimeout(() => setBankAnim("idle"), 700),
+    ];
+  }
+
+  useEffect(() => {
+    if (pressed) runBankAnim();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pressed]);
+
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
+
+  const isExiting = bankAnim !== "idle";
+  const showScore = bankAnim === "score" || bankAnim === "flash";
 
   return (
-    <div
-      className="flex items-center justify-center"
-      style={{
-        width: "100%",
-        height: "100%",
-        transform: showButton ? "rotate(45deg)" : "rotate(45deg) scale(0)",
-      }}
-    >
-      <button
-        onClick={enabled ? onBank : undefined}
-        disabled={!enabled && !pressed}
-        className={`flex items-center justify-center pressable ${animating ? "animate-scale-in" : ""}`}
-        onAnimationEnd={() => setIntroDone(true)}
-        style={{
-          width: "71%",
-          height: "71%",
-          transform: pressed ? "scale(0.85)" : undefined,
-          outline: `1px solid ${COLOR.textPrimary}`,
-          outlineOffset: -1,
-          borderRadius: RADIUS.sm,
-          opacity: pressed ? 1 : (enabled ? 1 : 0.35),
-          fontSize: "clamp(11px, 8cqi, 100px)",
+    <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
+      {/* Translation wrapper — slides down on bank */}
+      <div style={{
+        position: "absolute", inset: 0,
+        transform: isExiting ? "translateY(130%)" : undefined,
+        transition: bankAnim === "exit" ? "transform 220ms ease-in" : "none",
+      }}>
+        <div
+          className="flex items-center justify-center"
+          style={{
+            width: "100%",
+            height: "100%",
+            transform: showButton ? "rotate(45deg)" : "rotate(45deg) scale(0)",
+          }}
+        >
+          <button
+            onClick={enabled ? () => { runBankAnim(); onBank(); } : undefined}
+            disabled={!enabled && !pressed}
+            className={`flex items-center justify-center pressable ${animating ? "animate-scale-in" : ""}`}
+            onAnimationEnd={() => setIntroDone(true)}
+            style={{
+              width: "71%",
+              height: "71%",
+              outline: `1px solid ${COLOR.textPrimary}`,
+              outlineOffset: -1,
+              borderRadius: RADIUS.sm,
+              opacity: enabled ? 1 : 0.35,
+              fontSize: "clamp(11px, 8cqi, 100px)",
+              fontWeight: WEIGHT.semibold,
+              color: enabled ? COLOR.surfaceBg : COLOR.textPrimary,
+              background: enabled ? COLOR.textPrimary : "transparent",
+              cursor: enabled ? "pointer" : "default",
+              lineHeight: 1.2,
+              padding: "4%",
+            }}
+          >
+            <span style={{ transform: "rotate(-45deg)", display: "block", textAlign: "center" }}>
+              {label}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Rising score / flash */}
+      {showScore && scoreOnly && (
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "clamp(16px, 14cqi, 100px)",
           fontWeight: WEIGHT.semibold,
-          color: (pressed || enabled) ? COLOR.surfaceBg : COLOR.textPrimary,
-          background: (pressed || enabled) ? COLOR.textPrimary : "transparent",
-          cursor: enabled ? "pointer" : "default",
-          lineHeight: 1.2,
-          padding: "4%",
-        }}
-      >
-        <span style={{ transform: "rotate(-45deg)", display: "block", textAlign: "center" }}>
-          {label}
-        </span>
-      </button>
+          color: COLOR.textPrimary,
+          animation: bankAnim === "score"
+            ? "bank-score-rise 260ms cubic-bezier(0, 0, 0.2, 1) forwards"
+            : "bank-score-exit 200ms ease-out forwards",
+        }}>
+          {bankAnim === "flash" ? "*" : scoreOnly}
+        </div>
+      )}
     </div>
   );
 }

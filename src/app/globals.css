@@ -123,6 +123,16 @@ body {
   animation: spin-in 400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+@keyframes bank-score-rise {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes bank-score-exit {
+  from { transform: translateY(0);    opacity: 1; }
+  to   { transform: translateY(-40%); opacity: 0; }
+}
+
 @keyframes interstitial-in {
   0%   { opacity: 0; }
   100% { opacity: 1; }
