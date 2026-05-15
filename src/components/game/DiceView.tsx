@@ -328,6 +328,7 @@ export function DiceView({
             onRoll={onRoll}
             showButton={showButton}
             allHeld={allHeld}
+            color={playerColor}
           />
         </div>
       )}
@@ -339,7 +340,7 @@ export function DiceView({
               enabled={farkleActionEnabled}
               onAction={onRoll}
               showButton={showButton}
-              color={COLOR.textPrimary}
+              color={playerColor}
               hotDice={farkleActionLabel === "HOT DICE!"}
               pressed={farkleActionPressed}
             />

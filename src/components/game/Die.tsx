@@ -64,7 +64,7 @@ export function Die({
 
   const accent = flash && !held ? heldColor : null;
   const kismetColor = coloredPips ? kismetPipColor(value) : null;
-  const strokeColor = kismetColor ?? accent ?? heldColor;
+  const strokeColor = kismetColor ?? accent ?? COLOR.textPrimary;
   const heldFill = kismetColor ?? heldColor;
 
   let borderColor: string;
@@ -108,7 +108,7 @@ export function Die({
           style={{
             fontSize: "clamp(11px, 8cqi, 100px)",
             fontWeight: WEIGHT.medium,
-            color: held ? COLOR.surfaceBg : heldColor,
+            color: held ? COLOR.surfaceBg : COLOR.textPrimary,
             transform: "rotate(-45deg)",
             lineHeight: 1.1,
             textAlign: "center",
