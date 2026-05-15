@@ -32,10 +32,20 @@ function buildStyles(pausePct: number, pauseDrift: number, size: number, holeRy:
     [100,            130],
   ];
 
+  // Per-keyframe easing: hang phase uses ease-in-out, fall phase uses ease-in so
+  // the diamond starts slow and accelerates through the hole.
+  const easings = [
+    "animation-timing-function: ease-in-out;",
+    "animation-timing-function: ease-in-out;",
+    "animation-timing-function: cubic-bezier(0.55, 0, 1, 1);",
+    "animation-timing-function: cubic-bezier(0.8, 0, 1, 1);",
+    "",
+  ];
+
   // mask-position-y = -(translateY in px), but only once falling (keep 0 during hang/drift)
-  const keyframeLines = frames.map(([pct, ty]) => {
+  const keyframeLines = frames.map(([pct, ty], i) => {
     const maskY = ty > 0 ? `${(-(ty / 100) * size).toFixed(1)}px` : "0px";
-    return `${pct.toFixed(1)}% { transform: translateY(${ty}%); mask-position: 0px ${maskY}; -webkit-mask-position: 0px ${maskY}; }`;
+    return `${pct.toFixed(1)}% { transform: translateY(${ty}%); mask-position: 0px ${maskY}; -webkit-mask-position: 0px ${maskY}; ${easings[i]} }`;
   }).join("\n      ");
 
   return `
@@ -84,7 +94,7 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
     timers.current.forEach(clearTimeout);
     setPhase("exit");
     timers.current = [
-      setTimeout(() => setPhase("score"), vars.exitDuration + 80),
+      setTimeout(() => setPhase("score"), vars.exitDuration),
       setTimeout(() => setPhase("flash"), vars.flashDelay),
       setTimeout(() => setPhase("idle"), vars.totalDuration),
     ];
@@ -131,8 +141,11 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
         WebkitMaskSize: maskSize, maskSize,
         WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
         WebkitMaskPosition: "0px 0px", maskPosition: "0px 0px",
+        // Keep off-screen after animation ends so removing the animation prop
+        // doesn't snap the diamond back into view while the score is showing.
+        transform: (phase === "score" || phase === "flash") ? "translateY(200%)" : undefined,
         animation: phase === "exit"
-          ? `dev-diamond-drop ${vars.exitDuration}ms cubic-bezier(0.3, 0, 1, 1) forwards`
+          ? `dev-diamond-drop ${vars.exitDuration}ms linear forwards`
           : undefined,
       }}>
         <div style={{
