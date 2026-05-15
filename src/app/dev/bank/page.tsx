@@ -88,13 +88,30 @@ function BankButtonPreview({ vars, playing }: {
   const label = `BANK ${vars.score}`;
   const SIZE = 160;
 
+  // Hole geometry in the 160×160 container (proportional to Figma 258×42 in 268px height)
+  const HOLE_RY = 12.5;
+  const HOLE_CY = SIZE - HOLE_RY;
+
   return (
     <div style={{ width: SIZE, height: SIZE, overflow: "hidden", position: "relative" }}>
       <style>{buildExitKeyframes(vars.pausePct, vars.pauseDrift)}</style>
 
-      {/* Diamond */}
+      {/* z=0 — grey hole shape, behind diamond */}
+      {isExiting && vars.showHole > 0 && (
+        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
+          style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
+          <ellipse
+            cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
+            fill="#1A1A1A"
+            opacity={vars.showHole}
+            style={{ animation: "dev-hole-in 150ms ease-out forwards", transformBox: "fill-box", transformOrigin: "center" }}
+          />
+        </svg>
+      )}
+
+      {/* z=1 — diamond, falls */}
       <div style={{
-        position: "absolute", inset: 0,
+        position: "absolute", inset: 0, zIndex: 1,
         animation: phase === "exit"
           ? `dev-diamond-drop ${vars.exitDuration}ms cubic-bezier(0.3, 0, 1, 1) forwards`
           : undefined,
@@ -128,32 +145,24 @@ function BankButtonPreview({ vars, playing }: {
         </div>
       </div>
 
-      {/* Hole */}
-      {isExiting && vars.showHole > 0 && (
-        <svg
-          viewBox="0 0 258 42"
-          preserveAspectRatio="none"
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            width: "100%",
-            height: 42 / 160 * 100 + "%",
-            animation: `dev-hole-in 120ms ease-out forwards`,
-            transformOrigin: "center",
-            opacity: vars.showHole,
-            pointerEvents: "none",
-            overflow: "visible",
-          }}
-        >
-          <ellipse cx="129" cy="21" rx="129" ry="21" fill="#1A1A1A" />
+      {/* z=2 — black floor with ellipse hole, masks diamond on sides */}
+      {isExiting && (
+        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
+          style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
+          <defs>
+            <mask id="dev-floor-mask">
+              <rect width={SIZE} height={SIZE} fill="white" />
+              <ellipse cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY} fill="black" />
+            </mask>
+          </defs>
+          <rect width={SIZE} height={SIZE} fill="#000" mask="url(#dev-floor-mask)" />
         </svg>
       )}
 
-      {/* Rising score */}
+      {/* z=3 — rising score, above everything */}
       {showScore && (
         <div style={{
-          position: "absolute", inset: 0,
+          position: "absolute", inset: 0, zIndex: 3,
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 28,
           fontWeight: WEIGHT.semibold,
