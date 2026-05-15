@@ -80,7 +80,7 @@ function BankButtonPreview({ vars, playing }: {
     timers.current.forEach(clearTimeout);
     setPhase("exit");
     timers.current = [
-      setTimeout(() => setPhase("score"), vars.exitDuration),
+      setTimeout(() => setPhase("score"), vars.exitDuration + 80),
       setTimeout(() => setPhase("flash"), vars.flashDelay),
       setTimeout(() => setPhase("idle"), vars.totalDuration),
     ];
@@ -100,9 +100,26 @@ function BankButtonPreview({ vars, playing }: {
     <div style={{ width: SIZE, height: SIZE, overflow: "hidden", position: "relative" }}>
       <style>{buildExitKeyframes(vars.pausePct, vars.pauseDrift)}</style>
 
-      {/* z=0 — diamond, falls behind hole */}
+      {/* z=0 — grey hole, behind everything (diamond falls through this) */}
+      {isExiting && vars.showHole > 0 && (
+        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
+          style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
+          <ellipse
+            cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
+            fill="#1A1A1A"
+            opacity={vars.showHole}
+            style={{
+              animation: "dev-hole-in 150ms ease-out forwards",
+              animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
+              transformBox: "fill-box", transformOrigin: "center",
+            }}
+          />
+        </svg>
+      )}
+
+      {/* z=1 — diamond, falls (visible through hole against grey background) */}
       <div style={{
-        position: "absolute", inset: 0, zIndex: 0,
+        position: "absolute", inset: 0, zIndex: 1,
         animation: phase === "exit"
           ? `dev-diamond-drop ${vars.exitDuration}ms cubic-bezier(0.3, 0, 1, 1) forwards`
           : undefined,
@@ -136,11 +153,11 @@ function BankButtonPreview({ vars, playing }: {
         </div>
       </div>
 
-      {/* z=1 — black floor with ellipse cutout, delayed to appear when fast-fall begins */}
+      {/* z=2 — black floor with ellipse cutout, clips diamond to hole area */}
       {isExiting && (
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
           style={{
-            position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
+            position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none",
             opacity: 0,
             animation: `dev-floor-appear 60ms ease-out forwards`,
             animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
@@ -152,26 +169,6 @@ function BankButtonPreview({ vars, playing }: {
             </mask>
           </defs>
           <rect width={SIZE} height={SIZE} fill="#000" mask="url(#dev-floor-mask)" />
-        </svg>
-      )}
-
-      {/* z=2 — grey hole, in front of floor */}
-      {isExiting && vars.showHole > 0 && (
-        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
-          style={{
-            position: "absolute", inset: 0, zIndex: 2, overflow: "visible", pointerEvents: "none",
-            animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
-          }}>
-          <ellipse
-            cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
-            fill="#1A1A1A"
-            opacity={vars.showHole}
-            style={{
-              animation: "dev-hole-in 150ms ease-out forwards",
-              animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
-              transformBox: "fill-box", transformOrigin: "center",
-            }}
-          />
         </svg>
       )}
 
