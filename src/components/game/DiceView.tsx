@@ -50,6 +50,7 @@ export function DiceView({
   farkleBankLabel,
   farkleActionPressed = false,
   farkleBankPressed = false,
+  farkleBankReady = false,
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -71,6 +72,7 @@ export function DiceView({
   farkleBankLabel?: string;
   farkleActionPressed?: boolean;
   farkleBankPressed?: boolean;
+  farkleBankReady?: boolean;
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
@@ -350,7 +352,7 @@ export function DiceView({
               label={farkleBankLabel ?? "BANK"}
               enabled={farkleBankEnabled}
               onBank={farkleOnBank ?? (() => {})}
-              showButton={showButton}
+              showButton={showButton && farkleBankReady}
               pressed={farkleBankPressed}
             />
           </div>

@@ -419,6 +419,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     farkleBankLabel: belowThreshold && state.turnScore > 0 ? `NEED 500` : (state.turnScore > 0 ? `BANK ${state.turnScore}` : "BANK"),
     farkleActionPressed: aiPendingAction === "roll" || aiPendingAction === "set-aside",
     farkleBankPressed: aiPendingAction === "bank",
+    farkleBankReady: state.turnScore > 0,
   };
 
   return (
