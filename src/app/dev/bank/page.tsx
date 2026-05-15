@@ -13,7 +13,7 @@ const DEFAULTS = {
   scoreDuration: 260,
   flashDelay: 900,
   flashDuration: 200,
-  totalDuration: 1150,
+  totalDuration: 2000,
   showHole: 1,
   score: 350,
 };
