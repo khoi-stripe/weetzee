@@ -11,9 +11,9 @@ const DEFAULTS = {
   pausePct: 55,
   pauseDrift: 3,
   scoreDuration: 260,
-  flashDelay: 900,
+  flashDelay: 2000,
   flashDuration: 200,
-  totalDuration: 2000,
+  totalDuration: 2400,
   showHole: 1,
   score: 350,
 };
