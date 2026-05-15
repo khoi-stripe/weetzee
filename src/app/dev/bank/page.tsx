@@ -59,8 +59,8 @@ function buildStyles(pausePct: number, pauseDrift: number, size: number, holeRy:
       to   { transform: translateY(-40%); opacity: 0; }
     }
     @keyframes dev-hole-in {
-      from { transform: scale(0); }
-      to   { transform: scale(1); }
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
     }
   `;
 }
@@ -127,7 +127,7 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
             cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
             fill="#1A1A1A" opacity={vars.showHole}
             style={{
-              animation: `dev-hole-in 150ms ease-out ${hangDelay}ms forwards`,
+              animation: `dev-hole-in 400ms ease-out ${hangDelay}ms forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />
