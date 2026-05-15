@@ -61,6 +61,10 @@ function buildExitKeyframes(pausePct: number, pauseDrift: number) {
       from { transform: scale(0); }
       to   { transform: scale(1); }
     }
+    @keyframes dev-floor-appear {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
   `;
 }
 
@@ -132,23 +136,49 @@ function BankButtonPreview({ vars, playing }: {
         </div>
       </div>
 
-      {/* z=1 — grey hole, in front of diamond */}
+      {/* z=1 — black floor with ellipse cutout, delayed to appear when fast-fall begins */}
+      {isExiting && (
+        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
+          style={{
+            position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
+            opacity: 0,
+            animation: `dev-floor-appear 60ms ease-out forwards`,
+            animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
+          }}>
+          <defs>
+            <mask id="dev-floor-mask">
+              <rect width={SIZE} height={SIZE} fill="white" />
+              <ellipse cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY} fill="black" />
+            </mask>
+          </defs>
+          <rect width={SIZE} height={SIZE} fill="#000" mask="url(#dev-floor-mask)" />
+        </svg>
+      )}
+
+      {/* z=2 — grey hole, in front of floor */}
       {isExiting && vars.showHole > 0 && (
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
-          style={{ position: "absolute", inset: 0, zIndex: 1, overflow: "visible", pointerEvents: "none" }}>
+          style={{
+            position: "absolute", inset: 0, zIndex: 2, overflow: "visible", pointerEvents: "none",
+            animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
+          }}>
           <ellipse
             cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
             fill="#1A1A1A"
             opacity={vars.showHole}
-            style={{ animation: "dev-hole-in 150ms ease-out forwards", transformBox: "fill-box", transformOrigin: "center" }}
+            style={{
+              animation: "dev-hole-in 150ms ease-out forwards",
+              animationDelay: `${vars.pausePct / 100 * vars.exitDuration}ms`,
+              transformBox: "fill-box", transformOrigin: "center",
+            }}
           />
         </svg>
       )}
 
-      {/* z=2 — rising score */}
+      {/* z=3 — rising score */}
       {showScore && (
         <div style={{
-          position: "absolute", inset: 0, zIndex: 2,
+          position: "absolute", inset: 0, zIndex: 3,
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 28,
           fontWeight: WEIGHT.semibold,
