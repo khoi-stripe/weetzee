@@ -435,7 +435,7 @@ function FarkleBankButton({
       style={{
         width: "100%",
         height: "100%",
-        transform: showButton ? undefined : "scale(0)",
+        transform: showButton ? "rotate(45deg)" : "rotate(45deg) scale(0)",
       }}
     >
       <button
@@ -446,7 +446,7 @@ function FarkleBankButton({
         style={{
           width: "71%",
           height: "71%",
-          transform: pressed ? "rotate(45deg) scale(0.85)" : "rotate(45deg)",
+          transform: pressed ? "scale(0.85)" : undefined,
           outline: `1px solid ${COLOR.textPrimary}`,
           outlineOffset: -1,
           borderRadius: RADIUS.sm,
