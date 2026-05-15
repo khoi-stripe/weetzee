@@ -362,6 +362,85 @@ export function DiceView({
   );
 }
 
+// ===== Wavy animated border overlay =====
+
+function buildWavyPath(cx: number, cy: number, r: number, w1: number, a1: number, p1: number, w2: number, a2: number, p2: number, pts = 120): string {
+  const points: [number, number][] = [];
+  for (let i = 0; i < pts; i++) {
+    const angle = (i / pts) * Math.PI * 2;
+    const ripple = r + a1 * Math.sin(w1 * angle + p1) + a2 * Math.sin(w2 * angle + p2);
+    points.push([cx + ripple * Math.cos(angle), cy + ripple * Math.sin(angle)]);
+  }
+  const d: string[] = [`M ${points[0][0].toFixed(2)} ${points[0][1].toFixed(2)}`];
+  for (let i = 0; i < points.length; i++) {
+    const p0 = points[(i - 1 + points.length) % points.length];
+    const p1p = points[i];
+    const p2 = points[(i + 1) % points.length];
+    const p3 = points[(i + 2) % points.length];
+    const cp1x = p1p[0] + (p2[0] - p0[0]) / 6;
+    const cp1y = p1p[1] + (p2[1] - p0[1]) / 6;
+    const cp2x = p2[0] - (p3[0] - p1p[0]) / 6;
+    const cp2y = p2[1] - (p3[1] - p1p[1]) / 6;
+    d.push(`C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`);
+  }
+  return d.join(" ") + " Z";
+}
+
+function WavyBorder({ color, active }: { color: string; active: boolean }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pathRef = useRef<SVGPathElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const phase1 = useRef(0);
+  const phase2 = useRef(Math.PI * 0.7);
+  const raf = useRef<number>(0);
+  const last = useRef<number>(0);
+
+  useEffect(() => {
+    if (!active) {
+      cancelAnimationFrame(raf.current);
+      if (pathRef.current) pathRef.current.setAttribute("d", "");
+      return;
+    }
+    const WAVES = 17, AMP1 = 4, WAVES2 = 22, AMP2 = 1.6, S1 = -3.6, S2 = 7.2;
+    const PAD = AMP1 + AMP2 + 3;
+
+    const FRAME_MS = 1000 / 30;
+    function frame(ts: number) {
+      if (last.current && ts - last.current < FRAME_MS) {
+        raf.current = requestAnimationFrame(frame);
+        return;
+      }
+      const dt = last.current ? (ts - last.current) / 1000 : 0;
+      last.current = ts;
+      phase1.current += S1 * dt * Math.PI * 2 * 0.25;
+      phase2.current += S2 * dt * Math.PI * 2 * 0.25;
+
+      const el = containerRef.current;
+      if (el && pathRef.current && svgRef.current) {
+        const w = el.offsetWidth;
+        const svgSize = w + PAD * 2;
+        const c = svgSize / 2;
+        svgRef.current.setAttribute("width", String(svgSize));
+        svgRef.current.setAttribute("height", String(svgSize));
+        svgRef.current.style.left = `${-PAD}px`;
+        svgRef.current.style.top = `${-PAD}px`;
+        pathRef.current.setAttribute("d", buildWavyPath(c, c, w / 2, WAVES, AMP1, phase1.current, WAVES2, AMP2, phase2.current));
+      }
+      raf.current = requestAnimationFrame(frame);
+    }
+    raf.current = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf.current);
+  }, [active, color]);
+
+  return (
+    <div ref={containerRef} style={{ position: "absolute", inset: 0, pointerEvents: "none", borderRadius: "50%", overflow: "visible" }}>
+      <svg ref={svgRef} style={{ position: "absolute" }}>
+        <path ref={pathRef} d="" fill="transparent" stroke={color} strokeWidth={1.5} />
+      </svg>
+    </div>
+  );
+}
+
 // ===== Farkle Action Button (circular, in-grid) =====
 
 function FarkleActionButton({
@@ -384,32 +463,36 @@ function FarkleActionButton({
   const [introDone, setIntroDone] = useState(false);
   const animating = showButton && !introDone;
 
+  const showWavy = !!(hotDice && !pressed && showButton);
+
   return (
-    <button
-      onClick={enabled ? onAction : undefined}
-      disabled={!enabled && !pressed}
-      className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
-      onAnimationEnd={() => setIntroDone(true)}
-      style={{
-        width: "100%",
-        height: "100%",
-        outline: `1px solid ${pressed ? color : (enabled ? color : COLOR.textPrimary)}`,
-        outlineOffset: -1,
-        opacity: pressed ? 1 : (enabled ? 1 : 0.35),
-        fontSize: "clamp(11px, 8cqi, 100px)",
-        fontWeight: WEIGHT.semibold,
-        color: pressed ? COLOR.surfaceBg : (enabled ? color : COLOR.textPrimary),
-        background: pressed ? color : "transparent",
-        cursor: enabled ? "pointer" : "default",
-        transform: pressed ? "scale(0.85)" : (showButton ? undefined : "scale(0)"),
-        textAlign: "center",
-        lineHeight: 1.2,
-        padding: "8%",
-        ...hotDice && !pressed ? { "--hot-color": color, animation: "hot-dice-flash 1600ms ease" } as React.CSSProperties : {},
-      }}
-    >
-      {label}
-    </button>
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <WavyBorder color={color} active={showWavy} />
+      <button
+        onClick={enabled ? onAction : undefined}
+        disabled={!enabled && !pressed}
+        className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
+        onAnimationEnd={() => setIntroDone(true)}
+        style={{
+          width: "100%",
+          height: "100%",
+          outline: showWavy ? "none" : `1px solid ${pressed ? color : (enabled ? color : COLOR.textPrimary)}`,
+          outlineOffset: -1,
+          opacity: pressed ? 1 : (enabled ? 1 : 0.35),
+          fontSize: "clamp(11px, 8cqi, 100px)",
+          fontWeight: WEIGHT.semibold,
+          color: pressed ? COLOR.surfaceBg : (enabled ? color : COLOR.textPrimary),
+          background: pressed ? color : "transparent",
+          cursor: enabled ? "pointer" : "default",
+          transform: pressed ? "scale(0.85)" : (showButton ? undefined : "scale(0)"),
+          textAlign: "center",
+          lineHeight: 1.2,
+          padding: "8%",
+        }}
+      >
+        {label}
+      </button>
+    </div>
   );
 }
 
