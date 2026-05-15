@@ -7,11 +7,14 @@ import { COLOR } from "@/lib/color";
 import { RADIUS } from "@/lib/tokens";
 
 const DEFAULTS = {
-  exitDuration: 220,
+  exitDuration: 400,
+  pausePct: 40,      // % of exit animation spent "hanging" before drop
+  pauseDrift: 3,     // % translateY during the hang (slight upward bob)
   scoreDuration: 260,
-  flashDelay: 500,
+  flashDelay: 600,
   flashDuration: 200,
-  totalDuration: 700,
+  totalDuration: 850,
+  showHole: 1,
   score: 350,
 };
 
@@ -35,9 +38,34 @@ function Slider({ label, value, min, max, step = 1, onChange }: {
   );
 }
 
-function BankButtonPreview({ vars, color, playing }: {
+function buildExitKeyframes(pausePct: number, pauseDrift: number) {
+  // Looney Tunes: hangs at top, drifts slightly, then gravity catches up fast
+  const midPct = pausePct + (100 - pausePct) * 0.3;
+  return `
+    @keyframes dev-diamond-drop {
+      0%         { transform: translateY(0); }
+      ${pausePct * 0.5}%  { transform: translateY(-${pauseDrift}%); }
+      ${pausePct}%       { transform: translateY(-${pauseDrift * 0.5}%); }
+      ${midPct.toFixed(0)}%  { transform: translateY(20%); }
+      100%       { transform: translateY(130%); }
+    }
+    @keyframes dev-bank-rise {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes dev-bank-exit {
+      from { transform: translateY(0);    opacity: 1; }
+      to   { transform: translateY(-40%); opacity: 0; }
+    }
+    @keyframes dev-hole-in {
+      from { opacity: 0; transform: scaleX(0.3); }
+      to   { opacity: 1; transform: scaleX(1); }
+    }
+  `;
+}
+
+function BankButtonPreview({ vars, playing }: {
   vars: typeof DEFAULTS;
-  color: string;
   playing: boolean;
 }) {
   const [phase, setPhase] = useState<"idle" | "exit" | "score" | "flash">("idle");
@@ -61,27 +89,15 @@ function BankButtonPreview({ vars, color, playing }: {
   const SIZE = 160;
 
   return (
-    <div style={{
-      width: SIZE, height: SIZE,
-      overflow: "hidden",
-      position: "relative",
-    }}>
-      <style>{`
-        @keyframes dev-bank-rise {
-          from { transform: translateY(100%); opacity: 0; }
-          to   { transform: translateY(0);    opacity: 1; }
-        }
-        @keyframes dev-bank-exit {
-          from { transform: translateY(0);    opacity: 1; }
-          to   { transform: translateY(-40%); opacity: 0; }
-        }
-      `}</style>
+    <div style={{ width: SIZE, height: SIZE, overflow: "hidden", position: "relative" }}>
+      <style>{buildExitKeyframes(vars.pausePct, vars.pauseDrift)}</style>
 
-      {/* Diamond exit */}
+      {/* Diamond */}
       <div style={{
         position: "absolute", inset: 0,
-        transform: isExiting ? "translateY(130%)" : undefined,
-        transition: phase === "exit" ? `transform ${vars.exitDuration}ms ease-in` : "none",
+        animation: phase === "exit"
+          ? `dev-diamond-drop ${vars.exitDuration}ms cubic-bezier(0.3, 0, 1, 1) forwards`
+          : undefined,
       }}>
         <div style={{
           width: "100%", height: "100%",
@@ -112,6 +128,22 @@ function BankButtonPreview({ vars, color, playing }: {
         </div>
       </div>
 
+      {/* Hole */}
+      {isExiting && vars.showHole > 0 && (
+        <div style={{
+          position: "absolute",
+          bottom: 0,
+          left: "10%",
+          width: "80%",
+          height: 20,
+          borderRadius: "50%",
+          background: "radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 70%)",
+          animation: `dev-hole-in 120ms ease-out forwards`,
+          opacity: vars.showHole,
+          pointerEvents: "none",
+        }} />
+      )}
+
       {/* Rising score */}
       {showScore && (
         <div style={{
@@ -134,11 +166,9 @@ function BankButtonPreview({ vars, color, playing }: {
 
 export default function BankDevPage() {
   const [vars, setVars] = useState(DEFAULTS);
-  const [colorIndex, setColorIndex] = useState(0);
   const [playKey, setPlayKey] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const color = PLAYER_COLORS[colorIndex];
   const set = (key: keyof typeof DEFAULTS) => (v: number) => setVars((p) => ({ ...p, [key]: v }));
 
   function replay() {
@@ -149,10 +179,9 @@ export default function BankDevPage() {
     }, 50);
   }
 
-  // Auto-reset playing state
   useEffect(() => {
     if (!isPlaying) return;
-    const t = setTimeout(() => setIsPlaying(false), vars.totalDuration + 50);
+    const t = setTimeout(() => setIsPlaying(false), vars.totalDuration + 100);
     return () => clearTimeout(t);
   }, [isPlaying, playKey, vars.totalDuration]);
 
@@ -162,15 +191,18 @@ export default function BankDevPage() {
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center", gap: 40, padding: 24,
     }}>
-      <BankButtonPreview key={playKey} vars={vars} color={color} playing={isPlaying} />
+      <BankButtonPreview key={playKey} vars={vars} playing={isPlaying} />
 
       <div style={{ width: "100%", maxWidth: 440, display: "flex", flexDirection: "column", gap: 10, background: "#111", borderRadius: 12, padding: 20 }}>
-        <Slider label="exit duration (ms)"  value={vars.exitDuration}   min={50}  max={600} onChange={set("exitDuration")} />
-        <Slider label="score duration (ms)" value={vars.scoreDuration}  min={50}  max={600} onChange={set("scoreDuration")} />
-        <Slider label="flash delay (ms)"    value={vars.flashDelay}     min={100} max={900} onChange={set("flashDelay")} />
-        <Slider label="flash duration (ms)" value={vars.flashDuration}  min={50}  max={400} onChange={set("flashDuration")} />
-        <Slider label="total (ms)"          value={vars.totalDuration}  min={300} max={1200} onChange={set("totalDuration")} />
-        <Slider label="score"               value={vars.score}          min={50}  max={1000} step={50} onChange={set("score")} />
+        <Slider label="exit duration (ms)"  value={vars.exitDuration}  min={100} max={800} onChange={set("exitDuration")} />
+        <Slider label="pause % of exit"     value={vars.pausePct}      min={0}   max={70}  onChange={set("pausePct")} />
+        <Slider label="hang drift %"        value={vars.pauseDrift}    min={0}   max={20}  onChange={set("pauseDrift")} />
+        <Slider label="score rise (ms)"     value={vars.scoreDuration} min={50}  max={500} onChange={set("scoreDuration")} />
+        <Slider label="flash delay (ms)"    value={vars.flashDelay}    min={200} max={1000} onChange={set("flashDelay")} />
+        <Slider label="flash duration (ms)" value={vars.flashDuration} min={50}  max={400} onChange={set("flashDuration")} />
+        <Slider label="total (ms)"          value={vars.totalDuration} min={400} max={1400} onChange={set("totalDuration")} />
+        <Slider label="hole opacity"        value={vars.showHole}      min={0}   max={1}   step={0.05} onChange={set("showHole")} />
+        <Slider label="score"               value={vars.score}         min={50}  max={1000} step={50} onChange={set("score")} />
       </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
@@ -182,10 +214,6 @@ export default function BankDevPage() {
           style={{ padding: "6px 14px", background: "#333", color: "white", border: "none", borderRadius: 6, fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>
           Reset
         </button>
-        {PLAYER_COLORS.map((c, i) => (
-          <button key={c} onClick={() => setColorIndex(i)}
-            style={{ width: 28, height: 28, background: c, border: i === colorIndex ? "2px solid white" : "2px solid transparent", borderRadius: "50%", cursor: "pointer" }} />
-        ))}
       </div>
     </div>
   );
