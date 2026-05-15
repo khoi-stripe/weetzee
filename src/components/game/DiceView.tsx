@@ -147,7 +147,7 @@ export function DiceView({
 
   // Detect when a roll just happened (rollsUsed increased)
   useEffect(() => {
-    const justRolled = rollsUsed > prevRollsUsed.current && rollsUsed > 0;
+    const justRolled = rollsUsed === prevRollsUsed.current + 1;
     prevRollsUsed.current = rollsUsed;
     const dice = diceRef.current;
     const setAsideDiceIds = setAsideDiceIdsRef.current;
