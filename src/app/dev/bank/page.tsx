@@ -130,18 +130,23 @@ function BankButtonPreview({ vars, playing }: {
 
       {/* Hole */}
       {isExiting && vars.showHole > 0 && (
-        <div style={{
-          position: "absolute",
-          bottom: 0,
-          left: "10%",
-          width: "80%",
-          height: 20,
-          borderRadius: "50%",
-          background: "radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 70%)",
-          animation: `dev-hole-in 120ms ease-out forwards`,
-          opacity: vars.showHole,
-          pointerEvents: "none",
-        }} />
+        <svg
+          viewBox="0 0 258 42"
+          preserveAspectRatio="none"
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            height: 42 / 160 * 100 + "%",
+            animation: `dev-hole-in 120ms ease-out forwards`,
+            opacity: vars.showHole,
+            pointerEvents: "none",
+            overflow: "visible",
+          }}
+        >
+          <ellipse cx="129" cy="21" rx="129" ry="21" fill="#1A1A1A" />
+        </svg>
       )}
 
       {/* Rising score */}
