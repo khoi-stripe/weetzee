@@ -222,7 +222,7 @@ export default function BankDevPage() {
         <Slider label="score rise (ms)"     value={vars.scoreDuration} min={50}  max={500} onChange={set("scoreDuration")} />
         <Slider label="flash delay (ms)"    value={vars.flashDelay}    min={200} max={1000} onChange={set("flashDelay")} />
         <Slider label="flash duration (ms)" value={vars.flashDuration} min={50}  max={400} onChange={set("flashDuration")} />
-        <Slider label="total (ms)"          value={vars.totalDuration} min={400} max={1400} onChange={set("totalDuration")} />
+        <Slider label="total (ms)"          value={vars.totalDuration} min={400} max={4000} onChange={set("totalDuration")} />
         <Slider label="hole opacity"        value={vars.showHole}      min={0}   max={1}   step={0.05} onChange={set("showHole")} />
         <Slider label="score"               value={vars.score}         min={50}  max={1000} step={50} onChange={set("score")} />
       </div>
