@@ -264,7 +264,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
   const playerTotal = (currentPlayer.scores["total"] as number) ?? 0;
   const needsOpening = state.openingThresholdEnabled && playerTotal === 0;
   const belowThreshold = needsOpening && state.turnScore < 500;
-  const canBank = (state.farkled || (!state.mustSetAside && state.turnScore > 0 && !belowThreshold)) && hasRolled && !heldDice.length;
+  const canBank = !state.farkled && !state.mustSetAside && state.turnScore > 0 && !belowThreshold && hasRolled && !heldDice.length;
 
   // Combined action button: ROLL or SET ASIDE depending on state
   let actionLabel: string;
@@ -416,7 +416,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     farkleActionEnabled: actionEnabled,
     farkleBankEnabled: canBank,
     farkleOnBank: isAITurn ? () => {} : (state.farkled ? handleBustDone : handleBank),
-    farkleBankLabel: state.farkled ? "NEXT" : (canBank ? `BANK ${state.turnScore}` : (belowThreshold && state.turnScore > 0 ? `NEED 500` : "BANK")),
+    farkleBankLabel: belowThreshold && state.turnScore > 0 ? `NEED 500` : (state.turnScore > 0 ? `BANK ${state.turnScore}` : "BANK"),
     farkleActionPressed: aiPendingAction === "roll" || aiPendingAction === "set-aside",
     farkleBankPressed: aiPendingAction === "bank",
   };
@@ -632,7 +632,6 @@ export function FarkleBustScreen({
   keptDice: { value: number }[];
 }) {
   const [displayScore, setDisplayScore] = useState(lostScore);
-
   useEffect(() => {
     if (lostScore <= 0) return;
 
