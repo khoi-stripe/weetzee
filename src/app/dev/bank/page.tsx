@@ -58,8 +58,8 @@ function buildExitKeyframes(pausePct: number, pauseDrift: number) {
       to   { transform: translateY(-40%); opacity: 0; }
     }
     @keyframes dev-hole-in {
-      from { opacity: 0; transform: scaleX(0.3); }
-      to   { opacity: 1; transform: scaleX(1); }
+      from { transform: scale(0); }
+      to   { transform: scale(1); }
     }
   `;
 }
@@ -140,6 +140,7 @@ function BankButtonPreview({ vars, playing }: {
             width: "100%",
             height: 42 / 160 * 100 + "%",
             animation: `dev-hole-in 120ms ease-out forwards`,
+            transformOrigin: "center",
             opacity: vars.showHole,
             pointerEvents: "none",
             overflow: "visible",
