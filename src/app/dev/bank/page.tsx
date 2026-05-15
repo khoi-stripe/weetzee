@@ -96,22 +96,9 @@ function BankButtonPreview({ vars, playing }: {
     <div style={{ width: SIZE, height: SIZE, overflow: "hidden", position: "relative" }}>
       <style>{buildExitKeyframes(vars.pausePct, vars.pauseDrift)}</style>
 
-      {/* z=0 — grey hole shape, behind diamond */}
-      {isExiting && vars.showHole > 0 && (
-        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
-          style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
-          <ellipse
-            cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
-            fill="#1A1A1A"
-            opacity={vars.showHole}
-            style={{ animation: "dev-hole-in 150ms ease-out forwards", transformBox: "fill-box", transformOrigin: "center" }}
-          />
-        </svg>
-      )}
-
-      {/* z=1 — diamond, falls */}
+      {/* z=0 — diamond, falls behind hole */}
       <div style={{
-        position: "absolute", inset: 0, zIndex: 1,
+        position: "absolute", inset: 0, zIndex: 0,
         animation: phase === "exit"
           ? `dev-diamond-drop ${vars.exitDuration}ms cubic-bezier(0.3, 0, 1, 1) forwards`
           : undefined,
@@ -145,24 +132,23 @@ function BankButtonPreview({ vars, playing }: {
         </div>
       </div>
 
-      {/* z=2 — black floor with ellipse hole, masks diamond on sides */}
-      {isExiting && (
+      {/* z=1 — grey hole, in front of diamond */}
+      {isExiting && vars.showHole > 0 && (
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
-          style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
-          <defs>
-            <mask id="dev-floor-mask">
-              <rect width={SIZE} height={SIZE} fill="white" />
-              <ellipse cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY} fill="black" />
-            </mask>
-          </defs>
-          <rect width={SIZE} height={SIZE} fill="#000" mask="url(#dev-floor-mask)" />
+          style={{ position: "absolute", inset: 0, zIndex: 1, overflow: "visible", pointerEvents: "none" }}>
+          <ellipse
+            cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
+            fill="#1A1A1A"
+            opacity={vars.showHole}
+            style={{ animation: "dev-hole-in 150ms ease-out forwards", transformBox: "fill-box", transformOrigin: "center" }}
+          />
         </svg>
       )}
 
-      {/* z=3 — rising score, above everything */}
+      {/* z=2 — rising score */}
       {showScore && (
         <div style={{
-          position: "absolute", inset: 0, zIndex: 3,
+          position: "absolute", inset: 0, zIndex: 2,
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 28,
           fontWeight: WEIGHT.semibold,
