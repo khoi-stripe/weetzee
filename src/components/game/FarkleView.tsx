@@ -616,7 +616,7 @@ const FARKLE_REFERENCE = [
 
 // ===== Farkle Bust Screen =====
 
-function FarkleBustScreen({
+export function FarkleBustScreen({
   player,
   lostScore,
   exiting,
@@ -675,7 +675,7 @@ function FarkleBustScreen({
         <span style={{ ...TYPE.titleBold }}>
           {player.name}
         </span>
-        <span style={{ ...TYPE.displayBold, color: COLOR.surfaceBg, textAlign: "center" }}>
+        <span style={{ ...TYPE.subDisplayBold, color: COLOR.surfaceBg, textAlign: "center" }}>
           FARKLE!
         </span>
 

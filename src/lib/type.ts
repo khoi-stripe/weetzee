@@ -18,6 +18,7 @@ export const SIZE = {
   body: 13, // default body text and button labels
   title: 16, // page titles, modal prompts
   headline: 20, // hero titles in interstitials
+  subDisplay: 32, // large labels and interstitial callouts
   display: 48, // giant numeric displays (FarkleBust, GameOver)
 } as const;
 
@@ -56,6 +57,10 @@ export const TYPE = {
 
   // ----- Headline (20px) -----
   headline: { fontSize: SIZE.headline, fontWeight: WEIGHT.bold },
+
+  // ----- Sub-display (32px) -----
+  subDisplay: { fontSize: SIZE.subDisplay, fontWeight: WEIGHT.extrabold },
+  subDisplayBold: { fontSize: SIZE.subDisplay, fontWeight: WEIGHT.bold },
 
   // ----- Display (48px) -----
   display: { fontSize: SIZE.display, fontWeight: WEIGHT.extrabold },

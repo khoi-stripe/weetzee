@@ -115,18 +115,8 @@ body {
 }
 
 @keyframes splash-spin-scale {
-  0%   { transform: rotate(-1260deg) scale(0);   opacity: 0; }
-  /* Big overshoot on the first arrival — opacity ramps in across the full
-     entrance so the logo materializes alongside the spin/scale. */
-  55%  { transform: rotate(7deg)  scale(1.18);   opacity: 1; }
-  /* Spring back: oscillations are packed tighter so the bounce snaps
-     instead of meandering, then rests until fade-out. */
-  61%  { transform: rotate(-7deg)  scale(0.9);  }
-  66%  { transform: rotate(4deg)   scale(1.06); }
-  70%  { transform: rotate(-1.5deg) scale(0.985); }
-  74%  { transform: rotate(0.5deg) scale(1.005); }
-  78%  { transform: rotate(0deg)   scale(1);    opacity: 1; }
-  100% { transform: rotate(0deg)   scale(1);    opacity: 1; }
+  0%   { transform: rotate(-720deg) scale(0); opacity: 0; }
+  100% { transform: rotate(0deg)     scale(1); opacity: 1; }
 }
 
 .animate-spin-in {
