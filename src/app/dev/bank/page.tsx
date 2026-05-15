@@ -13,7 +13,7 @@ const DEFAULTS = {
   scoreDuration: 260,
   flashDelay: 2000,
   flashDuration: 200,
-  totalDuration: 2400,
+  totalDuration: 3000,
   showHole: 1,
   score: 350,
 };
@@ -127,7 +127,7 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
             cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
             fill="#1A1A1A" opacity={vars.showHole}
             style={{
-              animation: `dev-hole-in 400ms ease-out ${hangDelay}ms forwards`,
+              animation: `dev-hole-in 1000ms ease-out ${hangDelay}ms forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />
