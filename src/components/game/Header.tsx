@@ -650,24 +650,24 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
           <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 16 }}>
             One-time purchase. Helps keep Weetzee free.
           </p>
-          <button
-            onClick={handlePurchase}
-            disabled={loading}
-            className="flex items-center justify-center rounded-full pressable"
-            style={{
-              ...TYPE.bodyEmphasis,
-              width: "100%",
-              height: 48,
-              background: COLOR.textPrimary,
-              color: COLOR.surfaceBg,
-              border: "none",
-              cursor: loading ? "default" : "pointer",
-              opacity: loading ? 0.5 : 1,
-              transition: "opacity 150ms",
-            }}
-          >
-            {loading ? "Loading..." : "Support Weetzee — $2.99"}
-          </button>
+          <div className="support-border-ring" style={{ opacity: loading ? 0.5 : 1, transition: "opacity 150ms" }}>
+            <button
+              onClick={handlePurchase}
+              disabled={loading}
+              className="flex items-center justify-center rounded-full pressable"
+              style={{
+                ...TYPE.bodyEmphasis,
+                width: "100%",
+                height: 48,
+                background: COLOR.textPrimary,
+                color: COLOR.surfaceBg,
+                border: "none",
+                cursor: loading ? "default" : "pointer",
+              }}
+            >
+              {loading ? "Loading..." : "Support Weetzee — $2.99"}
+            </button>
+          </div>
         </>
       )}
       <button
