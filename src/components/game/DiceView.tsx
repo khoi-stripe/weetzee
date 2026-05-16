@@ -604,8 +604,8 @@ function FarkleBankButton({
             fill={color}
             style={{
               animation: bankAnim === "score"
-                ? `bank-hole-close-${sz} 200ms ease-in 80ms forwards`
-                : `bank-hole-open-${sz} 200ms ease-out forwards`,
+                ? `bank-hole-close-${sz} 100ms ease-in 150ms forwards`
+                : `bank-hole-open-${sz} 100ms ease-out forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />
