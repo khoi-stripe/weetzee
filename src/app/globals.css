@@ -124,13 +124,13 @@ body {
 }
 
 @keyframes bank-score-rise {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from { transform: translateY(100%) scale(0.9); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);   opacity: 1; }
 }
 
 @keyframes bank-score-exit {
-  from { transform: translateY(0);    opacity: 1; }
-  to   { transform: translateY(-40%); opacity: 0; }
+  0%   { transform: translateY(0)    scale(1.12); opacity: 1; }
+  100% { transform: translateY(-40%) scale(0.9);  opacity: 0; }
 }
 
 @keyframes interstitial-in {

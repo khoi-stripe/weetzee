@@ -605,7 +605,7 @@ function FarkleBankButton({
             style={{
               animation: bankAnim === "score"
                 ? `bank-hole-close-${sz} 100ms ease-in 150ms forwards`
-                : `bank-hole-open-${sz} 100ms ease-out forwards`,
+                : `bank-hole-open-${sz} 320ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />
@@ -669,8 +669,8 @@ function FarkleBankButton({
           fontWeight: WEIGHT.semibold,
           color: COLOR.textPrimary,
           animation: bankAnim === "score"
-            ? "bank-score-rise 260ms cubic-bezier(0, 0, 0.2, 1) forwards"
-            : "bank-score-exit 200ms ease-out forwards",
+            ? "bank-score-rise 260ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards"
+            : "bank-score-exit 200ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards",
         }}>
           {bankAnim === "flash" ? "*" : scoreOnly}
         </div>
