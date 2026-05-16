@@ -62,7 +62,7 @@ export function GameOverScreen({
       >
         <DialogCard
           background={winner.color}
-          maxWidth="calc(100dvh - 48px - 109.67px - 24px - 32px - 32px)"
+          maxWidth="calc(100dvh - 48px - 100px - 24px - 32px - 32px)"
         >
           <span style={{ ...TYPE.body }}>{winner.name} wins!</span>
           <span style={{ ...TYPE.displayBold }}>{winner.total}</span>
@@ -86,7 +86,6 @@ export function GameOverScreen({
           </RoundButton>
           <RoundButton
             variant="filled"
-            size={109.67}
             onClick={() => { playTap(); onPlayAgain(); }}
           >
             Play again
