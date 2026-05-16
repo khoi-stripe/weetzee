@@ -4,7 +4,11 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PLAYER_COLORS } from "@/lib/types";
 import { COLOR } from "@/lib/color";
-import { TYPE, WEIGHT } from "@/lib/type";
+import { TYPE } from "@/lib/type";
+import { Z } from "@/lib/tokens";
+import { Scrim } from "@/components/ui/Scrim";
+import { DialogCard } from "@/components/ui/DialogCard";
+import { RoundButton } from "@/components/ui/RoundButton";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -340,44 +344,23 @@ export default function SnakePage() {
 
         {/* Start prompt */}
         {!started && !over && (
-          <div style={{
-            position: "absolute", inset: 0, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", gap: 8,
-            background: "rgba(0,0,0,0.6)",
-          }}>
+          <Scrim position="absolute" zIndex={Z.interstitial} background="rgba(0,0,0,0.6)">
             <span style={{ ...TYPE.titleBold, color: COLOR.textPrimary }}>Snake</span>
             <span style={{ ...TYPE.microRegular, color: COLOR.textMuted }}>Swipe or use arrow keys</span>
-          </div>
+          </Scrim>
         )}
 
         {/* Game over */}
         {over && (
-          <div style={{
-            position: "absolute", inset: 0, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", gap: 16,
-            background: "rgba(0,0,0,0.75)",
-          }}>
-            <span style={{ ...TYPE.titleBold, color: COLOR.textPrimary }}>Game over</span>
-            <span style={{ fontSize: 40, fontWeight: WEIGHT.extrabold, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
-              {score}
-            </span>
-            <button
-              onClick={handleRestart}
-              style={{
-                ...TYPE.bodyEmphasis,
-                marginTop: 8,
-                padding: "12px 32px",
-                borderRadius: 9999,
-                background: COLOR.textPrimary,
-                color: COLOR.surfaceBg,
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
+          <Scrim position="absolute" zIndex={Z.interstitial}>
+            <DialogCard>
+              <span style={{ ...TYPE.body, color: COLOR.textPrimary }}>Game over</span>
+              <span style={{ ...TYPE.displayBold, fontVariantNumeric: "tabular-nums" }}>{score}</span>
+            </DialogCard>
+            <RoundButton variant="filled" onClick={handleRestart}>
               Play again
-            </button>
-          </div>
+            </RoundButton>
+          </Scrim>
         )}
       </div>
     </div>
