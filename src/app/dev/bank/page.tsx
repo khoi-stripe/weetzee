@@ -156,7 +156,7 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
           transform: "rotate(45deg)",
         }}>
           <div style={{
-            width: "71%", height: "71%",
+            width: "66%", height: "66%",
             outline: `1.5px solid ${COLOR.textPrimary}`,
             outlineOffset: -1,
             borderRadius: RADIUS.sm,
