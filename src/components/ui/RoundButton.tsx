@@ -50,7 +50,7 @@ export function RoundButton({
 }: RoundButtonProps) {
   const filled = variant === "filled";
   const resolvedTextColor = textColor ?? (filled ? COLOR.inverse : color);
-  const background = filled ? color : "transparent";
+  const background = filled ? color : COLOR.surfaceBg;
 
   return (
     <button
