@@ -38,7 +38,6 @@ export const DiceView = memo(function DiceView({
   onRoll,
   onToggleHold,
   alignTop = false,
-  dieValueMap,
   farkleMode = false,
   setAsideDiceIds = [],
   farkled = false,
@@ -60,7 +59,6 @@ export const DiceView = memo(function DiceView({
   onRoll: () => void;
   onToggleHold: (id: number) => void;
   alignTop?: boolean;
-  dieValueMap?: Record<number, number>;
   farkleMode?: boolean;
   setAsideDiceIds?: number[];
   farkled?: boolean;
@@ -314,7 +312,6 @@ export const DiceView = memo(function DiceView({
               label={rollsUsed === 0 ? "Roll me" : undefined}
               rolling={rollingDice.has(i)}
               flash={flashDice.has(i)}
-              dieValueMap={dieValueMap}
               setAside={isSetAside}
               setAsideColor={playerColor}
             />

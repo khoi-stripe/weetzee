@@ -59,9 +59,8 @@ function GameContent() {
   const hasCPU = state.players.some((p) => p.isComputer);
   const gameStarted = state.rollsUsed > 0 || state.turn > 1;
   const isFarkle = !!state.ruleset.farkle;
-  const isTarget = !!state.ruleset.targetAssignment;
-  const showSixDice = !isFarkle && !isTarget;
-  const showOrderedScoring = !isFarkle && !isTarget;
+  const showSixDice = !isFarkle;
+  const showOrderedScoring = !isFarkle;
 
   return (
     <div
@@ -72,11 +71,9 @@ function GameContent() {
         rulesetId={state.ruleset.id}
         rulesetName={state.ruleset.name}
         rollBankingEnabled={state.rollBankingEnabled}
-        onToggleRollBanking={state.ruleset.forcedRolls || isTarget || isFarkle ? undefined : game.toggleRollBanking}
+        onToggleRollBanking={isFarkle ? undefined : game.toggleRollBanking}
         multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
-        onToggleMultipleWeetzees={isTarget || isFarkle ? undefined : game.toggleMultipleWeetzees}
-        sequentialTargetsEnabled={isTarget ? state.sequentialTargetsEnabled : undefined}
-        onToggleSequentialTargets={isTarget ? (gameStarted ? undefined : game.toggleSequentialTargets) : undefined}
+        onToggleMultipleWeetzees={isFarkle ? undefined : game.toggleMultipleWeetzees}
         scoringHintsEnabled={state.scoringHintsEnabled}
         onToggleScoringHints={isFarkle ? game.toggleScoringHints : undefined}
         sixDiceEnabled={showSixDice ? state.sixDiceEnabled : undefined}

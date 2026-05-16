@@ -41,7 +41,6 @@ export const Die = memo(function Die({
   flash = false,
   label,
   coloredPips = false,
-  dieValueMap,
   setAside = false,
   setAsideColor,
 }: {
@@ -55,11 +54,9 @@ export const Die = memo(function Die({
   flash?: boolean;
   label?: string;
   coloredPips?: boolean;
-  dieValueMap?: Record<number, number>;
   setAside?: boolean;
   setAsideColor?: string;
 }) {
-  const mappedValue = dieValueMap?.[value];
   const pips = PIP_LAYOUTS[value] ?? [];
   const pipSize = size === "sm" ? "16%" : "17%";
 
@@ -118,18 +115,6 @@ export const Die = memo(function Die({
         >
           {label}
         </div>
-      ) : mappedValue !== undefined ? (
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: pipSize,
-            height: pipSize,
-            left: `calc(50% - ${pipSize} / 2)`,
-            top: `calc(50% - ${pipSize} / 2)`,
-            background: "transparent",
-            boxShadow: `inset 0 0 0 4px ${pipColor}`,
-          }}
-        />
       ) : (
         pips.map(([x, y], i) => (
           <div

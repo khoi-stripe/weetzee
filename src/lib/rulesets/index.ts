@@ -1,6 +1,5 @@
 import type { Ruleset } from "../types";
 import { CLASSIC_RULESET, getFullTotal, getBonusScore } from "./classic";
-import { KEEP_YOUR_HEAD_DOWN_RULESET } from "./keep-your-head-down";
 import { KISMET_RULESET } from "./kismet";
 import { FARKLE_RULESET } from "./farkle";
 
@@ -8,14 +7,9 @@ export const ALL_RULESETS: Ruleset[] = [
   FARKLE_RULESET,
   CLASSIC_RULESET,
   KISMET_RULESET,
-  KEEP_YOUR_HEAD_DOWN_RULESET,
 ];
 
-const HIDDEN_IDS = new Set(["keep-your-head-down"]);
-
-export const VISIBLE_RULESETS: Ruleset[] = ALL_RULESETS.filter(
-  (r) => !HIDDEN_IDS.has(r.id)
-);
+export const VISIBLE_RULESETS: Ruleset[] = ALL_RULESETS;
 
 export function getRuleset(id: string): Ruleset {
   return ALL_RULESETS.find((r) => r.id === id) ?? CLASSIC_RULESET;

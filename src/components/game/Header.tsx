@@ -29,8 +29,6 @@ export function Header({
   onToggleRollBanking,
   multipleWeetzeesEnabled,
   onToggleMultipleWeetzees,
-  sequentialTargetsEnabled,
-  onToggleSequentialTargets,
   scoringHintsEnabled,
   onToggleScoringHints,
   sixDiceEnabled,
@@ -54,8 +52,6 @@ export function Header({
   onToggleRollBanking?: () => void;
   multipleWeetzeesEnabled?: boolean;
   onToggleMultipleWeetzees?: () => void;
-  sequentialTargetsEnabled?: boolean;
-  onToggleSequentialTargets?: () => void;
   scoringHintsEnabled?: boolean;
   onToggleScoringHints?: () => void;
   sixDiceEnabled?: boolean;
@@ -144,8 +140,6 @@ export function Header({
           onToggleRollBanking={onToggleRollBanking}
           multipleWeetzeesEnabled={multipleWeetzeesEnabled}
           onToggleMultipleWeetzees={onToggleMultipleWeetzees}
-          sequentialTargetsEnabled={sequentialTargetsEnabled}
-          onToggleSequentialTargets={onToggleSequentialTargets}
           scoringHintsEnabled={scoringHintsEnabled}
           onToggleScoringHints={onToggleScoringHints}
           sixDiceEnabled={sixDiceEnabled}
@@ -206,39 +200,6 @@ function ClassicRules() {
           <ScoreRow name="Chance" value="Sum of all dice" />
           <ScoreRow name="Weetzee" value="50 pts" />
         </ScoreTable>
-      </Section>
-    </>
-  );
-}
-
-function KeepYourHeadDownRules() {
-  return (
-    <>
-      <Section title="Goal">
-        <p>Lowest total score wins. Each round, try to hit a number target as closely as possible.</p>
-      </Section>
-      <Section title="Targets">
-        <p>11 rounds with targets <b>10–20</b>. Each target is used once.</p>
-      </Section>
-      <Section title="Dice">
-        <p>5 dice. Face <b>3 = 0 points</b>; all others score at face value (1, 2, 4, 5, 6).</p>
-        <p style={{ marginTop: 8, color: COLOR.textMuted }}>The sum of all 5 dice determines your score each round.</p>
-      </Section>
-      <Section title="Rolling">
-        <RuleRow name="Roll all 5" desc="Start each round by rolling all dice" />
-        <RuleRow name="Hold & re-roll" desc="Hold any dice, then re-roll the rest" />
-        <RuleRow name="Stop anytime" desc="After any roll, you can stop and score" />
-        <p style={{ marginTop: 8, color: COLOR.textMuted }}>Maximum 3 rolls per round.</p>
-      </Section>
-      <Section title="Scoring">
-        <p>After rolling, choose an unused target to assign your total against.</p>
-        <ScoreTable>
-          <ScoreRow name="Exact match" value="−3 pts (reward)" />
-          <ScoreRow name="Any miss" value="difference × 3 pts" />
-        </ScoreTable>
-      </Section>
-      <Section title="Strategy">
-        <p style={{ color: COLOR.textMuted }}>Threes are worth 0 — great for low targets, but they make high targets harder to reach.</p>
       </Section>
     </>
   );
@@ -338,10 +299,9 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
       <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 8 }}>
         {description} — {diceCount} dice
         {id === "farkle" ? "" : ", 3 rolls per turn"}
-        {id === "keep-your-head-down" ? ", lowest score wins" : ", highest score wins"}
+        {", highest score wins"}
       </p>
       {id === "weetzee" && <ClassicRules />}
-      {id === "keep-your-head-down" && <KeepYourHeadDownRules />}
       {id === "kismet" && <KismetRules />}
       {id === "farkle" && <FarkleRules />}
     </div>
@@ -358,8 +318,6 @@ function RulesModal({
   onToggleRollBanking,
   multipleWeetzeesEnabled,
   onToggleMultipleWeetzees,
-  sequentialTargetsEnabled,
-  onToggleSequentialTargets,
   scoringHintsEnabled,
   onToggleScoringHints,
   sixDiceEnabled,
@@ -382,8 +340,6 @@ function RulesModal({
   onToggleRollBanking?: () => void;
   multipleWeetzeesEnabled?: boolean;
   onToggleMultipleWeetzees?: () => void;
-  sequentialTargetsEnabled?: boolean;
-  onToggleSequentialTargets?: () => void;
   scoringHintsEnabled?: boolean;
   onToggleScoringHints?: () => void;
   sixDiceEnabled?: boolean;
@@ -514,15 +470,13 @@ function RulesModal({
               </>
             ) : rulesetId === "kismet" ? (
               <KismetRules />
-            ) : rulesetId === "keep-your-head-down" ? (
-              <KeepYourHeadDownRules />
             ) : rulesetId === "farkle" ? (
               <FarkleRules />
             ) : (
               <ClassicRules />
             )}
 
-            {(onToggleRollBanking || onToggleMultipleWeetzees || onToggleSequentialTargets || onToggleScoringHints || onToggleSixDice !== undefined || onToggleOrderedScoring !== undefined || onToggleOpeningThreshold || onTogglePiggyback) && (
+            {(onToggleRollBanking || onToggleMultipleWeetzees || onToggleScoringHints || onToggleSixDice !== undefined || onToggleOrderedScoring !== undefined || onToggleOpeningThreshold || onTogglePiggyback) && (
               <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
                 <h3
                   style={{
@@ -547,15 +501,6 @@ function RulesModal({
                     desc="Score extra Weetzees for 100 pts each"
                     enabled={!!multipleWeetzeesEnabled}
                     onToggle={onToggleMultipleWeetzees}
-                  />
-                )}
-                {sequentialTargetsEnabled !== undefined && (
-                  <ToggleRow
-                    label="Sequential targets"
-                    desc={onToggleSequentialTargets ? "Must score targets in order (10, 11, ... 20)" : "Must score targets in order (set before game starts)"}
-                    enabled={!!sequentialTargetsEnabled}
-                    onToggle={onToggleSequentialTargets}
-                    disabled={!onToggleSequentialTargets}
                   />
                 )}
                 {onToggleScoringHints && (
@@ -764,7 +709,6 @@ function AboutContent() {
             <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>{r.name}</span>
             <span style={{ color: COLOR.textMuted }}>
               {r.id === "weetzee" && " — The standard game. 5 dice, 13 categories, highest score wins."}
-              {r.id === "keep-your-head-down" && " — Same categories, but lowest score wins. You must use all 3 rolls and score your highest available category."}
               {r.id === "kismet" && " — Dice have colored pips. New color-based categories like flushes and same-color full houses."}
               {r.id === "farkle" && " — Push your luck! Set aside scoring dice and keep rolling, or bank your points. First to 10,000 wins."}
             </span>

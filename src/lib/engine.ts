@@ -54,11 +54,10 @@ export function makeInitialState(ruleset: Ruleset, playerCount: number, aiIndice
     dice: makeDice(ruleset.diceCount),
     rollsUsed: 0,
     turn: 1,
-    view: ruleset.targetAssignment ? "scorecard" : "rolling",
+    view: "rolling",
     gameOver: false,
     rollBankingEnabled: false,
     multipleWeetzeesEnabled: false,
-    sequentialTargetsEnabled: false,
     turnScore: 0,
     turnScoreAtRollStart: 0,
     setAsideDiceIds: [],
@@ -83,17 +82,6 @@ export function getEffectiveRollsPerTurn(state: GameState): number {
   if (!state.rollBankingEnabled) return state.ruleset.rollsPerTurn;
   const player = state.players[state.currentPlayerIndex];
   return state.ruleset.rollsPerTurn + player.bankedRolls;
-}
-
-// ===== Die Value Helpers =====
-
-export function getMappedDieValue(face: number, dieValueMap?: Record<number, number>): number {
-  if (!dieValueMap) return face;
-  return dieValueMap[face] ?? face;
-}
-
-export function getMappedDiceSum(dice: number[], dieValueMap?: Record<number, number>): number {
-  return dice.reduce((sum, face) => sum + getMappedDieValue(face, dieValueMap), 0);
 }
 
 // ===== Score Helpers =====
@@ -162,7 +150,7 @@ function advanceTurn(state: GameState): GameState {
     dice: newDice,
     rollsUsed: 0,
     turn: nextTurn,
-    view: state.ruleset.targetAssignment ? "scorecard" : "rolling",
+    view: "rolling",
     turnScore: 0,
     turnScoreAtRollStart: 0,
     setAsideDiceIds: [],
@@ -262,8 +250,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.rollsUsed === 0) return state;
 
       const effectiveMax = getEffectiveRollsPerTurn(state);
-      if (state.ruleset.forcedRolls && state.rollsUsed < effectiveMax) return state;
-
       const diceValues = state.dice.map((d) => d.value);
       const category = state.ruleset.categories.find(
         (c) => c.id === action.categoryId
@@ -275,7 +261,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const fiveId = state.ruleset.fiveOfAKindId ?? "weetzee";
       const isWeetzee = hasAllSame(diceValues);
       const alreadyScoredWeetzee = currentPlayer.scores[fiveId] !== undefined && currentPlayer.scores[fiveId] !== null;
-      const earnExtraWeetzee = !state.ruleset.targetAssignment && state.multipleWeetzeesEnabled && isWeetzee && alreadyScoredWeetzee && (currentPlayer.scores[fiveId] ?? 0) > 0;
+      const earnExtraWeetzee = state.multipleWeetzeesEnabled && isWeetzee && alreadyScoredWeetzee && (currentPlayer.scores[fiveId] ?? 0) > 0;
 
       const updatedPlayers = state.players.map((p, i) =>
         i === state.currentPlayerIndex
@@ -306,11 +292,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "TOGGLE_MULTIPLE_WEETZEES": {
       return { ...state, multipleWeetzeesEnabled: !state.multipleWeetzeesEnabled };
-    }
-
-    case "TOGGLE_SEQUENTIAL_TARGETS": {
-      if (state.rollsUsed > 0 || state.turn > 1) return state;
-      return { ...state, sequentialTargetsEnabled: !state.sequentialTargetsEnabled };
     }
 
     case "SET_ASIDE": {

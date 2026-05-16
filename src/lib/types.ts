@@ -21,11 +21,6 @@ export interface Ruleset {
   fiveOfAKindId?: string;
   pipColors?: boolean;
   orderedScoring?: boolean;
-  forcedRolls?: boolean;
-  highestScoreOnly?: boolean;
-  alwaysAvailableId?: string;
-  dieValueMap?: Record<number, number>;
-  targetAssignment?: boolean;
   farkle?: boolean;
   winThreshold?: number;
 }
@@ -121,7 +116,6 @@ export interface GameState {
   gameOver: boolean;
   rollBankingEnabled: boolean;
   multipleWeetzeesEnabled: boolean;
-  sequentialTargetsEnabled: boolean;
   turnScore: number;
   turnScoreAtRollStart: number;
   setAsideDiceIds: number[];
@@ -148,7 +142,6 @@ export type GameAction =
   | { type: "SET_VIEW"; view: GameView }
   | { type: "TOGGLE_ROLL_BANKING" }
   | { type: "TOGGLE_MULTIPLE_WEETZEES" }
-  | { type: "TOGGLE_SEQUENTIAL_TARGETS" }
   | { type: "SET_ASIDE" }
   | { type: "BANK" }
   | { type: "TOGGLE_SCORING_HINTS" }

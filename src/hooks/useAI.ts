@@ -7,8 +7,6 @@ import {
   scorecardChooseCategory,
   farkleChooseSetAside,
   farkleShouldBank,
-  kyhdChooseHolds,
-  kyhdChooseTarget,
 } from "@/lib/ai";
 
 const AI_DELAY_ROLL = 1200;
@@ -108,7 +106,6 @@ export function useAI(
     };
 
     const isFarkle = !!state.ruleset.farkle;
-    const isTarget = !!state.ruleset.targetAssignment;
 
     async function run() {
       try {
@@ -122,8 +119,6 @@ export function useAI(
 
         if (isFarkle) {
           await runFarkleAI(state, dispatch, signal, callbacks, setAIPendingAction);
-        } else if (isTarget) {
-          await runTargetAI(state, dispatch, signal, callbacks);
         } else {
           await runScorecardAI(state, dispatch, signal, callbacks);
         }
@@ -213,59 +208,6 @@ async function runScorecardAI(
 
   await delay(thinkTime(0.7), signal);
   const catId = scorecardChooseCategory(state);
-  if (catId) {
-    dispatch({ type: "SCORE_CATEGORY", categoryId: catId });
-    callbacks?.onAIScored?.();
-  }
-}
-
-// ===== Target AI (Keep Your Head Down) =====
-
-async function runTargetAI(
-  state: GameState,
-  dispatch: DispatchFn,
-  signal: RunSignal,
-  callbacks?: { onAIScored?: () => void },
-) {
-  const maxRolls = state.ruleset.rollsPerTurn;
-  const rollsLeft = maxRolls - state.rollsUsed;
-
-  if (state.rollsUsed === 0) {
-    await delay(jitter(AI_DELAY_ROLL), signal);
-    dispatch({ type: "ROLL" });
-    return;
-  }
-
-  if (rollsLeft > 0) {
-    const decision = kyhdChooseHolds(state);
-
-    const currentlyHeld = new Set(state.dice.filter((d) => d.held).map((d) => d.id));
-    const targetHeld = new Set(decision.holdIds);
-    const toggleCount = state.dice.filter(d => targetHeld.has(d.id) !== currentlyHeld.has(d.id)).length;
-
-    await delay(thinkTime(toggleCount / state.dice.length), signal);
-
-    let first = true;
-    for (const d of state.dice) {
-      const shouldHold = targetHeld.has(d.id);
-      const isHeld = currentlyHeld.has(d.id);
-      if (shouldHold !== isHeld) {
-        await delay(first ? jitter(AI_DELAY_HOLD) : jitter(AI_DELAY_HOLD * 0.5), signal);
-        first = false;
-        dispatch({ type: "TOGGLE_HOLD", dieId: d.id });
-      }
-    }
-
-    const heldCount = decision.holdIds.length;
-    if (heldCount < state.dice.length) {
-      await delay(jitter(AI_DELAY_ROLL), signal);
-      dispatch({ type: "ROLL" });
-      return;
-    }
-  }
-
-  await delay(jitter(AI_DELAY_SCORE), signal);
-  const catId = kyhdChooseTarget(state);
   if (catId) {
     dispatch({ type: "SCORE_CATEGORY", categoryId: catId });
     callbacks?.onAIScored?.();

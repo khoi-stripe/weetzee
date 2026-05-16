@@ -26,14 +26,13 @@ export function GameView({ game, isAITurn = false, aiPendingAction = null }: { g
     return <FarkleView game={game} isAITurn={isAITurn} aiPendingAction={aiPendingAction} />;
   }
 
-  const defaultPanel = state.ruleset.targetAssignment ? 1 : 0;
-  const [activePanel, setActivePanel] = useState<0 | 1>(defaultPanel as 0 | 1);
+  const [activePanel, setActivePanel] = useState<0 | 1>(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const touchStartY = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLandscape, setIsLandscape] = useState(false);
-  const userPrefersScorecard = useRef(defaultPanel === 1);
+  const userPrefersScorecard = useRef(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -72,8 +71,7 @@ export function GameView({ game, isAITurn = false, aiPendingAction = null }: { g
     const effectiveMax = getEffectiveRollsPerTurn(state);
     const usedAllRolls = state.rollsUsed >= effectiveMax;
     const allHeld = state.dice.filter((d) => d.held).length >= state.dice.length;
-    const targetModeRolled = state.ruleset.targetAssignment && state.rollsUsed > 0;
-    const shouldAutoTransition = usedAllRolls || (allHeld && state.rollsUsed > 0) || targetModeRolled;
+    const shouldAutoTransition = usedAllRolls || (allHeld && state.rollsUsed > 0);
 
     if (shouldAutoTransition && activePanel === 0) {
       autoTransitionTimer.current = setTimeout(() => {
@@ -191,7 +189,7 @@ export function GameView({ game, isAITurn = false, aiPendingAction = null }: { g
         showInterstitial(currentPlayer);
         setTimeout(() => {
           showInterstitial(null);
-          if (!state.ruleset.targetAssignment) snapTo(0);
+          snapTo(0);
         }, 2000);
       }
     }
@@ -306,7 +304,6 @@ function LandscapeLayout({
           onRoll={roll}
           onToggleHold={toggleHold}
           alignTop
-          dieValueMap={state.ruleset.dieValueMap}
           hugged
         />
       </div>
@@ -328,7 +325,6 @@ function LandscapeLayout({
           multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
           hideMiniDice
           landscapeHeader
-          sequentialTargetsEnabled={state.sequentialTargetsEnabled}
         />
       </div>
     </div>
@@ -415,7 +411,7 @@ function ContentStrip({
     const nextIsAI = nextPlayer.isComputer;
     const interstitialDuration = nextIsAI ? 1200 : 2000;
 
-    const returnPanel = state.ruleset.targetAssignment || userPrefersScorecard.current ? 1 : 0;
+    const returnPanel = userPrefersScorecard.current ? 1 : 0;
 
     scoreTimer.current = setTimeout(() => {
       scoreCategory(id);
@@ -454,7 +450,6 @@ function ContentStrip({
             coloredPips={!!state.ruleset.pipColors}
             onRoll={roll}
             onToggleHold={toggleHold}
-            dieValueMap={state.ruleset.dieValueMap}
           />
         </div>
 
@@ -479,7 +474,6 @@ function ContentStrip({
             justScoredCategoryId={null}
             justScoredPlayerIndex={null}
             multipleWeetzeesEnabled={state.multipleWeetzeesEnabled}
-            sequentialTargetsEnabled={state.sequentialTargetsEnabled}
           />
         </div>
       </div>
