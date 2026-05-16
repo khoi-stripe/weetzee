@@ -5,10 +5,10 @@ import { KISMET_RULESET } from "./kismet";
 import { FARKLE_RULESET } from "./farkle";
 
 export const ALL_RULESETS: Ruleset[] = [
+  FARKLE_RULESET,
   CLASSIC_RULESET,
   KISMET_RULESET,
   KEEP_YOUR_HEAD_DOWN_RULESET,
-  FARKLE_RULESET,
 ];
 
 const HIDDEN_IDS = new Set(["keep-your-head-down"]);
