@@ -118,7 +118,7 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
   const maskSize = `${SIZE}px ${SIZE + HOLE_RY}px`;
 
   return (
-    <div style={{ width: SIZE, height: SIZE, position: "relative" }}>
+    <div style={{ width: SIZE, height: SIZE, overflow: "hidden", position: "relative" }}>
       <style>{buildStyles(vars.pausePct, vars.pauseDrift, SIZE, HOLE_RY)}</style>
 
       {/* z=0 — grey hole, behind diamond */}
