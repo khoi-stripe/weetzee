@@ -31,6 +31,12 @@ type ScrimProps = {
   enterDuration?: number;
   /** Customize exit duration (default: `DURATION.modal`). */
   exitDuration?: number;
+  /**
+   * Height of a UI element (e.g. PlayerBar) overlaid above this scrim with a
+   * higher z-index. Adds equivalent padding so flex centering targets the
+   * visible area rather than the full container.
+   */
+  overlayBottomHeight?: number;
   className?: string;
   style?: CSSProperties;
 };
@@ -43,6 +49,7 @@ export function Scrim({
   position = "fixed",
   enterDuration = DURATION.base,
   exitDuration = DURATION.modal,
+  overlayBottomHeight = 0,
   className,
   style,
 }: ScrimProps) {
@@ -53,6 +60,7 @@ export function Scrim({
         zIndex,
         background,
         padding: 16,
+        paddingBottom: 16 + overlayBottomHeight,
         gap: 24,
         animation: exiting
           ? `interstitial-out ${exitDuration}ms ease forwards`

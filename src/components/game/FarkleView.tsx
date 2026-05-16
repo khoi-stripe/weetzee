@@ -564,6 +564,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
           onDone={handleBustDone}
           failedDice={bustDice}
           keptDice={bustKeptDice}
+          playerBarHeight={state.players.length > 1 ? barH : 0}
         />
       )}
 
@@ -576,6 +577,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
           aiChoice={aiPiggybackChoice}
           onFreshRoll={onFreshRoll}
           onPiggyback={onPiggyback}
+          playerBarHeight={state.players.length > 1 ? barH : 0}
         />
       )}
     </div>
@@ -661,6 +663,7 @@ export function FarkleBustScreen({
   onDone,
   failedDice,
   keptDice,
+  playerBarHeight = 0,
 }: {
   player: Player;
   lostScore: number;
@@ -668,6 +671,7 @@ export function FarkleBustScreen({
   onDone: () => void;
   failedDice: { value: number }[];
   keptDice: { value: number }[];
+  playerBarHeight?: number;
 }) {
   const [displayScore, setDisplayScore] = useState(lostScore);
   useEffect(() => {
@@ -703,6 +707,7 @@ export function FarkleBustScreen({
       zIndex={Z.interstitial}
       enterDuration={DURATION.modal}
       exitDuration={DURATION.slow}
+      overlayBottomHeight={playerBarHeight}
     >
       <DialogCard
         background={player.color}
@@ -847,6 +852,7 @@ function PlayerInterstitial({
   aiChoice,
   onFreshRoll,
   onPiggyback,
+  playerBarHeight = 0,
 }: {
   player: Player;
   exiting: boolean;
@@ -855,6 +861,7 @@ function PlayerInterstitial({
   aiChoice?: "fresh" | "piggyback" | null;
   onFreshRoll?: () => void;
   onPiggyback?: () => void;
+  playerBarHeight?: number;
 }) {
   const [freshIntroDone, setFreshIntroDone] = useState(false);
   const [piggyIntroDone, setPiggyIntroDone] = useState(false);
@@ -872,6 +879,7 @@ function PlayerInterstitial({
         zIndex={Z.interstitial}
         enterDuration={DURATION.modal}
         exitDuration={DURATION.slow}
+        overlayBottomHeight={playerBarHeight}
       >
         <DialogCard
           background={player.color}
@@ -940,6 +948,7 @@ function PlayerInterstitial({
         background: COLOR.surfaceOverlay,
         zIndex: Z.interstitial,
         padding: 16,
+        paddingBottom: 16 + playerBarHeight,
         animation: exiting
           ? "interstitial-out 400ms ease forwards"
           : "interstitial-in 300ms ease forwards",
