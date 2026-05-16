@@ -36,9 +36,13 @@ const { count, size, manifestEntries, warnings } = await getFileManifestEntries(
 });
 for (const w of warnings) console.warn("[build-sw]", w);
 
+// Compact JSON — no newlines — so the value is safe as a single --define argument.
+// Must NOT be double-stringified: esbuild --define expects a JS expression, not a
+// string literal. Double-encoding (JSON.stringify of a JSON string) would make
+// self.__SW_MANIFEST a string at runtime, causing serwist to iterate its characters.
 const manifestString = manifestEntries === undefined
   ? "undefined"
-  : JSON.stringify(manifestEntries, null, 2);
+  : JSON.stringify(manifestEntries);
 
 // ── 3. Patch esbuild-wasm bin to fix Node v24 SyncWriteStream crash ───────────
 // The crash: process.stdout.write(largeBuf) in a piped subprocess triggers
@@ -91,7 +95,7 @@ const args = [
   `--target=es2020`,
   `--tree-shaking=true`,
   process.env.NODE_ENV !== "development" ? "--minify" : "",
-  `--define:self.__SW_MANIFEST=${JSON.stringify(manifestString)}`,
+  `--define:self.__SW_MANIFEST=${manifestString}`,
   `--outfile=${swDest}`,
 ].filter(Boolean);
 
