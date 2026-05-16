@@ -5,7 +5,7 @@ import { Die } from "./Die";
 import type { Die as DieType } from "@/lib/types";
 import { rollValue } from "@/lib/engine";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
-import { getAudioCtx, playBleep, playSettle, playTap } from "@/lib/sounds";
+import { getAudioCtx, playBank, playBleep, playSettle, playTap } from "@/lib/sounds";
 import { hapticDiceRoll } from "@/lib/haptics";
 import { WEIGHT } from "@/lib/type";
 import { COLOR } from "@/lib/color";
@@ -571,7 +571,7 @@ function FarkleBankButton({
     setBankAnim("exit");
     setDone(false);
     timers.current = [
-      setTimeout(() => setBankAnim("score"), 900),
+      setTimeout(() => { setBankAnim("score"); playBank(); }, 900),
       setTimeout(() => setBankAnim("flash"), 1800),
       setTimeout(() => { setBankAnim("idle"); setDone(true); }, 2070),
     ];

@@ -251,6 +251,45 @@ export function playFarkle() {
   osc2.stop(t + 0.6);
 }
 
+// ===== Bank cha-ching =====
+// Quick metallic strike ("cha") followed by a bright bell ring ("ching").
+
+export function playBank() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+
+  // "Cha" — brief square-wave thunk dropping in pitch
+  const strike = ctx.createOscillator();
+  const strikeGain = ctx.createGain();
+  strike.type = "square";
+  strike.frequency.setValueAtTime(1300, t);
+  strike.frequency.exponentialRampToValueAtTime(600, t + 0.03);
+  strikeGain.gain.setValueAtTime(0.09, t);
+  strikeGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+  strike.connect(strikeGain).connect(ctx.destination);
+  strike.start(t);
+  strike.stop(t + 0.04);
+
+  // "Ching" — C6/E6/G6 sine partials for a metallic bell ring
+  ([
+    [1047, 0.12, 0.55],
+    [1319, 0.07, 0.38],
+    [1568, 0.04, 0.25],
+  ] as [number, number, number][]).forEach(([freq, vol, dur]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    const s = t + 0.025;
+    gain.gain.setValueAtTime(vol, s);
+    gain.gain.exponentialRampToValueAtTime(0.001, s + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(s);
+    osc.stop(s + dur + 0.05);
+  });
+}
+
 // ===== Toggle switch =====
 // Quick pitch bend — up for on, down for off.
 
