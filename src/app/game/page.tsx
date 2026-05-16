@@ -53,7 +53,15 @@ function GameContent() {
   const { isAITurn, aiPendingAction } = useAI(state, dispatch);
 
   if (state.gameOver) {
-    return <GameOverScreen players={state.players} ruleset={state.ruleset} />;
+    const aiSuffix = aiParam ? `&ai=${aiParam}` : "";
+    return (
+      <GameOverScreen
+        players={state.players}
+        ruleset={state.ruleset}
+        playAgainUrl={`/game?players=${playerCount}&ruleset=${rulesetId}${aiSuffix}`}
+        newGameUrl={`/ruleset?players=${playerCount}${aiSuffix}`}
+      />
+    );
   }
 
   const hasCPU = state.players.some((p) => p.isComputer);

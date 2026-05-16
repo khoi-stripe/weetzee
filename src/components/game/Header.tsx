@@ -41,10 +41,12 @@ export function Header({
   onTogglePiggyback,
   aiDifficulty,
   onSetAIDifficulty,
+  exitWithoutConfirm = false,
   onEndGame,
 }: {
   showBack?: boolean;
   backLabel?: string;
+  exitWithoutConfirm?: boolean;
   rulesetId?: string;
   rulesetName?: string;
   showAllRulesets?: boolean;
@@ -72,10 +74,10 @@ export function Header({
 
   function handleBack() {
     playTap();
-    if (backLabel === "Exit") {
+    if (backLabel === "Exit" && !exitWithoutConfirm) {
       setShowExitConfirm(true);
     } else {
-      router.push("/");
+      onEndGame ? onEndGame() : router.push("/");
     }
   }
 

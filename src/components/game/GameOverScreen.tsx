@@ -23,7 +23,17 @@ function maybeRequestReview(gamesCompleted: number) {
   }
 }
 
-export function GameOverScreen({ players, ruleset }: { players: Player[]; ruleset: Ruleset }) {
+export function GameOverScreen({
+  players,
+  ruleset,
+  playAgainUrl,
+  newGameUrl,
+}: {
+  players: Player[];
+  ruleset: Ruleset;
+  playAgainUrl: string;
+  newGameUrl: string;
+}) {
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +54,7 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
       className="flex flex-col"
       style={{ height: "100%", background: COLOR.surfaceBg, overflow: "hidden" }}
     >
-      <Header />
+      <Header showBack backLabel="Exit" exitWithoutConfirm onEndGame={() => router.push("/")} />
 
       <div
         className="flex flex-col flex-1 min-h-0 items-center justify-center"
@@ -68,13 +78,20 @@ export function GameOverScreen({ players, ruleset }: { players: Player[]; rulese
           </div>
         )}
 
-        <RoundButton
-          className="shrink-0"
-          size={109.67}
-          onClick={() => { playTap(); router.push("/"); }}
-        >
-          Play again
-        </RoundButton>
+        <div className="flex shrink-0" style={{ gap: 16 }}>
+          <RoundButton
+            onClick={() => { playTap(); router.push(newGameUrl); }}
+          >
+            New game
+          </RoundButton>
+          <RoundButton
+            variant="filled"
+            size={109.67}
+            onClick={() => { playTap(); router.push(playAgainUrl); }}
+          >
+            Play again
+          </RoundButton>
+        </div>
       </div>
     </div>
   );
