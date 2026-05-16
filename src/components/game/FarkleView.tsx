@@ -239,7 +239,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
         if (!hasPiggyback) {
           setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
         }
-      }, 3200);
+      }, 1770);
     }, 300);
   }
 

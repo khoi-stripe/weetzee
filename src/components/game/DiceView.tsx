@@ -568,9 +568,9 @@ function FarkleBankButton({
     setBankAnim("exit");
     setDone(false);
     timers.current = [
-      setTimeout(() => setBankAnim("score"), 1000),
-      setTimeout(() => setBankAnim("flash"), 2000),
-      setTimeout(() => { setBankAnim("idle"); setDone(true); }, 3500),
+      setTimeout(() => setBankAnim("score"), 900),
+      setTimeout(() => setBankAnim("flash"), 1800),
+      setTimeout(() => { setBankAnim("idle"); setDone(true); }, 2070),
     ];
   }
 
@@ -623,7 +623,7 @@ function FarkleBankButton({
         maskPosition: bankAnim === "exit" ? "0px 0px" : undefined,
         opacity: (bankAnim !== "exit" && (bankAnim !== "idle" || done)) ? 0 : undefined,
         animation: bankAnim === "exit" && size > 0
-          ? `bank-drop-${sz} 1000ms linear forwards`
+          ? `bank-drop-${sz} 900ms linear forwards`
           : undefined,
       }}>
         <div
