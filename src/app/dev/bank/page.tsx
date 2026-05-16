@@ -127,7 +127,7 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
           style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
           <ellipse
             cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
-            fill="#0F0F0F" opacity={vars.showHole}
+            fill="#000000" stroke="#ffffff" strokeWidth={1} opacity={vars.showHole}
             style={{
               animation: `dev-hole-in 200ms ease-out 0ms forwards`,
               transformBox: "fill-box", transformOrigin: "center",
