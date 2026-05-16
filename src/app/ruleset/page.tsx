@@ -19,7 +19,7 @@ function RulesetContent() {
   const params = useSearchParams();
   const playerCount = params.get("players") ?? "1";
   const aiParam = params.get("ai") ?? "";
-  const [rulesetId, setRulesetId] = useState("weetzee");
+  const [rulesetId, setRulesetId] = useState("farkle");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState({ cols: 2, rows: 3, cellSize: 0 });
