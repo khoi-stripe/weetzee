@@ -7,8 +7,8 @@ import { COLOR } from "@/lib/color";
 import { RADIUS } from "@/lib/tokens";
 
 const DEFAULTS = {
-  exitDuration: 800,
-  pausePct: 63,
+  exitDuration: 600,
+  pausePct: 34,
   pauseDrift: 3,
   scoreDuration: 260,
   flashDelay: 2000,
@@ -129,7 +129,7 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
             cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
             fill="#1A1A1A" opacity={vars.showHole}
             style={{
-              animation: `dev-hole-in 500ms ease-out 0ms forwards`,
+              animation: `dev-hole-in 200ms ease-out 0ms forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />
