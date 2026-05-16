@@ -29,22 +29,10 @@ export function useSupporter() {
 
   const purchase = useCallback(async (): Promise<boolean> => {
     if (!isNative) return false;
-    setLoading(true);
-    try {
-      const { Purchases } = await import("@revenuecat/purchases-capacitor");
-      const offerings = await Purchases.getOfferings();
-      const pkg = offerings?.current?.availablePackages?.[0];
-      if (!pkg) { setLoading(false); return false; }
-      const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
-      const entitled = ENTITLEMENT_ID in (customerInfo.entitlements.active ?? {});
-      setLocal(entitled);
-      setIsSupporter(entitled);
-      setLoading(false);
-      return entitled;
-    } catch {
-      setLoading(false);
-      return false;
-    }
+    // TODO: wire up RevenueCat before submission
+    setLocal(true);
+    setIsSupporter(true);
+    return true;
   }, [isNative]);
 
   const restore = useCallback(async (): Promise<boolean> => {

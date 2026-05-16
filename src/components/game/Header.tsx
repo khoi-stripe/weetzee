@@ -601,6 +601,7 @@ function RulesModal({
 function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }) {
   const { isSupporter, purchase, restore, loading, isNative } = useSupporter();
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null);
+  const router = useRouter();
 
   if (!isNative) return null;
 
@@ -630,21 +631,25 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
       paddingBottom: position === "top" ? 24 : 0,
     }}>
       <h3 style={{ ...TYPE.sectionHeading, color: COLOR.textPrimary, marginBottom: 8 }}>
-        Support Weetzee
+        {isSupporter ? "Supporter" : "Support Weetzee"}
       </h3>
       {isSupporter ? (
-        <div
+        <button
+          onClick={() => { playTap(); router.push("/snake"); }}
+          className="flex items-center justify-center rounded-full pressable"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "12px 0",
+            ...TYPE.bodyEmphasis,
+            width: "100%",
+            height: 48,
+            background: COLOR.textPrimary,
+            color: COLOR.surfaceBg,
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "inherit",
           }}
         >
-          <span style={{ fontSize: SIZE.title }}>&#10003;</span>
-          <span style={{ ...TYPE.body, color: COLOR.textPrimary }}>Supporter</span>
-          <span style={{ ...TYPE.microRegular, color: COLOR.textMuted }}>Thank you!</span>
-        </div>
+          Play Snake
+        </button>
       ) : (
         <>
           <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 16 }}>
@@ -663,31 +668,33 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
                 color: COLOR.surfaceBg,
                 border: "none",
                 cursor: loading ? "default" : "pointer",
+                fontFamily: "inherit",
               }}
             >
               {loading ? "Loading..." : "Support Weetzee — $2.99"}
             </button>
           </div>
+          <button
+            onClick={handleRestore}
+            disabled={loading}
+            style={{
+              ...TYPE.microRegular,
+              display: "block",
+              marginTop: 12,
+              background: "none",
+              border: "none",
+              color: COLOR.textDisabled,
+              cursor: loading ? "default" : "pointer",
+              padding: 0,
+              fontFamily: "inherit",
+            }}
+          >
+            Restore Purchases
+          </button>
+          {restoreMsg && (
+            <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 6 }}>{restoreMsg}</p>
+          )}
         </>
-      )}
-      <button
-        onClick={handleRestore}
-        disabled={loading}
-        style={{
-          ...TYPE.microRegular,
-          display: "block",
-          marginTop: 12,
-          background: "none",
-          border: "none",
-          color: COLOR.textDisabled,
-          cursor: loading ? "default" : "pointer",
-          padding: 0,
-        }}
-      >
-        Restore Purchases
-      </button>
-      {restoreMsg && (
-        <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 6 }}>{restoreMsg}</p>
       )}
     </div>
   );
