@@ -55,8 +55,8 @@ function buildStyles(pausePct: number, pauseDrift: number, size: number, holeRy:
       to   { transform: translateY(0);    opacity: 1; }
     }
     @keyframes dev-bank-exit {
-      from { transform: translateY(0);    opacity: 1; }
-      to   { transform: translateY(-40%); opacity: 0; }
+      from { transform: scale(1);   opacity: 1; }
+      to   { transform: scale(2.2); opacity: 0; }
     }
     @keyframes dev-hole-in {
       from { transform: scaleX(0); }
