@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DiceView } from "./DiceView";
 import { PlayerBar } from "./PlayerBar";
 import type { UseGameReturn } from "@/hooks/useGame";
@@ -15,6 +15,8 @@ import { RADIUS, Z } from "@/lib/tokens";
 import { Scrim } from "@/components/ui/Scrim";
 import { DialogCard } from "@/components/ui/DialogCard";
 import { RoundButton } from "@/components/ui/RoundButton";
+
+const NOOP = () => {};
 
 export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: { game: UseGameReturn; isAITurn?: boolean; aiPendingAction?: string | null }) {
   const { state, roll, toggleHold, setAside, bank, acceptPiggyback } = game;
@@ -279,32 +281,56 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
   let actionHandler: () => void;
 
   if (!hasRolled) {
-    actionLabel = "Roll";
+    actionLabel = "ROLL";
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (canSetAside) {
-    actionLabel = `Set aside +${selectionScore}`;
+    actionLabel = `SET ASIDE +${selectionScore}`;
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { playTap(); setAside(); };
   } else if (hotDiceWaiting) {
     // Single-shot: pressing HOT DICE! rolls and sets mustSetAside=true,
     // so the next render falls through to the "SELECT DICE" branch below.
-    actionLabel = isAITurn ? "Thinking..." : "Hot dice!";
+    actionLabel = isAITurn ? "THINKING..." : "HOT DICE!";
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (canRoll) {
-    actionLabel = "Roll";
+    actionLabel = "ROLL";
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (state.mustSetAside) {
-    actionLabel = isAITurn ? "Thinking..." : "Select dice";
+    actionLabel = isAITurn ? "THINKING..." : "SELECT DICE";
     actionEnabled = false;
     actionHandler = () => {};
   } else {
-    actionLabel = "Roll";
+    actionLabel = "ROLL";
     actionEnabled = false;
     actionHandler = () => {};
   }
+
+  // Stable callback refs — wrap mutable handlers so DiceView/interstitial
+  // receive a stable function reference across renders.
+  const actionHandlerRef = useRef<() => void>(NOOP);
+  actionHandlerRef.current = actionHandler;
+  const stableActionHandler = useCallback(() => actionHandlerRef.current(), []);
+
+  const stableToggleHold = useCallback(
+    (id: number) => { if (!isAITurn) toggleHold(id); },
+    [isAITurn, toggleHold],
+  );
+
+  const farkleOnBankRef = useRef<() => void>(NOOP);
+  farkleOnBankRef.current = isAITurn ? NOOP : (state.farkled ? handleBustDone : handleBank);
+  const stableFarkleOnBank = useCallback(() => farkleOnBankRef.current(), []);
+
+  const onFreshRoll = useCallback(
+    () => { playTap(); showInterstitial(null); },
+    [showInterstitial],
+  );
+  const onPiggyback = useCallback(
+    () => { playTap(); acceptPiggyback(); roll(); showInterstitial(null); },
+    [acceptPiggyback, roll, showInterstitial],
+  );
 
   // Landscape detection — same ref as the top-level container, matching GameView pattern
   const containerRef = useRef<HTMLDivElement>(null);
@@ -409,25 +435,29 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     ? getScoringPossibilities(availableDice)
     : [];
 
-  const diceViewProps = {
+  const diceViewProps = useMemo(() => ({
     dice: state.dice,
     rollsUsed: state.rollsUsed,
-    rollsPerTurn: 999,
+    rollsPerTurn: 999 as const,
     playerColor: currentPlayer.color,
-    onRoll: actionHandler,
-    onToggleHold: isAITurn ? () => {} : toggleHold,
+    onRoll: stableActionHandler,
+    onToggleHold: stableToggleHold,
     farkleMode: true as const,
     setAsideDiceIds: hotDiceWaiting ? state.dice.map((d) => d.id) : state.setAsideDiceIds,
     farkled: state.farkled,
     farkleActionLabel: actionLabel,
     farkleActionEnabled: actionEnabled,
     farkleBankEnabled: canBank,
-    farkleOnBank: isAITurn ? () => {} : (state.farkled ? handleBustDone : handleBank),
-    farkleBankLabel: belowThreshold && state.turnScore > 0 ? `Need 500` : (state.turnScore > 0 ? `Bank ${state.turnScore}` : "Bank"),
+    farkleOnBank: stableFarkleOnBank,
+    farkleBankLabel: belowThreshold && state.turnScore > 0 ? `NEED 500` : (state.turnScore > 0 ? `BANK ${state.turnScore}` : "BANK"),
     farkleActionPressed: aiPendingAction === "roll" || aiPendingAction === "set-aside",
     farkleBankPressed: aiPendingAction === "bank",
     farkleBankReady: state.turnScore > 0,
-  };
+  }), [
+    state.dice, state.rollsUsed, state.farkled, state.setAsideDiceIds, state.turnScore,
+    currentPlayer.color, stableActionHandler, stableToggleHold, stableFarkleOnBank,
+    hotDiceWaiting, actionLabel, actionEnabled, canBank, belowThreshold, aiPendingAction,
+  ]);
 
   return (
     <div
@@ -544,8 +574,8 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
           lastTurn={interstitialLastTurn}
           piggyback={interstitialPiggyback}
           aiChoice={aiPiggybackChoice}
-          onFreshRoll={() => { playTap(); showInterstitial(null); }}
-          onPiggyback={() => { playTap(); acceptPiggyback(); roll(); showInterstitial(null); }}
+          onFreshRoll={onFreshRoll}
+          onPiggyback={onPiggyback}
         />
       )}
     </div>

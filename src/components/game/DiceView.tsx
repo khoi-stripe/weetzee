@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Die } from "./Die";
 import type { Die as DieType } from "@/lib/types";
 import { rollValue } from "@/lib/engine";
@@ -29,7 +29,7 @@ const CYCLE_STAGGER_PER_DIE = 60;
 
 // ===== DiceView =====
 
-export function DiceView({
+export const DiceView = memo(function DiceView({
   dice,
   rollsUsed,
   rollsPerTurn,
@@ -338,7 +338,7 @@ export function DiceView({
         <>
           <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
             <FarkleActionButton
-              label={farkleActionLabel ?? "Roll"}
+              label={farkleActionLabel ?? "ROLL"}
               enabled={farkleActionEnabled}
               onAction={onRoll}
               showButton={showButton}
@@ -349,7 +349,7 @@ export function DiceView({
           </div>
           <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
             <FarkleBankButton
-              label={farkleBankLabel ?? "Bank"}
+              label={farkleBankLabel ?? "BANK"}
               enabled={farkleBankEnabled}
               onBank={farkleOnBank ?? (() => {})}
               showButton={showButton && farkleBankReady}
@@ -360,7 +360,7 @@ export function DiceView({
       )}
     </div>
   );
-}
+});
 
 // ===== Wavy animated border overlay =====
 
@@ -702,9 +702,9 @@ function RollButton({
 
   let label: string;
   if (allHeld || rollsUsed >= rollsPerTurn) {
-    label = "Score";
+    label = "SCORE";
   } else {
-    label = rollsUsed === 0 ? "Roll" : `Roll (${rollsRemaining})`;
+    label = rollsUsed === 0 ? "ROLL" : `ROLL (${rollsRemaining})`;
   }
 
   const animating = showButton && !introDone;

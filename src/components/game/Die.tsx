@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { WEIGHT } from "@/lib/type";
 import { COLOR } from "@/lib/color";
 
@@ -29,7 +30,7 @@ function kismetPipColor(value: number): string {
   return KISMET_PIP_COLORS.green;
 }
 
-export function Die({
+export const Die = memo(function Die({
   value,
   held = false,
   heldColor = COLOR.textPrimary,
@@ -146,4 +147,4 @@ export function Die({
       )}
     </div>
   );
-}
+});
