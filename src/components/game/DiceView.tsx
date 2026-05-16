@@ -522,7 +522,7 @@ function buildBankKeyframes(pausePct: number, pauseDrift: number, size: number, 
     const maskY = ty > 0 ? `${(-(ty / 100) * size).toFixed(1)}px` : "0px";
     return `${pct.toFixed(1)}% { transform: translateY(${ty}%); mask-position: 0px ${maskY}; -webkit-mask-position: 0px ${maskY}; ${easings[i]} }`;
   }).join(" ");
-  return `@keyframes bank-drop-${sz} { ${lines} } @keyframes bank-hole-open-${sz} { from { transform: scaleX(0); } to { transform: scaleX(1); } }`;
+  return `@keyframes bank-drop-${sz} { ${lines} } @keyframes bank-hole-open-${sz} { from { transform: scaleX(0); } to { transform: scaleX(1); } } @keyframes bank-hole-close-${sz} { from { transform: scaleX(1); } to { transform: scaleX(0); } }`;
 }
 
 function FarkleBankButton({
@@ -595,15 +595,17 @@ function FarkleBankButton({
     <div ref={containerRef} style={{ width: "100%", height: "100%", overflow: isExiting ? "hidden" : "visible", position: "relative" }}>
       {size > 0 && <style>{buildBankKeyframes(70, 3, size, holeRy)}</style>}
 
-      {/* z=0 — grey hole, opens from center */}
-      {isExiting && size > 0 && (
+      {/* z=0 — grey hole, opens on exit then closes when score appears */}
+      {(bankAnim === "exit" || bankAnim === "score") && size > 0 && (
         <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}
           style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
           <ellipse
             cx={size / 2} cy={holeCy} rx={size / 2} ry={holeRy}
             fill="#0F0F0F"
             style={{
-              animation: `bank-hole-open-${sz} 200ms ease-out 0ms forwards`,
+              animation: bankAnim === "score"
+                ? `bank-hole-close-${sz} 200ms ease-in 80ms forwards`
+                : `bank-hole-open-${sz} 200ms ease-out forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />

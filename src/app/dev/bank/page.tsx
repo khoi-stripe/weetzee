@@ -62,6 +62,10 @@ function buildStyles(pausePct: number, pauseDrift: number, size: number, holeRy:
       from { transform: scaleX(0); }
       to   { transform: scaleX(1); }
     }
+    @keyframes dev-hole-out {
+      from { transform: scaleX(1); }
+      to   { transform: scaleX(0); }
+    }
   `;
 }
 
@@ -121,15 +125,17 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
     <div style={{ width: SIZE, height: SIZE, overflow: "hidden", position: "relative" }}>
       <style>{buildStyles(vars.pausePct, vars.pauseDrift, SIZE, HOLE_RY)}</style>
 
-      {/* z=0 — grey hole, behind diamond */}
-      {isExiting && vars.showHole > 0 && (
+      {/* z=0 — grey hole, opens on exit then closes when score appears */}
+      {(phase === "exit" || phase === "score") && vars.showHole > 0 && (
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}
           style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
           <ellipse
             cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
             fill="#0F0F0F" opacity={vars.showHole}
             style={{
-              animation: `dev-hole-in 200ms ease-out 0ms forwards`,
+              animation: phase === "score"
+                ? `dev-hole-out 200ms ease-in 80ms forwards`
+                : `dev-hole-in 200ms ease-out forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />
