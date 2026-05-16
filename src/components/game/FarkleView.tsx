@@ -226,12 +226,16 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
       bankTimer.current = null;
 
       if (!isSinglePlayer) {
-        setInterstitialLastTurn(isLastTurn);
-        setInterstitialPiggyback(piggybackInfo);
-        showInterstitial(nextPlayer);
-        if (!hasPiggyback) {
-          setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
-        }
+        // Delay interstitial until the bank animation finishes (3200ms after
+        // bank() = 3500ms from click, matching the animation totalDuration).
+        setTimeout(() => {
+          setInterstitialLastTurn(isLastTurn);
+          setInterstitialPiggyback(piggybackInfo);
+          showInterstitial(nextPlayer);
+          if (!hasPiggyback) {
+            setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
+          }
+        }, 3200);
       }
     }, 300);
   }
