@@ -7,7 +7,17 @@ import { Z } from "@/lib/tokens";
 import { PLAYER_COLORS } from "@/lib/types";
 
 const SESSION_KEY = "weetzee-splash-shown";
-const LAYER_DELAY_MS = 120;
+
+// Progressive stagger: each layer waits a bit longer than the previous.
+// layerIndex 0 = white (always 0ms), 1..N = colored layers in order.
+function layerDelay(index: number): number {
+  const BASE = 60;
+  const ACCEL = 20;
+  let total = 0;
+  for (let i = 0; i < index; i++) total += BASE + i * ACCEL;
+  return total;
+}
+const MAX_LAYER_DELAY = layerDelay(PLAYER_COLORS.length);
 
 function LogoSVG({
   color,
@@ -66,9 +76,9 @@ export function SplashIntro({ forceShow = false }: { forceShow?: boolean }) {
     }
 
     requestAnimationFrame(() => setPhase("intro"));
-    const holdTimer = setTimeout(() => setPhase("hold"), 1600 + PLAYER_COLORS.length * LAYER_DELAY_MS + 400);
-    const fadeTimer = setTimeout(() => setPhase("fade"), 3200 + PLAYER_COLORS.length * LAYER_DELAY_MS + 400);
-    const doneTimer = setTimeout(() => setPhase("done"), 3900 + PLAYER_COLORS.length * LAYER_DELAY_MS + 400);
+    const holdTimer = setTimeout(() => setPhase("hold"), 1600 + MAX_LAYER_DELAY + 400);
+    const fadeTimer = setTimeout(() => setPhase("fade"), 3200 + MAX_LAYER_DELAY + 400);
+    const doneTimer = setTimeout(() => setPhase("done"), 3900 + MAX_LAYER_DELAY + 400);
     return () => {
       clearTimeout(holdTimer);
       clearTimeout(fadeTimer);
@@ -102,9 +112,8 @@ export function SplashIntro({ forceShow = false }: { forceShow?: boolean }) {
           {/* Colored layers — rendered first so they sit behind white */}
           {[...PLAYER_COLORS].reverse().map((color, i) => {
             const layerIndex = PLAYER_COLORS.length - i;
-            const delay = layerIndex * LAYER_DELAY_MS;
             return (
-              <LogoSVG key={color} color={color} animationDelay={delay} phase={phase} />
+              <LogoSVG key={color} color={color} animationDelay={layerDelay(layerIndex)} phase={phase} />
             );
           })}
           {/* White logo on top */}
