@@ -9,7 +9,7 @@ import { getRulesetBonus, getRulesetTotal } from "@/lib/rulesets";
 import { EXTRA_WEETZEE_VALUE } from "@/lib/rulesets/classic";
 import { rollValue } from "@/lib/engine";
 import { playSelect, playDeselect, playConfirm, playTap } from "@/lib/sounds";
-import { hapticDiceRoll } from "@/lib/haptics";
+import { hapticLight } from "@/lib/haptics";
 import type { Ruleset } from "@/lib/types";
 import { TYPE, WEIGHT } from "@/lib/type";
 import { COLOR } from "@/lib/color";
@@ -709,7 +709,7 @@ function MiniDiceStrip({
       ))}
       <div className="flex-1 min-w-0 aspect-square" style={{ containerType: "inline-size" }}>
         <button
-          onClick={canRoll ? () => { hapticDiceRoll(); onRoll(); } : undefined}
+          onClick={canRoll ? () => { hapticLight(); onRoll(); } : undefined}
           disabled={!canRoll}
           className="w-full h-full flex items-center justify-center rounded-full pressable"
           style={{

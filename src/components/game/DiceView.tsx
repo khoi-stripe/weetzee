@@ -6,7 +6,7 @@ import type { Die as DieType } from "@/lib/types";
 import { rollValue } from "@/lib/engine";
 import { computeSquareGridLayout } from "@/lib/gridLayout";
 import { getAudioCtx, playBank, playBleep, playSettle, playTap } from "@/lib/sounds";
-import { hapticDiceRoll } from "@/lib/haptics";
+import { hapticLight } from "@/lib/haptics";
 import { WEIGHT } from "@/lib/type";
 import { COLOR } from "@/lib/color";
 import { RADIUS } from "@/lib/tokens";
@@ -467,7 +467,7 @@ function FarkleActionButton({
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <WavyBorder color={color} active={showWavy} />
       <button
-        onClick={enabled ? () => { getAudioCtx(); hapticDiceRoll(); onAction(); } : undefined}
+        onClick={enabled ? () => { getAudioCtx(); hapticLight(); onAction(); } : undefined}
         disabled={!enabled && !pressed}
         className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
         onAnimationEnd={() => setIntroDone(true)}
@@ -713,7 +713,7 @@ function RollButton({
 
   return (
     <button
-      onClick={canRoll ? () => { getAudioCtx(); hapticDiceRoll(); onRoll(); } : undefined}
+      onClick={canRoll ? () => { getAudioCtx(); hapticLight(); onRoll(); } : undefined}
       disabled={!canRoll}
       className={`flex items-center justify-center rounded-full pressable ${animating ? "animate-scale-in" : ""}`}
       onAnimationEnd={() => setIntroDone(true)}
