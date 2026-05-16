@@ -143,9 +143,9 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
         WebkitMaskSize: maskSize, maskSize,
         WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
         WebkitMaskPosition: "0px 0px", maskPosition: "0px 0px",
-        // Keep off-screen once the diamond has fallen, through score display and
-        // after the sequence completes. Component re-mounts on Replay (key changes).
-        transform: (phase !== "exit" && (phase !== "idle" || done)) ? "translateY(200%)" : undefined,
+        // Hide once the diamond has fallen, through score display and after the
+        // sequence completes. opacity avoids layout bleed-through (no overflow:hidden).
+        opacity: (phase !== "exit" && (phase !== "idle" || done)) ? 0 : undefined,
         animation: phase === "exit"
           ? `dev-diamond-drop ${vars.exitDuration}ms linear forwards`
           : undefined,
