@@ -7,13 +7,13 @@ import { COLOR } from "@/lib/color";
 import { RADIUS } from "@/lib/tokens";
 
 const DEFAULTS = {
-  exitDuration: 600,
-  pausePct: 34,
+  exitDuration: 1000,
+  pausePct: 70,
   pauseDrift: 3,
   scoreDuration: 260,
   flashDelay: 2000,
   flashDuration: 200,
-  totalDuration: 3000,
+  totalDuration: 3500,
   showHole: 1,
   score: 350,
 };
