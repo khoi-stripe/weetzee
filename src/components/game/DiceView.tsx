@@ -601,7 +601,7 @@ function FarkleBankButton({
           style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
           <ellipse
             cx={size / 2} cy={holeCy} rx={size / 2} ry={holeRy}
-            fill="#1A1A1A"
+            fill="#0F0F0F"
             style={{
               animation: `bank-hole-open-${sz} 200ms ease-out 0ms forwards`,
               transformBox: "fill-box", transformOrigin: "center",
