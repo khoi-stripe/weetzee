@@ -87,16 +87,18 @@ function Slider({ label, value, min, max, step = 1, onChange }: {
 
 function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: boolean }) {
   const [phase, setPhase] = useState<"idle" | "exit" | "score" | "flash">("idle");
+  const [done, setDone] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     if (!playing) return;
     timers.current.forEach(clearTimeout);
     setPhase("exit");
+    setDone(false);
     timers.current = [
       setTimeout(() => setPhase("score"), vars.exitDuration),
       setTimeout(() => setPhase("flash"), vars.flashDelay),
-      setTimeout(() => setPhase("idle"), vars.totalDuration),
+      setTimeout(() => { setPhase("idle"); setDone(true); }, vars.totalDuration),
     ];
     return () => { timers.current.forEach(clearTimeout); };
   }, [playing, vars]);
@@ -141,9 +143,9 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
         WebkitMaskSize: maskSize, maskSize,
         WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
         WebkitMaskPosition: "0px 0px", maskPosition: "0px 0px",
-        // Keep off-screen after animation ends so removing the animation prop
-        // doesn't snap the diamond back into view while the score is showing.
-        transform: (phase === "score" || phase === "flash") ? "translateY(200%)" : undefined,
+        // Keep off-screen once the diamond has fallen, through score display and
+        // after the sequence completes. Component re-mounts on Replay (key changes).
+        transform: (phase !== "exit" && (phase !== "idle" || done)) ? "translateY(200%)" : undefined,
         animation: phase === "exit"
           ? `dev-diamond-drop ${vars.exitDuration}ms linear forwards`
           : undefined,
