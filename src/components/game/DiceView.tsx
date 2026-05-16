@@ -354,6 +354,7 @@ export const DiceView = memo(function DiceView({
               onBank={farkleOnBank ?? (() => {})}
               showButton={showButton && farkleBankReady}
               pressed={farkleBankPressed}
+              color={playerColor}
             />
           </div>
         </>
@@ -522,7 +523,7 @@ function buildBankKeyframes(pausePct: number, pauseDrift: number, size: number, 
     const maskY = ty > 0 ? `${(-(ty / 100) * size).toFixed(1)}px` : "0px";
     return `${pct.toFixed(1)}% { transform: translateY(${ty}%); mask-position: 0px ${maskY}; -webkit-mask-position: 0px ${maskY}; ${easings[i]} }`;
   }).join(" ");
-  return `@keyframes bank-drop-${sz} { ${lines} } @keyframes bank-hole-open-${sz} { from { transform: scaleX(0); } to { transform: scaleX(1); } } @keyframes bank-hole-close-${sz} { from { transform: scaleX(1); } to { transform: scaleX(0); } }`;
+  return `@keyframes bank-drop-${sz} { ${lines} } @keyframes bank-hole-open-${sz} { from { transform: scaleX(0); } to { transform: scaleX(1); } } @keyframes bank-hole-close-${sz} { from { transform: scale(1); } to { transform: scale(0); } }`;
 }
 
 function FarkleBankButton({
@@ -531,12 +532,14 @@ function FarkleBankButton({
   onBank,
   showButton,
   pressed = false,
+  color = COLOR.textPrimary,
 }: {
   label: string;
   enabled: boolean;
   onBank: () => void;
   showButton: boolean;
   pressed?: boolean;
+  color?: string;
 }) {
   const [introDone, setIntroDone] = useState(false);
   const [bankAnim, setBankAnim] = useState<"idle" | "exit" | "score" | "flash">("idle");
@@ -601,7 +604,7 @@ function FarkleBankButton({
           style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
           <ellipse
             cx={size / 2} cy={holeCy} rx={size / 2} ry={holeRy}
-            fill="#0F0F0F"
+            fill={color}
             style={{
               animation: bankAnim === "score"
                 ? `bank-hole-close-${sz} 200ms ease-in 80ms forwards`

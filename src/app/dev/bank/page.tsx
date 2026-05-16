@@ -63,8 +63,8 @@ function buildStyles(pausePct: number, pauseDrift: number, size: number, holeRy:
       to   { transform: scaleX(1); }
     }
     @keyframes dev-hole-out {
-      from { transform: scaleX(1); }
-      to   { transform: scaleX(0); }
+      from { transform: scale(1); }
+      to   { transform: scale(0); }
     }
   `;
 }
