@@ -58,7 +58,6 @@ export function RoundButton({
       className={`flex items-center justify-center rounded-full pressable ${className ?? ""}`}
       style={{
         ...TYPE.body,
-        textTransform: "uppercase",
         width: size,
         height: size,
         outline: `1px solid ${color}`,

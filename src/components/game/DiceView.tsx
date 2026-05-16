@@ -338,7 +338,7 @@ export function DiceView({
         <>
           <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
             <FarkleActionButton
-              label={farkleActionLabel ?? "ROLL"}
+              label={farkleActionLabel ?? "Roll"}
               enabled={farkleActionEnabled}
               onAction={onRoll}
               showButton={showButton}
@@ -349,7 +349,7 @@ export function DiceView({
           </div>
           <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
             <FarkleBankButton
-              label={farkleBankLabel ?? "BANK"}
+              label={farkleBankLabel ?? "Bank"}
               enabled={farkleBankEnabled}
               onBank={farkleOnBank ?? (() => {})}
               showButton={showButton && farkleBankReady}
@@ -702,9 +702,9 @@ function RollButton({
 
   let label: string;
   if (allHeld || rollsUsed >= rollsPerTurn) {
-    label = "SCORE";
+    label = "Score";
   } else {
-    label = rollsUsed === 0 ? "ROLL" : `ROLL (${rollsRemaining})`;
+    label = rollsUsed === 0 ? "Roll" : `Roll (${rollsRemaining})`;
   }
 
   const animating = showButton && !introDone;

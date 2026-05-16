@@ -279,29 +279,29 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
   let actionHandler: () => void;
 
   if (!hasRolled) {
-    actionLabel = "ROLL";
+    actionLabel = "Roll";
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (canSetAside) {
-    actionLabel = `SET ASIDE +${selectionScore}`;
+    actionLabel = `Set aside +${selectionScore}`;
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { playTap(); setAside(); };
   } else if (hotDiceWaiting) {
     // Single-shot: pressing HOT DICE! rolls and sets mustSetAside=true,
     // so the next render falls through to the "SELECT DICE" branch below.
-    actionLabel = isAITurn ? "THINKING..." : "HOT DICE!";
+    actionLabel = isAITurn ? "Thinking..." : "Hot dice!";
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (canRoll) {
-    actionLabel = "ROLL";
+    actionLabel = "Roll";
     actionEnabled = !isAITurn;
     actionHandler = isAITurn ? () => {} : () => { getAudioCtx(); roll(); };
   } else if (state.mustSetAside) {
-    actionLabel = isAITurn ? "THINKING..." : "SELECT DICE";
+    actionLabel = isAITurn ? "Thinking..." : "Select dice";
     actionEnabled = false;
     actionHandler = () => {};
   } else {
-    actionLabel = "ROLL";
+    actionLabel = "Roll";
     actionEnabled = false;
     actionHandler = () => {};
   }
@@ -423,7 +423,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     farkleActionEnabled: actionEnabled,
     farkleBankEnabled: canBank,
     farkleOnBank: isAITurn ? () => {} : (state.farkled ? handleBustDone : handleBank),
-    farkleBankLabel: belowThreshold && state.turnScore > 0 ? `NEED 500` : (state.turnScore > 0 ? `BANK ${state.turnScore}` : "BANK"),
+    farkleBankLabel: belowThreshold && state.turnScore > 0 ? `Need 500` : (state.turnScore > 0 ? `Bank ${state.turnScore}` : "Bank"),
     farkleActionPressed: aiPendingAction === "roll" || aiPendingAction === "set-aside",
     farkleBankPressed: aiPendingAction === "bank",
     farkleBankReady: state.turnScore > 0,
