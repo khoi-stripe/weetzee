@@ -222,21 +222,24 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
         setAsideDiceIds: state.setAsideDiceIds,
       } : null;
 
-      bank();
       bankTimer.current = null;
 
-      if (!isSinglePlayer) {
-        // Delay interstitial until the bank animation finishes (3200ms after
-        // bank() = 3500ms from click, matching the animation totalDuration).
-        setTimeout(() => {
-          setInterstitialLastTurn(isLastTurn);
-          setInterstitialPiggyback(piggybackInfo);
-          showInterstitial(nextPlayer);
-          if (!hasPiggyback) {
-            setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
-          }
-        }, 3200);
+      if (isSinglePlayer) {
+        bank();
+        return;
       }
+
+      // Delay bank() until the animation finishes and the interstitial covers the
+      // screen — that way the dice/player-color transition happens behind the modal.
+      setTimeout(() => {
+        bank();
+        setInterstitialLastTurn(isLastTurn);
+        setInterstitialPiggyback(piggybackInfo);
+        showInterstitial(nextPlayer);
+        if (!hasPiggyback) {
+          setTimeout(() => showInterstitial(null), isLastTurn ? 3200 : 2000);
+        }
+      }, 3200);
     }, 300);
   }
 

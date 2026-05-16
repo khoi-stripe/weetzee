@@ -558,6 +558,11 @@ function FarkleBankButton({
     return () => obs.disconnect();
   }, []);
 
+  // Reset animation state when the button becomes visible for a new turn.
+  useEffect(() => {
+    if (showButton) { setDone(false); setIntroDone(false); }
+  }, [showButton]);
+
   function runBankAnim() {
     timers.current.forEach(clearTimeout);
     setBankAnim("exit");
@@ -581,10 +586,9 @@ function FarkleBankButton({
   const sz = Math.round(size);
   const holeRy = size > 0 ? Math.round(size * BANK_HOLE_RY_RATIO) : 0;
   const holeCy = size - holeRy;
-  const maskSvg = size > 0
-    ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size + holeRy}"><rect width="${size}" height="${size}" fill="black"/><ellipse cx="${size / 2}" cy="${size}" rx="${size / 2}" ry="${holeRy}" fill="black"/></svg>`
-    : "";
-  const maskUrl = size > 0 ? `url("data:image/svg+xml,${encodeURIComponent(maskSvg)}")` : undefined;
+  const maskUrl = size > 0
+    ? `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size + holeRy}"><rect width="${size}" height="${size}" fill="black"/><ellipse cx="${size / 2}" cy="${size}" rx="${size / 2}" ry="${holeRy}" fill="black"/></svg>`)}")`
+    : undefined;
   const maskSize = size > 0 ? `${size}px ${size + holeRy}px` : undefined;
 
   return (
@@ -620,10 +624,10 @@ function FarkleBankButton({
       }}>
         <div
           className="flex items-center justify-center"
-          style={{ width: "100%", height: "100%", transform: showButton ? "rotate(45deg)" : "rotate(45deg) scale(0)" }}
+          style={{ width: "100%", height: "100%", transform: (showButton || bankAnim !== "idle") ? "rotate(45deg)" : "rotate(45deg) scale(0)" }}
         >
           <button
-            onClick={enabled ? () => { runBankAnim(); onBank(); } : undefined}
+            onClick={enabled && bankAnim === "idle" ? () => { runBankAnim(); onBank(); } : undefined}
             disabled={!enabled && !pressed}
             className={`flex items-center justify-center pressable ${animating ? "animate-scale-in" : ""}`}
             onAnimationEnd={() => setIntroDone(true)}
