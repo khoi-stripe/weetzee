@@ -891,7 +891,7 @@ function PlayerInterstitial({
             {player.name}
           </span>
           {lastTurn && (
-            <span style={{ ...TYPE.bodyEmphasis, color: "rgba(0, 0, 0, 0.6)" }}>
+            <span style={{ ...TYPE.subDisplayBold, color: "rgba(0, 0, 0, 0.6)", textAlign: "center" }}>
               Final round
             </span>
           )}
