@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Die } from "./Die";
 import type { Die as DieType } from "@/lib/types";
 import { rollValue } from "@/lib/engine";
@@ -498,6 +498,33 @@ function FarkleActionButton({
 
 // ===== Farkle Bank Button (diamond, in-grid) =====
 
+// Hole ry as a fraction of the container size, matching Figma proportions.
+const BANK_HOLE_RY_RATIO = 12.5 / 160;
+
+function buildBankKeyframes(pausePct: number, pauseDrift: number, size: number, holeRy: number) {
+  const midPct = pausePct + (100 - pausePct) * 0.3;
+  const frames: [number, number][] = [
+    [0, 0],
+    [pausePct * 0.5, -pauseDrift],
+    [pausePct, -pauseDrift * 0.5],
+    [midPct, 20],
+    [100, 130],
+  ];
+  const easings = [
+    "animation-timing-function: ease-in-out;",
+    "animation-timing-function: ease-in-out;",
+    "animation-timing-function: cubic-bezier(0.55, 0, 1, 1);",
+    "animation-timing-function: cubic-bezier(0.8, 0, 1, 1);",
+    "",
+  ];
+  const sz = Math.round(size);
+  const lines = frames.map(([pct, ty], i) => {
+    const maskY = ty > 0 ? `${(-(ty / 100) * size).toFixed(1)}px` : "0px";
+    return `${pct.toFixed(1)}% { transform: translateY(${ty}%); mask-position: 0px ${maskY}; -webkit-mask-position: 0px ${maskY}; ${easings[i]} }`;
+  }).join(" ");
+  return `@keyframes bank-drop-${sz} { ${lines} } @keyframes bank-hole-open-${sz} { from { transform: scaleX(0); } to { transform: scaleX(1); } }`;
+}
+
 function FarkleBankButton({
   label,
   enabled,
@@ -513,18 +540,32 @@ function FarkleBankButton({
 }) {
   const [introDone, setIntroDone] = useState(false);
   const [bankAnim, setBankAnim] = useState<"idle" | "exit" | "score" | "flash">("idle");
+  const [done, setDone] = useState(false);
+  const [size, setSize] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const animating = showButton && !introDone;
   const scoreOnly = label.replace(/[^0-9]/g, "");
 
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(entries => {
+      setSize(Math.round(entries[0].contentRect.width));
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   function runBankAnim() {
     timers.current.forEach(clearTimeout);
     setBankAnim("exit");
+    setDone(false);
     timers.current = [
-      setTimeout(() => setBankAnim("score"), 220),
-      setTimeout(() => setBankAnim("flash"), 500),
-      setTimeout(() => setBankAnim("idle"), 700),
+      setTimeout(() => setBankAnim("score"), 1000),
+      setTimeout(() => setBankAnim("flash"), 2000),
+      setTimeout(() => { setBankAnim("idle"); setDone(true); }, 3500),
     ];
   }
 
@@ -537,22 +578,49 @@ function FarkleBankButton({
 
   const isExiting = bankAnim !== "idle";
   const showScore = bankAnim === "score" || bankAnim === "flash";
+  const sz = Math.round(size);
+  const holeRy = size > 0 ? Math.round(size * BANK_HOLE_RY_RATIO) : 0;
+  const holeCy = size - holeRy;
+  const maskSvg = size > 0
+    ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size + holeRy}"><rect width="${size}" height="${size}" fill="black"/><ellipse cx="${size / 2}" cy="${size}" rx="${size / 2}" ry="${holeRy}" fill="black"/></svg>`
+    : "";
+  const maskUrl = size > 0 ? `url("data:image/svg+xml,${encodeURIComponent(maskSvg)}")` : undefined;
+  const maskSize = size > 0 ? `${size}px ${size + holeRy}px` : undefined;
 
   return (
-    <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
-      {/* Translation wrapper — slides down on bank */}
+    <div ref={containerRef} style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
+      {size > 0 && <style>{buildBankKeyframes(70, 3, size, holeRy)}</style>}
+
+      {/* z=0 — grey hole, opens from center */}
+      {isExiting && size > 0 && (
+        <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}
+          style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
+          <ellipse
+            cx={size / 2} cy={holeCy} rx={size / 2} ry={holeRy}
+            fill="#1A1A1A"
+            style={{
+              animation: `bank-hole-open-${sz} 200ms ease-out 0ms forwards`,
+              transformBox: "fill-box", transformOrigin: "center",
+            }}
+          />
+        </svg>
+      )}
+
+      {/* z=1 — diamond with CSS mask tracking the hole aperture */}
       <div style={{
-        position: "absolute", inset: 0,
-        transform: isExiting ? "translateY(130%)" : undefined,
-        transition: bankAnim === "exit" ? "transform 220ms ease-in" : "none",
+        position: "absolute", inset: 0, zIndex: 1,
+        WebkitMaskImage: maskUrl, maskImage: maskUrl,
+        WebkitMaskSize: maskSize, maskSize,
+        WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+        WebkitMaskPosition: "0px 0px", maskPosition: "0px 0px",
+        opacity: (bankAnim !== "exit" && (bankAnim !== "idle" || done)) ? 0 : undefined,
+        animation: bankAnim === "exit" && size > 0
+          ? `bank-drop-${sz} 1000ms linear forwards`
+          : undefined,
       }}>
         <div
           className="flex items-center justify-center"
-          style={{
-            width: "100%",
-            height: "100%",
-            transform: showButton ? "rotate(45deg)" : "rotate(45deg) scale(0)",
-          }}
+          style={{ width: "100%", height: "100%", transform: showButton ? "rotate(45deg)" : "rotate(45deg) scale(0)" }}
         >
           <button
             onClick={enabled ? () => { runBankAnim(); onBank(); } : undefined}
@@ -560,8 +628,8 @@ function FarkleBankButton({
             className={`flex items-center justify-center pressable ${animating ? "animate-scale-in" : ""}`}
             onAnimationEnd={() => setIntroDone(true)}
             style={{
-              width: "71%",
-              height: "71%",
+              width: "66%",
+              height: "66%",
               outline: `1px solid ${COLOR.textPrimary}`,
               outlineOffset: -1,
               borderRadius: RADIUS.sm,
@@ -582,10 +650,10 @@ function FarkleBankButton({
         </div>
       </div>
 
-      {/* Rising score / flash */}
+      {/* z=2 — rising score / flash */}
       {showScore && scoreOnly && (
         <div style={{
-          position: "absolute", inset: 0,
+          position: "absolute", inset: 0, zIndex: 2,
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: "clamp(16px, 14cqi, 100px)",
           fontWeight: WEIGHT.semibold,
