@@ -435,7 +435,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, aiDifficulty: action.difficulty };
     }
 
-    case "RESTORE": {
+    case "RESTORE":
+    case "RESET_GAME": {
       return action.state;
     }
 

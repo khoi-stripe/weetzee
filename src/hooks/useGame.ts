@@ -269,6 +269,23 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee", aiIn
   const acceptPiggyback = useCallback(() => { dispatch({ type: "ACCEPT_PIGGYBACK" }); }, []);
   const endGame = useCallback(() => { clearState(); }, []);
 
+  const resetGame = useCallback(() => {
+    clearState();
+    const prefs = loadPrefs();
+    const fresh = makeInitialState(ruleset, playerCount, aiIndices);
+    const colors = getPlayerColors();
+    let next: GameState = { ...fresh, players: fresh.players.map((p, i) => ({ ...p, color: colors[i] ?? p.color })) };
+    if (prefs.rollBankingEnabled && !ruleset.farkle) next = gameReducer(next, { type: "TOGGLE_ROLL_BANKING" });
+    if (prefs.multipleWeetzeesEnabled) next = gameReducer(next, { type: "TOGGLE_MULTIPLE_WEETZEES" });
+    if (!prefs.scoringHintsEnabled) next = gameReducer(next, { type: "TOGGLE_SCORING_HINTS" });
+    if (prefs.sixDiceEnabled) next = gameReducer(next, { type: "TOGGLE_SIX_DICE" });
+    if (prefs.orderedScoringEnabled) next = gameReducer(next, { type: "TOGGLE_ORDERED_SCORING" });
+    if (prefs.openingThresholdEnabled && ruleset.farkle) next = gameReducer(next, { type: "TOGGLE_OPENING_THRESHOLD" });
+    if (prefs.piggybackEnabled && ruleset.farkle) next = gameReducer(next, { type: "TOGGLE_PIGGYBACK" });
+    if (prefs.aiDifficulty !== "medium") next = gameReducer(next, { type: "SET_AI_DIFFICULTY", difficulty: prefs.aiDifficulty });
+    dispatch({ type: "RESET_GAME", state: next });
+  }, [ruleset, playerCount, aiIndices]);
+
   const toggleRollBanking = useCallback(() => {
     dispatch({ type: "TOGGLE_ROLL_BANKING" });
     savePrefs({ ...currentPrefs(), rollBankingEnabled: !stateRef.current.rollBankingEnabled });
@@ -309,7 +326,7 @@ export function useGame(playerCount: number, rulesetId: string = "weetzee", aiIn
     savePrefs({ ...currentPrefs(), aiDifficulty: difficulty });
   }, [currentPrefs]);
 
-  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, setAside, bank, toggleScoringHints, toggleSixDice, toggleOrderedScoring, toggleOpeningThreshold, togglePiggyback, acceptPiggyback, setAIDifficulty, endGame };
+  return { state, roll, toggleHold, scoreCategory, setView, toggleRollBanking, toggleMultipleWeetzees, setAside, bank, toggleScoringHints, toggleSixDice, toggleOrderedScoring, toggleOpeningThreshold, togglePiggyback, acceptPiggyback, setAIDifficulty, endGame, resetGame };
 }
 
 export type UseGameReturn = ReturnType<typeof useGame>;

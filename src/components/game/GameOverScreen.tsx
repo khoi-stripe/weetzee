@@ -9,7 +9,6 @@ import { incrementGamesCompleted } from "@/lib/supporter";
 import { Header } from "./Header";
 import { PlayerBar } from "./PlayerBar";
 import { playWin, playTap } from "@/lib/sounds";
-import { clearSavedGame } from "@/hooks/useGame";
 import { TYPE } from "@/lib/type";
 import { COLOR } from "@/lib/color";
 import { DialogCard } from "@/components/ui/DialogCard";
@@ -27,12 +26,12 @@ function maybeRequestReview(gamesCompleted: number) {
 export function GameOverScreen({
   players,
   ruleset,
-  playAgainUrl,
+  onPlayAgain,
   newGameUrl,
 }: {
   players: Player[];
   ruleset: Ruleset;
-  playAgainUrl: string;
+  onPlayAgain: () => void;
   newGameUrl: string;
 }) {
   const router = useRouter();
@@ -81,14 +80,14 @@ export function GameOverScreen({
 
         <div className="flex shrink-0" style={{ gap: 16 }}>
           <RoundButton
-            onClick={() => { playTap(); clearSavedGame(); router.push(newGameUrl); }}
+            onClick={() => { playTap(); router.push(newGameUrl); }}
           >
             New game
           </RoundButton>
           <RoundButton
             variant="filled"
             size={109.67}
-            onClick={() => { playTap(); clearSavedGame(); router.push(playAgainUrl); }}
+            onClick={() => { playTap(); onPlayAgain(); }}
           >
             Play again
           </RoundButton>

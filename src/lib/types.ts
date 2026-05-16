@@ -152,4 +152,5 @@ export type GameAction =
   | { type: "ACCEPT_PIGGYBACK" }
   | { type: "SET_AI_DIFFICULTY"; difficulty: AIDifficulty }
   | { type: "RESTORE"; state: GameState }
+  | { type: "RESET_GAME"; state: GameState }
   | { type: "SET_PLAYER_COLORS"; colors: string[] };

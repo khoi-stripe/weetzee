@@ -58,7 +58,7 @@ function GameContent() {
       <GameOverScreen
         players={state.players}
         ruleset={state.ruleset}
-        playAgainUrl={`/game?players=${playerCount}&ruleset=${rulesetId}${aiSuffix}`}
+        onPlayAgain={game.resetGame}
         newGameUrl={`/ruleset?players=${playerCount}${aiSuffix}`}
       />
     );
