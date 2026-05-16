@@ -592,7 +592,7 @@ function FarkleBankButton({
   const maskSize = size > 0 ? `${size}px ${size + holeRy}px` : undefined;
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
+    <div ref={containerRef} style={{ width: "100%", height: "100%", overflow: isExiting ? "hidden" : "visible", position: "relative" }}>
       {size > 0 && <style>{buildBankKeyframes(70, 3, size, holeRy)}</style>}
 
       {/* z=0 — grey hole, opens from center */}
@@ -610,13 +610,17 @@ function FarkleBankButton({
         </svg>
       )}
 
-      {/* z=1 — diamond with CSS mask tracking the hole aperture */}
+      {/* z=1 — diamond with CSS mask tracking the hole aperture (only during exit) */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 1,
-        WebkitMaskImage: maskUrl, maskImage: maskUrl,
-        WebkitMaskSize: maskSize, maskSize,
-        WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
-        WebkitMaskPosition: "0px 0px", maskPosition: "0px 0px",
+        WebkitMaskImage: bankAnim === "exit" ? maskUrl : undefined,
+        maskImage: bankAnim === "exit" ? maskUrl : undefined,
+        WebkitMaskSize: bankAnim === "exit" ? maskSize : undefined,
+        maskSize: bankAnim === "exit" ? maskSize : undefined,
+        WebkitMaskRepeat: bankAnim === "exit" ? "no-repeat" : undefined,
+        maskRepeat: bankAnim === "exit" ? "no-repeat" : undefined,
+        WebkitMaskPosition: bankAnim === "exit" ? "0px 0px" : undefined,
+        maskPosition: bankAnim === "exit" ? "0px 0px" : undefined,
         opacity: (bankAnim !== "exit" && (bankAnim !== "idle" || done)) ? 0 : undefined,
         animation: bankAnim === "exit" && size > 0
           ? `bank-drop-${sz} 1000ms linear forwards`
