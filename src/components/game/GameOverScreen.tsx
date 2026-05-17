@@ -60,13 +60,18 @@ export function GameOverScreen({
         className="flex flex-col flex-1 min-h-0 items-center justify-center"
         style={{ padding: 16, gap: 24 }}
       >
-        <DialogCard
-          background={winner.color}
-          maxWidth="calc(100dvh - 48px - 100px - 24px - 32px - 32px)"
-        >
-          <span style={{ ...TYPE.body }}>{winner.name} wins!</span>
-          <span style={{ ...TYPE.displayBold }}>{winner.total}</span>
-        </DialogCard>
+        <div style={{ position: "relative", width: "100%", maxWidth: "calc(100dvh - 48px - 100px - 24px - 32px - 32px)" }}>
+          <div className="snake-modal-border" />
+          <DialogCard
+            background={winner.color}
+            maxWidth="100%"
+            enter="spinIn"
+            style={{ borderRadius: 4, position: "relative" }}
+          >
+            <span style={{ ...TYPE.headline, textTransform: "uppercase" }}>{winner.name} wins!</span>
+            <span style={{ ...TYPE.displayBold }}>{winner.total}</span>
+          </DialogCard>
+        </div>
 
         {ranked.length > 1 && (
           <div className="w-full" style={{ animation: "fade-in 400ms ease 200ms both" }}>
