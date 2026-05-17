@@ -15,15 +15,16 @@ import { RoundButton } from "@/components/ui/RoundButton";
 const COLORS = PLAYER_COLORS;
 const SPIN_MS = 10000;
 const TICK_MS = 140;
+const FOOD_COUNT = 3;
 const RADIUS_RATIO = 0.25; // segment corner radius as fraction of cell size
 
 const PIP_PATTERNS: Record<number, [number, number][]> = {
-  1: [[0.5, 0.5]],
-  2: [[0.28, 0.28], [0.72, 0.72]],
-  3: [[0.28, 0.28], [0.5, 0.5], [0.72, 0.72]],
-  4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]],
-  5: [[0.28, 0.28], [0.72, 0.28], [0.5, 0.5], [0.28, 0.72], [0.72, 0.72]],
-  6: [[0.28, 0.25], [0.72, 0.25], [0.28, 0.5], [0.72, 0.5], [0.28, 0.75], [0.72, 0.75]],
+  1: [[0.50, 0.50]],
+  2: [[0.25, 0.25], [0.75, 0.75]],
+  3: [[0.25, 0.25], [0.50, 0.50], [0.75, 0.75]],
+  4: [[0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]],
+  5: [[0.25, 0.25], [0.75, 0.25], [0.50, 0.50], [0.25, 0.75], [0.75, 0.75]],
+  6: [[0.25, 0.20], [0.75, 0.20], [0.25, 0.50], [0.75, 0.50], [0.25, 0.80], [0.75, 0.80]],
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,14 +37,14 @@ type GameState = {
   snake: Point[];
   dir: Dir;
   nextDir: Dir;
-  food: Food;
+  foods: Food[];
   score: number;
   over: boolean;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function randomFood(snake: Point[], cols: number, rows: number): Food {
+function randomFood(excluded: Point[], cols: number, rows: number): Food {
   if (cols <= 0 || rows <= 0) return { x: 0, y: 0, value: 1 };
   let p: Point;
   let attempts = 0;
@@ -51,7 +52,7 @@ function randomFood(snake: Point[], cols: number, rows: number): Food {
     p = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
     attempts++;
     if (attempts > cols * rows) break;
-  } while (snake.some((s) => s.x === p.x && s.y === p.y));
+  } while (excluded.some((s) => s.x === p.x && s.y === p.y));
   return { ...p, value: Math.floor(Math.random() * 6) + 1 };
 }
 
@@ -71,7 +72,11 @@ function opposite(d: Dir): Dir {
 function makeInitial(cols: number, rows: number): GameState {
   const mid = { x: Math.floor(cols / 2), y: Math.floor(rows / 2) };
   const snake = [mid, { x: mid.x - 1, y: mid.y }, { x: mid.x - 2, y: mid.y }];
-  return { snake, dir: "right", nextDir: "right", food: randomFood(snake, cols, rows), score: 0, over: false };
+  const foods: Food[] = [];
+  for (let i = 0; i < FOOD_COUNT; i++) {
+    foods.push(randomFood([...snake, ...foods], cols, rows));
+  }
+  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -99,16 +104,15 @@ function segmentColor(idx: number, len: number, now: number): string {
 function drawDie(ctx: CanvasRenderingContext2D, x: number, y: number, cell: number, value: number) {
   const pad = cell * 0.1;
   const s = cell - pad * 2;
-  const r = s * RADIUS_RATIO;
   ctx.save();
-  roundedRect(ctx, x + pad, y + pad, s, s, r);
-  ctx.fillStyle = COLOR.textPrimary;
-  ctx.fill();
-  ctx.strokeStyle = "#333";
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-  const pipR = cell * 0.07;
+  roundedRect(ctx, x + pad, y + pad, s, s, 4);
   ctx.fillStyle = COLOR.surfaceBg;
+  ctx.fill();
+  ctx.strokeStyle = COLOR.textPrimary;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  const pipR = s * 0.085;
+  ctx.fillStyle = COLOR.textPrimary;
   for (const [fx, fy] of PIP_PATTERNS[value]) {
     ctx.beginPath();
     ctx.arc(x + pad + s * fx, y + pad + s * fy, pipR, 0, Math.PI * 2);
@@ -143,21 +147,39 @@ function drawFrame(
   }
 
   // Food
-  drawDie(ctx, state.food.x * cell, state.food.y * cell, cell, state.food.value);
-
-  // Snake
-  const len = state.snake.length;
-  for (let i = len - 1; i >= 0; i--) {
-    const { x, y } = state.snake[i];
-    const pad = cell * 0.08;
-    const s = cell - pad * 2;
-    const r = s * RADIUS_RATIO;
-    ctx.save();
-    roundedRect(ctx, x * cell + pad, y * cell + pad, s, s, r);
-    ctx.fillStyle = segmentColor(i, len, now);
-    ctx.fill();
-    ctx.restore();
+  for (const food of state.foods) {
+    drawDie(ctx, food.x * cell, food.y * cell, cell, food.value);
   }
+
+  // Snake — continuous tube with rainbow border + dark inner fill
+  const len = state.snake.length;
+  const cx = (p: Point) => p.x * cell + cell / 2;
+  const cy = (p: Point) => p.y * cell + cell / 2;
+  const outerW = cell * 0.78;
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  // Body segments (tail → head, round linecap fills corners at turns)
+  ctx.lineWidth = outerW;
+  for (let i = len - 1; i >= 1; i--) {
+    ctx.beginPath();
+    ctx.strokeStyle = segmentColor(i, len, now);
+    ctx.moveTo(cx(state.snake[i]), cy(state.snake[i]));
+    ctx.lineTo(cx(state.snake[i - 1]), cy(state.snake[i - 1]));
+    ctx.stroke();
+  }
+  // Head cap — 4px rounded rect overwrites the circular linecap end
+  ctx.beginPath();
+  ctx.fillStyle = segmentColor(0, len, now);
+  roundedRect(ctx, cx(state.snake[0]) - outerW / 2, cy(state.snake[0]) - outerW / 2, outerW, outerW, 4);
+  ctx.fill();
+  // Tail cap — same
+  ctx.beginPath();
+  ctx.fillStyle = segmentColor(len - 1, len, now);
+  roundedRect(ctx, cx(state.snake[len - 1]) - outerW / 2, cy(state.snake[len - 1]) - outerW / 2, outerW, outerW, 4);
+  ctx.fill();
+
 }
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
@@ -177,40 +199,49 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
 
   useEffect(() => {
     if (!active) return;
-    const id = setInterval(() => {
+    let cancelled = false;
+    function tick() {
+      if (cancelled) return;
       const s = stateRef.current;
-      if (s.over) return;
-      const dir = s.nextDir;
-      const head = step(s.snake[0], dir);
-      // Wall collision
-      if (head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows) {
-        stateRef.current = { ...s, over: true };
-        return;
+      if (!s.over) {
+        const dir = s.nextDir;
+        const head = step(s.snake[0], dir);
+        if (head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows) {
+          stateRef.current = { ...s, over: true };
+        } else if (s.snake.some((p) => p.x === head.x && p.y === head.y)) {
+          stateRef.current = { ...s, over: true };
+        } else {
+          const eatenIdx = s.foods.findIndex(f => head.x === f.x && head.y === f.y);
+          const ate = eatenIdx >= 0;
+          const newSnake = [head, ...s.snake.slice(0, ate ? undefined : -1)];
+          const newFoods = ate
+            ? [...s.foods.slice(0, eatenIdx), ...s.foods.slice(eatenIdx + 1),
+               randomFood([...newSnake, ...s.foods.filter((_, i) => i !== eatenIdx)], cols, rows)]
+            : s.foods;
+          stateRef.current = {
+            snake: newSnake,
+            dir,
+            nextDir: dir,
+            foods: newFoods,
+            score: ate ? s.score + s.foods[eatenIdx].value : s.score,
+            over: false,
+          };
+        }
       }
-      // Self collision
-      if (s.snake.some((p) => p.x === head.x && p.y === head.y)) {
-        stateRef.current = { ...s, over: true };
-        return;
-      }
-      const ate = head.x === s.food.x && head.y === s.food.y;
-      const newSnake = [head, ...s.snake.slice(0, ate ? undefined : -1)];
-      const newFood = ate ? randomFood(newSnake, cols, rows) : s.food;
-      stateRef.current = {
-        snake: newSnake,
-        dir,
-        nextDir: dir,
-        food: newFood,
-        score: ate ? s.score + s.food.value : s.score,
-        over: false,
-      };
-    }, TICK_MS);
-    return () => clearInterval(id);
+      const len = stateRef.current.snake.length;
+      const delay = TICK_MS * Math.pow(0.97, len - 3);
+      setTimeout(tick, delay);
+    }
+    const id = setTimeout(tick, TICK_MS);
+    return () => { cancelled = true; clearTimeout(id); };
   }, [cols, rows, active]);
 
   return { stateRef, steer, reset };
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
+
+const HS_KEY = "weetzee-snake-highscore";
 
 export default function SnakePage() {
   const router = useRouter();
@@ -220,10 +251,16 @@ export default function SnakePage() {
   const [cols, setCols] = useState(0);
   const [rows, setRows] = useState(0);
   const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
   const [over, setOver] = useState(false);
   const [started, setStarted] = useState(false);
   const rafRef = useRef<number>(0);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const stored = parseInt(localStorage.getItem(HS_KEY) ?? "0", 10);
+    if (!isNaN(stored)) setHighScore(stored);
+  }, []);
 
   // Measure container → compute grid
   useEffect(() => {
@@ -259,7 +296,14 @@ export default function SnakePage() {
       const s = stateRef.current;
       drawFrame(ctx!, s, cols, rows, cell, Date.now());
       setScore(s.score);
-      if (s.over && !over) setOver(true);
+      if (s.over && !over) {
+        setOver(true);
+        setHighScore((prev) => {
+          const next = Math.max(prev, s.score);
+          localStorage.setItem(HS_KEY, String(next));
+          return next;
+        });
+      }
       rafRef.current = requestAnimationFrame(loop);
     }
     rafRef.current = requestAnimationFrame(loop);
@@ -323,7 +367,9 @@ export default function SnakePage() {
         <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
           {score}
         </span>
-        <div style={{ width: 48 }} />
+        <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
+          Best {highScore}
+        </span>
       </div>
 
       {/* Canvas */}
@@ -344,19 +390,35 @@ export default function SnakePage() {
 
         {/* Start prompt */}
         {!started && !over && (
-          <Scrim position="absolute" zIndex={Z.interstitial} background="rgba(0,0,0,0.6)">
-            <span style={{ ...TYPE.titleBold, color: COLOR.textPrimary }}>Snake</span>
-            <span style={{ ...TYPE.microRegular, color: COLOR.textMuted }}>Swipe or use arrow keys</span>
+          <Scrim position="absolute" zIndex={Z.interstitial}>
+            <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
+              <div className="snake-modal-border" />
+              <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
+                <span style={{ ...TYPE.displayBold, fontFamily: "inherit" }}>Snake Eyes</span>
+                <span style={{ ...TYPE.body, fontFamily: "inherit", opacity: 0.5 }}>Swipe or use arrow keys</span>
+              </DialogCard>
+            </div>
+            <RoundButton variant="filled" onClick={() => setStarted(true)}>
+              Play
+            </RoundButton>
           </Scrim>
         )}
 
         {/* Game over */}
         {over && (
           <Scrim position="absolute" zIndex={Z.interstitial}>
-            <DialogCard enter="spinIn">
-              <span style={{ ...TYPE.body }}>Game over</span>
-              <span style={{ ...TYPE.displayBold, fontVariantNumeric: "tabular-nums" }}>{score}</span>
+            <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
+              <div className="snake-modal-border" />
+              <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
+              <span style={{ ...TYPE.body, fontFamily: "inherit" }}>Game over</span>
+              <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}>{score}</span>
+              {highScore > 0 && (
+                <span style={{ ...TYPE.body, fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}>
+                  Best {highScore}
+                </span>
+              )}
             </DialogCard>
+            </div>
             <RoundButton variant="filled" onClick={handleRestart}>
               Play again
             </RoundButton>

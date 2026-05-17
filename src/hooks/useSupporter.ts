@@ -52,5 +52,10 @@ export function useSupporter() {
     }
   }, [isNative]);
 
-  return { isSupporter, purchase, restore, loading, isNative };
+  const reset = useCallback(() => {
+    setLocal(false);
+    setIsSupporter(false);
+  }, []);
+
+  return { isSupporter, purchase, restore, reset, loading, isNative };
 }

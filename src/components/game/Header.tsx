@@ -599,7 +599,7 @@ function RulesModal({
 }
 
 function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }) {
-  const { isSupporter, purchase, restore, loading, isNative } = useSupporter();
+  const { isSupporter, purchase, restore, reset, loading, isNative } = useSupporter();
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null);
   const router = useRouter();
 
@@ -634,26 +634,47 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
         {isSupporter ? "Supporter" : "Support Weetzee"}
       </h3>
       {isSupporter ? (
-        <button
-          onClick={() => { playTap(); router.push("/snake"); }}
-          className="flex items-center justify-center rounded-full pressable"
-          style={{
-            ...TYPE.bodyEmphasis,
-            width: "100%",
-            height: 48,
-            background: COLOR.textPrimary,
-            color: COLOR.surfaceBg,
-            border: "none",
-            cursor: "pointer",
-            fontFamily: "inherit",
-          }}
-        >
-          Play Snake
-        </button>
+        <>
+          <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 16 }}>
+            Thanks for keeping the dice rolling. Snake Eyes is all yours.
+          </p>
+          <button
+            onClick={() => { playTap(); router.push("/snake"); }}
+            className="flex items-center justify-center rounded-full pressable"
+            style={{
+              ...TYPE.bodyEmphasis,
+              width: "100%",
+              height: 48,
+              background: COLOR.textPrimary,
+              color: COLOR.surfaceBg,
+              border: "none",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            Play Snake Eyes
+          </button>
+          <button
+            onClick={() => { playTap(); reset(); }}
+            style={{
+              ...TYPE.microRegular,
+              display: "block",
+              marginTop: 12,
+              background: "none",
+              border: "none",
+              color: COLOR.textDisabled,
+              cursor: "pointer",
+              padding: 0,
+              fontFamily: "inherit",
+            }}
+          >
+            Reset supporter status
+          </button>
+        </>
       ) : (
         <>
           <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 16 }}>
-            One-time purchase. Helps keep Weetzee free.
+            Hungry snake. Hungry dice. Support Weetzee to unlock Snake Eyes, a bonus game hiding inside the app.
           </p>
           <div className="support-border-ring" style={{ opacity: loading ? 0.5 : 1, transition: "opacity 150ms" }}>
             <button

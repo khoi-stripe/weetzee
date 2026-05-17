@@ -51,12 +51,12 @@ function buildStyles(pausePct: number, pauseDrift: number, size: number, holeRy:
   return `
     @keyframes dev-diamond-drop { ${keyframeLines} }
     @keyframes dev-bank-rise {
-      from { transform: translateY(100%); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
+      from { transform: translateY(100%) scale(0.9); opacity: 0; }
+      to   { transform: translateY(0)    scale(1);   opacity: 1; }
     }
     @keyframes dev-bank-exit {
-      from { transform: translateY(0);    opacity: 1; }
-      to   { transform: translateY(-40%); opacity: 0; }
+      0%   { transform: translateY(0)    scale(1.12); opacity: 1; }
+      100% { transform: translateY(-40%) scale(0.9);  opacity: 0; }
     }
     @keyframes dev-hole-in {
       from { transform: scaleX(0); }
@@ -89,7 +89,7 @@ function Slider({ label, value, min, max, step = 1, onChange }: {
   );
 }
 
-function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: boolean }) {
+function BankButtonPreview({ vars, playing, holeColor }: { vars: typeof DEFAULTS; playing: boolean; holeColor: string }) {
   const [phase, setPhase] = useState<"idle" | "exit" | "score" | "flash">("idle");
   const [done, setDone] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -131,11 +131,11 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
           style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "visible", pointerEvents: "none" }}>
           <ellipse
             cx={SIZE / 2} cy={HOLE_CY} rx={SIZE / 2} ry={HOLE_RY}
-            fill="#0F0F0F" opacity={vars.showHole}
+            fill={holeColor} opacity={vars.showHole}
             style={{
               animation: phase === "score"
                 ? `dev-hole-out 200ms ease-in 80ms forwards`
-                : `dev-hole-in 200ms ease-out forwards`,
+                : `dev-hole-in 320ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards`,
               transformBox: "fill-box", transformOrigin: "center",
             }}
           />
@@ -188,8 +188,8 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
           fontSize: 28, fontWeight: WEIGHT.semibold,
           color: COLOR.textPrimary, fontFamily: "inherit",
           animation: phase === "score"
-            ? `dev-bank-rise ${vars.scoreDuration}ms cubic-bezier(0, 0, 0.2, 1) forwards`
-            : `dev-bank-exit ${vars.flashDuration}ms ease-out forwards`,
+            ? `dev-bank-rise ${vars.scoreDuration}ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards`
+            : `dev-bank-exit ${vars.flashDuration}ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards`,
         }}>
           {phase === "flash" ? "*" : String(vars.score)}
         </div>
@@ -198,10 +198,13 @@ function BankButtonPreview({ vars, playing }: { vars: typeof DEFAULTS; playing: 
   );
 }
 
+const HOLE_COLORS = ["#0F0F0F", "#1a1a1a", "#333333", "#666666", "#ffffff", ...PLAYER_COLORS];
+
 export default function BankDevPage() {
   const [vars, setVars] = useState(DEFAULTS);
   const [playKey, setPlayKey] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [holeColor, setHoleColor] = useState("#0F0F0F");
   const set = (key: keyof typeof DEFAULTS) => (v: number) => setVars((p) => ({ ...p, [key]: v }));
 
   function replay() {
@@ -221,7 +224,7 @@ export default function BankDevPage() {
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center", gap: 40, padding: 24,
     }}>
-      <BankButtonPreview key={playKey} vars={vars} playing={isPlaying} />
+      <BankButtonPreview key={playKey} vars={vars} playing={isPlaying} holeColor={holeColor} />
 
       <div style={{ width: "100%", maxWidth: 440, display: "flex", flexDirection: "column", gap: 10, background: "#111", borderRadius: 12, padding: 20 }}>
         <Slider label="exit duration (ms)"  value={vars.exitDuration}  min={100} max={800} onChange={set("exitDuration")} />
@@ -233,6 +236,18 @@ export default function BankDevPage() {
         <Slider label="total (ms)"          value={vars.totalDuration} min={400} max={4000} onChange={set("totalDuration")} />
         <Slider label="hole opacity"        value={vars.showHole}      min={0}   max={1}   step={0.05} onChange={set("showHole")} />
         <Slider label="score"               value={vars.score}         min={50}  max={1000} step={50} onChange={set("score")} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
+          <span style={{ color: "white", fontSize: 11, fontFamily: "monospace", width: 130, textAlign: "right", flexShrink: 0 }}>hole color</span>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: 1 }}>
+            {HOLE_COLORS.map((c) => (
+              <button key={c} onClick={() => setHoleColor(c)} style={{
+                width: 20, height: 20, borderRadius: "50%", background: c, border: "none",
+                outline: holeColor === c ? "2px solid white" : "1px solid #444",
+                outlineOffset: 1, cursor: "pointer", flexShrink: 0,
+              }} />
+            ))}
+          </div>
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
