@@ -44,6 +44,8 @@ type GameState = {
   over: boolean;
   walls: Wall[];
   wallTick: number;
+  powerUp: (Point & { value: number; color: string }) | null;
+  intangibleUntil: number;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -116,7 +118,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false, walls, wallTick: 0 };
+  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false, walls, wallTick: 0, powerUp: null, intangibleUntil: 0 };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -157,18 +159,21 @@ function segmentFrac(idx: number, len: number, now: number): number {
   return ((phase + (len <= 1 ? 0 : idx / len)) % 1 + 1) % 1;
 }
 
-function drawDie(ctx: CanvasRenderingContext2D, x: number, y: number, cell: number, value: number) {
+function drawDie(
+  ctx: CanvasRenderingContext2D, x: number, y: number, cell: number, value: number,
+  bg: string = COLOR.surfaceBg, fg: string = COLOR.textPrimary, borderColor: string = COLOR.textPrimary,
+) {
   const pad = cell * 0.1;
   const s = cell - pad * 2;
   ctx.save();
   roundedRect(ctx, x + pad, y + pad, s, s, 4);
-  ctx.fillStyle = COLOR.surfaceBg;
+  ctx.fillStyle = bg;
   ctx.fill();
-  ctx.strokeStyle = COLOR.textPrimary;
+  ctx.strokeStyle = borderColor;
   ctx.lineWidth = 1;
   ctx.stroke();
   const pipR = s * 0.085;
-  ctx.fillStyle = COLOR.textPrimary;
+  ctx.fillStyle = fg;
   for (const [fx, fy] of PIP_PATTERNS[value]) {
     ctx.beginPath();
     ctx.arc(x + pad + s * fx, y + pad + s * fy, pipR, 0, Math.PI * 2);
@@ -178,14 +183,14 @@ function drawDie(ctx: CanvasRenderingContext2D, x: number, y: number, cell: numb
 }
 
 function drawWalls(ctx: CanvasRenderingContext2D, walls: Wall[], snakeLen: number, cols: number, rows: number, cell: number) {
-  ctx.fillStyle = COLOR.textPrimary;
   for (const wall of walls) {
     const sideLen = wall.side === "top" || wall.side === "bottom" ? cols : rows;
     const len = wallLength(snakeLen, sideLen);
-    for (const c of wallCells(wall, len, cols, rows)) {
-      const pad = cell * 0.1;
-      ctx.fillRect(c.x * cell + pad, c.y * cell + pad, cell - pad * 2, cell - pad * 2);
-    }
+    const cells = wallCells(wall, len, cols, rows);
+    cells.forEach((c, i) => {
+      const value = ((wall.offset + i) % 6) + 1;
+      drawDie(ctx, c.x * cell, c.y * cell, cell, value, COLOR.textPrimary, COLOR.surfaceBg, COLOR.surfaceBg);
+    });
   }
 }
 
@@ -224,7 +229,16 @@ function drawFrame(
     drawDie(ctx, food.x * cell, food.y * cell, cell, food.value);
   }
 
+  // Power-up die (colored bg, white pips)
+  if (state.powerUp) {
+    const pu = state.powerUp;
+    drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value, pu.color, "#000000", pu.color);
+  }
+
   // Snake — continuous tube with rainbow border + dark inner fill
+  const intangible = now < state.intangibleUntil;
+  const flashOn = intangible ? Math.floor(now / 200) % 2 === 0 : true;
+  if (intangible) ctx.globalAlpha = flashOn ? 1 : 0.35;
   const len = state.snake.length;
   const lerp = (a: number, b: number) => a + (b - a) * t;
   const lx = (i: number) => {
@@ -271,6 +285,7 @@ function drawFrame(
   roundedRect(ctx, lx(len - 1) - outerW / 2, ly(len - 1) - outerW / 2, outerW, outerW, 4);
   ctx.fill();
 
+  if (intangible) ctx.globalAlpha = 1;
 }
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
@@ -326,20 +341,36 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
         const newWalls = newWallTick % 2 === 0
           ? s.walls.map(w => advanceWall(w, wallLength(snakeLen, w.side === "top" || w.side === "bottom" ? cols : rows), cols, rows))
           : s.walls;
-        const hitWall = newWalls.some(w =>
+        const now = Date.now();
+        const intangible = now < s.intangibleUntil;
+        const hitWall = !intangible && newWalls.some(w =>
           wallCells(w, wallLength(snakeLen, w.side === "top" || w.side === "bottom" ? cols : rows), cols, rows)
             .some(c => c.x === head.x && c.y === head.y)
         );
-        if (s.snake.slice(0, -1).some((p) => p.x === head.x && p.y === head.y) || hitWall) {
-          stateRef.current = { ...s, over: true };
+        const hitSelf = !intangible && s.snake.slice(0, -1).some((p) => p.x === head.x && p.y === head.y);
+        if (hitSelf || hitWall) {
+          stateRef.current = { ...s, over: true, intangibleUntil: 0 };
         } else {
           const eatenIdx = s.foods.findIndex(f => head.x === f.x && head.y === f.y);
           const ate = eatenIdx >= 0;
+          const atePowerUp = s.powerUp !== null && head.x === s.powerUp.x && head.y === s.powerUp.y;
           const newSnake = [head, ...s.snake.slice(0, ate ? undefined : -1)];
           const newFoods = ate
             ? [...s.foods.slice(0, eatenIdx), ...s.foods.slice(eatenIdx + 1),
                randomFood([...newSnake, ...s.foods.filter((_, i) => i !== eatenIdx)], cols, rows)]
             : s.foods;
+          // Spawn a power-up with ~20% chance when food is eaten and none exists
+          const spawnPowerUp = ate && s.powerUp === null && Math.random() < 0.20;
+          const allOccupied = [...newSnake, ...newFoods];
+          const newPowerUp = atePowerUp
+            ? null
+            : spawnPowerUp
+              ? (() => {
+                  const p = randomFood(allOccupied, cols, rows);
+                  const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                  return { ...p, color };
+                })()
+              : s.powerUp;
           stateRef.current = {
             snake: newSnake,
             dir,
@@ -349,6 +380,8 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
             over: false,
             walls: newWalls,
             wallTick: newWallTick,
+            powerUp: newPowerUp,
+            intangibleUntil: atePowerUp ? now + 10000 : s.intangibleUntil,
           };
         }
       }
