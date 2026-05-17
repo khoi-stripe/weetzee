@@ -455,7 +455,7 @@ export default function SnakePage() {
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
-                <div style={{ ...TYPE.subDisplayBold, fontFamily: "inherit" }}>Snake Eyes</div>
+                <div style={{ ...TYPE.subDisplayBold, fontFamily: "inherit" }}>SNAKE EYES</div>
                 <span style={{ ...TYPE.body, fontFamily: "inherit", opacity: 0.5 }}>Swipe or use arrow keys</span>
               </DialogCard>
             </div>
