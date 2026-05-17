@@ -485,18 +485,9 @@ function SlotLabel({ label }: { label: string }) {
   );
 }
 
-// ===== Hot Dice cycling label =====
-
-function HotDiceLabel() {
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setIdx((i) => 1 - i), 3000);
-    return () => clearInterval(id);
-  }, []);
-  return <SlotLabel label={["HOT DICE!", "ROLL AGAIN"][idx]} />;
-}
-
 // ===== Farkle Action Button (circular, in-grid) =====
+
+const HOT_DICE_LABELS = ["HOT DICE!", "ROLL AGAIN"] as const;
 
 function FarkleActionButton({
   label,
@@ -518,6 +509,22 @@ function FarkleActionButton({
   const [introDone, setIntroDone] = useState(false);
   const animating = showButton && !introDone;
   const showWavy = !!(hotDice && !pressed && showButton);
+
+  // Cycling index for hot dice — lives here so SlotLabel stays permanently
+  // mounted and "ROLL" can never flash through as a plain-text intermediate.
+  const [hotIdx, setHotIdx] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+    if (!hotDice) {
+      setHotIdx(0);
+      return;
+    }
+    intervalRef.current = setInterval(() => setHotIdx((i) => 1 - i), 3000);
+    return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
+  }, [hotDice]);
+
+  const displayLabel = hotDice ? HOT_DICE_LABELS[hotIdx] : label;
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -544,7 +551,7 @@ function FarkleActionButton({
           padding: "8%",
         }}
       >
-        {hotDice ? <HotDiceLabel /> : label}
+        <SlotLabel label={displayLabel} />
       </button>
     </div>
   );
