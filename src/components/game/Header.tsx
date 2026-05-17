@@ -455,7 +455,7 @@ function RulesModal({
               </div>
             )}
 
-            {rulesetId !== "farkle" && (
+            {!showAllRulesets && rulesetId !== "farkle" && (
               <Section title="How to play">
                 Roll your dice, then optionally hold any and re-roll the rest — up to 3 rolls per turn.
                 After rolling, choose a scoring category. You may place a zero in any unused category if
@@ -465,7 +465,7 @@ function RulesModal({
 
             {showAllRulesets ? (
               <>
-                <HouseRulesInfo />
+                <SupportSection position="top" />
                 {VISIBLE_RULESETS.map((r) => (
                   <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
                 ))}
@@ -589,7 +589,7 @@ function RulesModal({
               </div>
             )}
 
-            <SupportSection />
+            {!showAllRulesets && <SupportSection />}
             <InstallSection />
           </>
         )}
