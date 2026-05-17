@@ -570,7 +570,7 @@ function FarkleActionButton({
           padding: "8%",
         }}
       >
-        <SlotLabel label={displayLabel} />
+        {displayLabel}
       </button>
     </div>
   );
