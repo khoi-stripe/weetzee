@@ -435,7 +435,7 @@ export default function SnakePage() {
     if (!el) return;
     function measure() {
       const { width, height } = el!.getBoundingClientRect();
-      const cellPx = 28;
+      const cellPx = 24;
       const c = Math.floor(width / cellPx);
       const r = Math.floor(height / cellPx);
       setCols(c);
