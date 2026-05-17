@@ -542,7 +542,7 @@ export default function SnakePage() {
           onClick={() => router.back()}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}
         >
-          ← Back
+          Back
         </button>
         <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
           {score}
