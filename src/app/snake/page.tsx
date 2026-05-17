@@ -388,23 +388,32 @@ export default function SnakePage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [steer, started]);
 
-  // Touch swipe
+  // Touch swipe — fires on move once threshold exceeded, not on lift
+  const swipeFiredRef = useRef(false);
+
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    swipeFiredRef.current = false;
   }, []);
 
-  const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!touchRef.current) return;
-    const dx = e.changedTouches[0].clientX - touchRef.current.x;
-    const dy = e.changedTouches[0].clientY - touchRef.current.y;
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchRef.current || swipeFiredRef.current) return;
+    const dx = e.touches[0].clientX - touchRef.current.x;
+    const dy = e.touches[0].clientY - touchRef.current.y;
+    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
+    swipeFiredRef.current = true;
     touchRef.current = null;
-    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
     const dir: Dir = Math.abs(dx) > Math.abs(dy)
       ? dx > 0 ? "right" : "left"
       : dy > 0 ? "down" : "up";
     if (!started) setStarted(true);
     steer(dir);
   }, [steer, started]);
+
+  const onTouchEnd = useCallback(() => {
+    touchRef.current = null;
+    swipeFiredRef.current = false;
+  }, []);
 
   function handleRestart() {
     reset();
@@ -438,6 +447,7 @@ export default function SnakePage() {
         ref={containerRef}
         style={{ flex: 1, minHeight: 0, position: "relative" }}
         onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         {cell > 0 && (
