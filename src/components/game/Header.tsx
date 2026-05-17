@@ -291,7 +291,7 @@ function GameRulesBlock({ id, name, diceCount, description }: { id: string; name
     <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
       <h2
         style={{
-          ...TYPE.sectionHeading,
+          ...TYPE.headline,
           color: COLOR.textPrimary,
           marginBottom: 4,
         }}
