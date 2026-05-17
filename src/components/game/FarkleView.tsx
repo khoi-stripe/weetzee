@@ -892,7 +892,7 @@ function PlayerInterstitial({
             {player.name}
           </span>
           {lastTurn && (
-            <span style={{ ...TYPE.bodyEmphasis, color: "rgba(0, 0, 0, 0.6)", textAlign: "center" }}>
+            <span style={{ ...TYPE.headline, color: "rgba(0, 0, 0, 0.6)", textAlign: "center" }}>
               Final round
             </span>
           )}
@@ -972,7 +972,7 @@ function PlayerInterstitial({
       >
         {player.name}
         {lastTurn && (
-          <span style={{ ...TYPE.bodyEmphasis, color: "rgba(0, 0, 0, 0.6)" }}>
+          <span style={{ ...TYPE.headline, color: "rgba(0, 0, 0, 0.6)" }}>
             Final round
           </span>
         )}
