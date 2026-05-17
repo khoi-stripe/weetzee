@@ -524,7 +524,7 @@ function FarkleActionButton({
       setHotIdx(0);
       return;
     }
-    intervalRef.current = setInterval(() => setHotIdx((i) => 1 - i), 3000);
+    intervalRef.current = setInterval(() => setHotIdx((i) => 1 - i), 2000);
     return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
   }, [hotDice]);
 
