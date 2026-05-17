@@ -95,10 +95,26 @@ function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   ctx.closePath();
 }
 
-function segmentColor(idx: number, len: number, now: number): string {
+function hexToRgb(hex: string): [number, number, number] {
+  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+}
+
+function lerpColor(a: string, b: string, t: number): string {
+  const [r1, g1, b1] = hexToRgb(a);
+  const [r2, g2, b2] = hexToRgb(b);
+  return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
+}
+
+function snakeColor(frac: number): string {
+  const n = COLORS.length;
+  const pos = (((frac % 1) + 1) % 1) * n;
+  const i = Math.floor(pos) % n;
+  return lerpColor(COLORS[i], COLORS[(i + 1) % n], pos - Math.floor(pos));
+}
+
+function segmentFrac(idx: number, len: number, now: number): number {
   const phase = (now % SPIN_MS) / SPIN_MS;
-  const frac = ((phase + (len <= 1 ? 0 : idx / len)) % 1 + 1) % 1;
-  return COLORS[Math.floor(frac * COLORS.length)];
+  return ((phase + (len <= 1 ? 0 : idx / len)) % 1 + 1) % 1;
 }
 
 function drawDie(ctx: CanvasRenderingContext2D, x: number, y: number, cell: number, value: number) {
@@ -124,6 +140,8 @@ function drawDie(ctx: CanvasRenderingContext2D, x: number, y: number, cell: numb
 function drawFrame(
   ctx: CanvasRenderingContext2D,
   state: GameState,
+  prevSnake: Point[],
+  t: number,
   cols: number,
   rows: number,
   cell: number,
@@ -153,31 +171,44 @@ function drawFrame(
 
   // Snake — continuous tube with rainbow border + dark inner fill
   const len = state.snake.length;
-  const cx = (p: Point) => p.x * cell + cell / 2;
-  const cy = (p: Point) => p.y * cell + cell / 2;
+  const lerp = (a: number, b: number) => a + (b - a) * t;
+  const lx = (i: number) => {
+    const prev = prevSnake[i];
+    const curr = state.snake[i];
+    return prev ? lerp(prev.x, curr.x) * cell + cell / 2 : curr.x * cell + cell / 2;
+  };
+  const ly = (i: number) => {
+    const prev = prevSnake[i];
+    const curr = state.snake[i];
+    return prev ? lerp(prev.y, curr.y) * cell + cell / 2 : curr.y * cell + cell / 2;
+  };
   const outerW = cell * 0.78;
 
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // Body segments (tail → head, round linecap fills corners at turns)
+  // Body segments — linear gradient per segment for smooth color flow
   ctx.lineWidth = outerW;
   for (let i = len - 1; i >= 1; i--) {
+    const x1 = lx(i), y1 = ly(i), x2 = lx(i - 1), y2 = ly(i - 1);
+    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+    grad.addColorStop(0, snakeColor(segmentFrac(i, len, now)));
+    grad.addColorStop(1, snakeColor(segmentFrac(i - 1, len, now)));
     ctx.beginPath();
-    ctx.strokeStyle = segmentColor(i, len, now);
-    ctx.moveTo(cx(state.snake[i]), cy(state.snake[i]));
-    ctx.lineTo(cx(state.snake[i - 1]), cy(state.snake[i - 1]));
+    ctx.strokeStyle = grad;
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
     ctx.stroke();
   }
-  // Head cap — 4px rounded rect overwrites the circular linecap end
+  // Head cap
   ctx.beginPath();
-  ctx.fillStyle = segmentColor(0, len, now);
-  roundedRect(ctx, cx(state.snake[0]) - outerW / 2, cy(state.snake[0]) - outerW / 2, outerW, outerW, 4);
+  ctx.fillStyle = snakeColor(segmentFrac(0, len, now));
+  roundedRect(ctx, lx(0) - outerW / 2, ly(0) - outerW / 2, outerW, outerW, 4);
   ctx.fill();
-  // Tail cap — same
+  // Tail cap
   ctx.beginPath();
-  ctx.fillStyle = segmentColor(len - 1, len, now);
-  roundedRect(ctx, cx(state.snake[len - 1]) - outerW / 2, cy(state.snake[len - 1]) - outerW / 2, outerW, outerW, 4);
+  ctx.fillStyle = snakeColor(segmentFrac(len - 1, len, now));
+  roundedRect(ctx, lx(len - 1) - outerW / 2, ly(len - 1) - outerW / 2, outerW, outerW, 4);
   ctx.fill();
 
 }
@@ -186,9 +217,16 @@ function drawFrame(
 
 function useSnakeGame(cols: number, rows: number, active: boolean) {
   const stateRef = useRef<GameState>(makeInitial(cols, rows));
+  const prevSnakeRef = useRef<Point[]>(stateRef.current.snake);
+  const lastTickRef = useRef(Date.now());
+  const tickDurRef = useRef(TICK_MS);
 
   const reset = useCallback(() => {
-    stateRef.current = makeInitial(cols, rows);
+    const s = makeInitial(cols, rows);
+    stateRef.current = s;
+    prevSnakeRef.current = s.snake;
+    lastTickRef.current = Date.now();
+    tickDurRef.current = TICK_MS;
   }, [cols, rows]);
 
   const steer = useCallback((dir: Dir) => {
@@ -203,6 +241,8 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
     function tick() {
       if (cancelled) return;
       const s = stateRef.current;
+      prevSnakeRef.current = s.snake;
+      lastTickRef.current = Date.now();
       if (!s.over) {
         const dir = s.nextDir;
         const head = step(s.snake[0], dir);
@@ -230,13 +270,14 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
       }
       const len = stateRef.current.snake.length;
       const delay = TICK_MS * Math.pow(0.97, len - 3);
+      tickDurRef.current = delay;
       setTimeout(tick, delay);
     }
     const id = setTimeout(tick, TICK_MS);
     return () => { cancelled = true; clearTimeout(id); };
   }, [cols, rows, active]);
 
-  return { stateRef, steer, reset };
+  return { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset };
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -268,8 +309,8 @@ export default function SnakePage() {
     if (!el) return;
     function measure() {
       const { width, height } = el!.getBoundingClientRect();
-      const c = Math.floor(Math.min(width, height * 0.55) / 16);
-      const cellPx = Math.floor(width / c);
+      const cellPx = 32;
+      const c = Math.floor(width / cellPx);
       const r = Math.floor(height / cellPx);
       setCols(c);
       setRows(r);
@@ -281,7 +322,7 @@ export default function SnakePage() {
     return () => ro.disconnect();
   }, []);
 
-  const { stateRef, steer, reset } = useSnakeGame(cols, rows, started && !over);
+  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over);
 
   // Render loop
   useEffect(() => {
@@ -294,7 +335,9 @@ export default function SnakePage() {
     function loop() {
       if (!running) return;
       const s = stateRef.current;
-      drawFrame(ctx!, s, cols, rows, cell, Date.now());
+      const now = Date.now();
+      const t = s.over ? 1 : Math.min(1, (now - lastTickRef.current) / tickDurRef.current);
+      drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now);
       setScore(s.score);
       if (s.over && !over) {
         setOver(true);
@@ -394,7 +437,7 @@ export default function SnakePage() {
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
-                <span style={{ ...TYPE.displayBold, fontFamily: "inherit" }}>Snake Eyes</span>
+                <div style={{ ...TYPE.subDisplayBold, fontFamily: "inherit" }}>Snake Eyes</div>
                 <span style={{ ...TYPE.body, fontFamily: "inherit", opacity: 0.5 }}>Swipe or use arrow keys</span>
               </DialogCard>
             </div>

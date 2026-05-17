@@ -32,13 +32,13 @@ export const WEIGHT = {
 
 export const TYPE = {
   // ----- Body (13px) -----
-  body: { fontSize: SIZE.body, fontWeight: WEIGHT.medium },
-  bodyRegular: { fontSize: SIZE.body, fontWeight: WEIGHT.regular },
-  bodyEmphasis: { fontSize: SIZE.body, fontWeight: WEIGHT.semibold },
+  body: { fontSize: SIZE.body, fontWeight: WEIGHT.medium, lineHeight: 1.2 },
+  bodyRegular: { fontSize: SIZE.body, fontWeight: WEIGHT.regular, lineHeight: 1.2 },
+  bodyEmphasis: { fontSize: SIZE.body, fontWeight: WEIGHT.semibold, lineHeight: 1.2 },
 
   // ----- Micro (12px) -----
-  micro: { fontSize: SIZE.micro, fontWeight: WEIGHT.medium },
-  microRegular: { fontSize: SIZE.micro, fontWeight: WEIGHT.regular },
+  micro: { fontSize: SIZE.micro, fontWeight: WEIGHT.medium, lineHeight: 1.2 },
+  microRegular: { fontSize: SIZE.micro, fontWeight: WEIGHT.regular, lineHeight: 1.2 },
 
   /** Uppercase label, used as a section eyebrow. */
   eyebrow: {
@@ -46,23 +46,24 @@ export const TYPE = {
     fontWeight: WEIGHT.medium,
     textTransform: "uppercase",
     letterSpacing: 1,
+    lineHeight: 1.2,
   },
 
   /** h3 section heading inside modals / settings. */
-  sectionHeading: { fontSize: SIZE.body, fontWeight: WEIGHT.semibold },
+  sectionHeading: { fontSize: SIZE.body, fontWeight: WEIGHT.semibold, lineHeight: 1.2 },
 
   // ----- Title (16px) -----
-  title: { fontSize: SIZE.title, fontWeight: WEIGHT.medium },
-  titleBold: { fontSize: SIZE.title, fontWeight: WEIGHT.bold },
+  title: { fontSize: SIZE.title, fontWeight: WEIGHT.medium, lineHeight: 1.2 },
+  titleBold: { fontSize: SIZE.title, fontWeight: WEIGHT.bold, lineHeight: 1.2 },
 
   // ----- Headline (20px) -----
-  headline: { fontSize: SIZE.headline, fontWeight: WEIGHT.bold },
+  headline: { fontSize: SIZE.headline, fontWeight: WEIGHT.bold, lineHeight: 1.2 },
 
   // ----- Sub-display (32px) -----
-  subDisplay: { fontSize: SIZE.subDisplay, fontWeight: WEIGHT.extrabold },
-  subDisplayBold: { fontSize: SIZE.subDisplay, fontWeight: WEIGHT.bold },
+  subDisplay: { fontSize: SIZE.subDisplay, fontWeight: WEIGHT.extrabold, lineHeight: 1 },
+  subDisplayBold: { fontSize: SIZE.subDisplay, fontWeight: WEIGHT.bold, lineHeight: 1 },
 
   // ----- Display (48px) -----
-  display: { fontSize: SIZE.display, fontWeight: WEIGHT.extrabold },
-  displayBold: { fontSize: SIZE.display, fontWeight: WEIGHT.bold },
+  display: { fontSize: SIZE.display, fontWeight: WEIGHT.extrabold, lineHeight: 1 },
+  displayBold: { fontSize: SIZE.display, fontWeight: WEIGHT.bold, lineHeight: 1 },
 } as const satisfies Record<string, CSSProperties>;

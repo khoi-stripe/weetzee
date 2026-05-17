@@ -638,22 +638,24 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
           <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 16 }}>
             Thanks for keeping the dice rolling. Snake Eyes is all yours.
           </p>
-          <button
-            onClick={() => { playTap(); router.push("/snake"); }}
-            className="flex items-center justify-center rounded-full pressable"
-            style={{
-              ...TYPE.bodyEmphasis,
-              width: "100%",
-              height: 48,
-              background: COLOR.textPrimary,
-              color: COLOR.surfaceBg,
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            Play Snake Eyes
-          </button>
+          <div className="support-border-ring" style={{ opacity: 1 }}>
+            <button
+              onClick={() => { playTap(); router.push("/snake"); }}
+              className="flex items-center justify-center rounded-full pressable"
+              style={{
+                ...TYPE.bodyEmphasis,
+                width: "100%",
+                height: 48,
+                background: COLOR.surfaceBg,
+                color: COLOR.textPrimary,
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              Play Snake Eyes
+            </button>
+          </div>
           <button
             onClick={() => { playTap(); reset(); }}
             style={{
