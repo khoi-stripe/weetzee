@@ -11,11 +11,8 @@ const SESSION_KEY = "weetzee-splash-shown";
 // Progressive stagger: each layer waits a bit longer than the previous.
 // layerIndex 0 = white (always 0ms), 1..N = colored layers in order.
 function layerDelay(index: number): number {
-  const BASE = 60;
-  const ACCEL = 20;
-  let total = 0;
-  for (let i = 0; i < index; i++) total += BASE + i * ACCEL;
-  return total;
+  const STEP = 80;
+  return index * STEP;
 }
 const MAX_LAYER_DELAY = layerDelay(PLAYER_COLORS.length);
 
