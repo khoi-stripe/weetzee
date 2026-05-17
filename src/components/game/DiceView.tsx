@@ -488,7 +488,7 @@ function SlotLabel({ label }: { label: string }) {
 
 // ===== Farkle Action Button (circular, in-grid) =====
 
-const HOT_DICE_LABELS = ["HOT DICE!", "ROLL AGAIN"] as const;
+const HOT_DICE_LABELS = ["HOT DICE!", "ROLL"] as const;
 
 function FarkleActionButton({
   label,
