@@ -479,6 +479,17 @@ function SlotLabel({ label }: { label: string }) {
   );
 }
 
+// ===== Hot Dice cycling label =====
+
+function HotDiceLabel() {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setIdx((i) => 1 - i), 3000);
+    return () => clearInterval(id);
+  }, []);
+  return <SlotLabel label={["HOT DICE!", "ROLL AGAIN"][idx]} />;
+}
+
 // ===== Farkle Action Button (circular, in-grid) =====
 
 function FarkleActionButton({
@@ -500,15 +511,6 @@ function FarkleActionButton({
 }) {
   const [introDone, setIntroDone] = useState(false);
   const animating = showButton && !introDone;
-  const [hotIdx, setHotIdx] = useState(0);
-
-  useEffect(() => {
-    if (!hotDice) { setHotIdx(0); return; }
-    const id = setInterval(() => setHotIdx((i) => 1 - i), 3000);
-    return () => clearInterval(id);
-  }, [hotDice]);
-
-  const displayLabel = hotDice ? ["HOT DICE!", "ROLL AGAIN"][hotIdx] : label;
   const showWavy = !!(hotDice && !pressed && showButton);
 
   return (
@@ -536,7 +538,7 @@ function FarkleActionButton({
           padding: "8%",
         }}
       >
-        {hotDice ? <SlotLabel label={displayLabel} /> : label}
+        {hotDice ? <HotDiceLabel /> : label}
       </button>
     </div>
   );
