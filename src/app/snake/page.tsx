@@ -353,8 +353,8 @@ export default function SnakePage() {
         {/* Game over */}
         {over && (
           <Scrim position="absolute" zIndex={Z.interstitial}>
-            <DialogCard>
-              <span style={{ ...TYPE.body, color: COLOR.textPrimary }}>Game over</span>
+            <DialogCard enter="spinIn">
+              <span style={{ ...TYPE.body }}>Game over</span>
               <span style={{ ...TYPE.displayBold, fontVariantNumeric: "tabular-nums" }}>{score}</span>
             </DialogCard>
             <RoundButton variant="filled" onClick={handleRestart}>
