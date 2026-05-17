@@ -187,9 +187,8 @@ function drawWalls(ctx: CanvasRenderingContext2D, walls: Wall[], snakeLen: numbe
     const sideLen = wall.side === "top" || wall.side === "bottom" ? cols : rows;
     const len = wallLength(snakeLen, sideLen);
     const cells = wallCells(wall, len, cols, rows);
-    cells.forEach((c, i) => {
-      const value = ((wall.offset + i) % 6) + 1;
-      drawDie(ctx, c.x * cell, c.y * cell, cell, value, COLOR.textPrimary, COLOR.surfaceBg, COLOR.surfaceBg);
+    cells.forEach((c) => {
+      drawDie(ctx, c.x * cell, c.y * cell, cell, 1, COLOR.textPrimary, COLOR.surfaceBg, COLOR.surfaceBg);
     });
   }
 }
