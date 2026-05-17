@@ -439,6 +439,46 @@ function WavyBorder({ color, active }: { color: string; active: boolean }) {
   );
 }
 
+// ===== Slot Label (drop-in / sink-out transition) =====
+
+function SlotLabel({ label }: { label: string }) {
+  const prevRef = useRef(label);
+  const [anim, setAnim] = useState<{ from: string; to: string; id: number } | null>(null);
+
+  useEffect(() => {
+    if (label !== prevRef.current) {
+      setAnim({ from: prevRef.current, to: label, id: Date.now() });
+      prevRef.current = label;
+    }
+  }, [label]);
+
+  return (
+    <span style={{ overflow: "hidden", display: "block", position: "relative" }}>
+      <span
+        style={{
+          display: "block",
+          animation: anim ? "slot-exit 160ms cubic-bezier(0.4,0,1,1) forwards" : undefined,
+        }}
+        onAnimationEnd={() => setAnim(null)}
+      >
+        {anim ? anim.from : label}
+      </span>
+      {anim && (
+        <span
+          style={{
+            display: "block",
+            position: "absolute",
+            inset: 0,
+            animation: "slot-enter 160ms cubic-bezier(0,0,0.2,1) forwards",
+          }}
+        >
+          {anim.to}
+        </span>
+      )}
+    </span>
+  );
+}
+
 // ===== Farkle Action Button (circular, in-grid) =====
 
 function FarkleActionButton({
@@ -460,7 +500,15 @@ function FarkleActionButton({
 }) {
   const [introDone, setIntroDone] = useState(false);
   const animating = showButton && !introDone;
+  const [hotIdx, setHotIdx] = useState(0);
 
+  useEffect(() => {
+    if (!hotDice) { setHotIdx(0); return; }
+    const id = setInterval(() => setHotIdx((i) => 1 - i), 3000);
+    return () => clearInterval(id);
+  }, [hotDice]);
+
+  const displayLabel = hotDice ? ["HOT DICE!", "ROLL AGAIN"][hotIdx] : label;
   const showWavy = !!(hotDice && !pressed && showButton);
 
   return (
@@ -488,7 +536,7 @@ function FarkleActionButton({
           padding: "8%",
         }}
       >
-        {label}
+        <SlotLabel label={displayLabel} />
       </button>
     </div>
   );
