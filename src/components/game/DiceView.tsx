@@ -457,10 +457,11 @@ function SlotLabel({ label }: { label: string }) {
   }, [label]);
 
   return (
-    <span style={{ overflow: "hidden", display: "block", position: "relative" }}>
+    <span style={{ overflow: "hidden", display: "block", position: "relative", whiteSpace: "nowrap" }}>
       <span
         style={{
           display: "block",
+          whiteSpace: "nowrap",
           animation: anim ? "slot-exit 160ms cubic-bezier(0.4,0,1,1) forwards" : undefined,
         }}
         onAnimationEnd={() => setAnim(null)}
@@ -471,6 +472,7 @@ function SlotLabel({ label }: { label: string }) {
         <span
           style={{
             display: "block",
+            whiteSpace: "nowrap",
             position: "absolute",
             inset: 0,
             animation: "slot-enter 160ms cubic-bezier(0,0,0.2,1) forwards",
