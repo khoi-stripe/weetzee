@@ -32,6 +32,8 @@ const PIP_PATTERNS: Record<number, [number, number][]> = {
 type Point = { x: number; y: number };
 type Dir = "up" | "down" | "left" | "right";
 type Food = Point & { value: number };
+type WallSide = "top" | "bottom" | "left" | "right";
+type Wall = { side: WallSide; offset: number; dir: 1 | -1 };
 
 type GameState = {
   snake: Point[];
@@ -40,6 +42,8 @@ type GameState = {
   foods: Food[];
   score: number;
   over: boolean;
+  walls: Wall[];
+  wallTick: number;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -69,6 +73,36 @@ function opposite(d: Dir): Dir {
   return d === "up" ? "down" : d === "down" ? "up" : d === "left" ? "right" : "left";
 }
 
+function wallLength(snakeLen: number, sideLen: number): number {
+  const min = 2;
+  const max = Math.floor(sideLen * 0.5);
+  const t = Math.min(1, (snakeLen - 3) / 20);
+  return Math.max(min, Math.round(min + (max - min) * t));
+}
+
+function wallCells(wall: Wall, length: number, cols: number, rows: number): Point[] {
+  const sideLen = wall.side === "top" || wall.side === "bottom" ? cols : rows;
+  const cells: Point[] = [];
+  for (let i = 0; i < length; i++) {
+    const pos = wall.offset + i;
+    if (pos < 0 || pos >= sideLen) continue;
+    if (wall.side === "top")    cells.push({ x: pos, y: 0 });
+    if (wall.side === "bottom") cells.push({ x: pos, y: rows - 1 });
+    if (wall.side === "left")   cells.push({ x: 0, y: pos });
+    if (wall.side === "right")  cells.push({ x: cols - 1, y: pos });
+  }
+  return cells;
+}
+
+function advanceWall(wall: Wall, length: number, cols: number, rows: number): Wall {
+  const sideLen = wall.side === "top" || wall.side === "bottom" ? cols : rows;
+  let offset = wall.offset + wall.dir;
+  let dir = wall.dir;
+  if (offset + length >= sideLen) { offset = sideLen - length; dir = -1; }
+  if (offset <= 0) { offset = 0; dir = 1; }
+  return { ...wall, offset, dir };
+}
+
 function makeInitial(cols: number, rows: number): GameState {
   const mid = { x: Math.floor(cols / 2), y: Math.floor(rows / 2) };
   const snake = [mid, { x: mid.x - 1, y: mid.y }, { x: mid.x - 2, y: mid.y }];
@@ -76,7 +110,13 @@ function makeInitial(cols: number, rows: number): GameState {
   for (let i = 0; i < FOOD_COUNT; i++) {
     foods.push(randomFood([...snake, ...foods], cols, rows));
   }
-  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false };
+  const walls: Wall[] = [
+    { side: "top",    offset: 0,                         dir: 1 },
+    { side: "bottom", offset: Math.floor(cols / 2),      dir: -1 },
+    { side: "left",   offset: 0,                         dir: 1 },
+    { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
+  ];
+  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false, walls, wallTick: 0 };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -137,6 +177,18 @@ function drawDie(ctx: CanvasRenderingContext2D, x: number, y: number, cell: numb
   ctx.restore();
 }
 
+function drawWalls(ctx: CanvasRenderingContext2D, walls: Wall[], snakeLen: number, cols: number, rows: number, cell: number) {
+  ctx.fillStyle = COLOR.textPrimary;
+  for (const wall of walls) {
+    const sideLen = wall.side === "top" || wall.side === "bottom" ? cols : rows;
+    const len = wallLength(snakeLen, sideLen);
+    for (const c of wallCells(wall, len, cols, rows)) {
+      const pad = cell * 0.1;
+      ctx.fillRect(c.x * cell + pad, c.y * cell + pad, cell - pad * 2, cell - pad * 2);
+    }
+  }
+}
+
 function drawFrame(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -163,6 +215,9 @@ function drawFrame(
   for (let row = 0; row <= rows; row++) {
     ctx.beginPath(); ctx.moveTo(0, row * cell); ctx.lineTo(w, row * cell); ctx.stroke();
   }
+
+  // Walls
+  drawWalls(ctx, state.walls, state.snake.length, cols, rows, cell);
 
   // Food
   for (const food of state.foods) {
@@ -266,7 +321,16 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
           x: ((raw.x % cols) + cols) % cols,
           y: ((raw.y % rows) + rows) % rows,
         };
-        if (s.snake.slice(0, -1).some((p) => p.x === head.x && p.y === head.y)) {
+        const newWallTick = s.wallTick + 1;
+        const snakeLen = s.snake.length;
+        const newWalls = newWallTick % 2 === 0
+          ? s.walls.map(w => advanceWall(w, wallLength(snakeLen, w.side === "top" || w.side === "bottom" ? cols : rows), cols, rows))
+          : s.walls;
+        const hitWall = newWalls.some(w =>
+          wallCells(w, wallLength(snakeLen, w.side === "top" || w.side === "bottom" ? cols : rows), cols, rows)
+            .some(c => c.x === head.x && c.y === head.y)
+        );
+        if (s.snake.slice(0, -1).some((p) => p.x === head.x && p.y === head.y) || hitWall) {
           stateRef.current = { ...s, over: true };
         } else {
           const eatenIdx = s.foods.findIndex(f => head.x === f.x && head.y === f.y);
@@ -283,6 +347,8 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
             foods: newFoods,
             score: ate ? s.score + s.foods[eatenIdx].value : s.score,
             over: false,
+            walls: newWalls,
+            wallTick: newWallTick,
           };
         }
       }
