@@ -175,12 +175,15 @@ function drawFrame(
   const lx = (i: number) => {
     const prev = prevSnake[i];
     const curr = state.snake[i];
-    return prev ? lerp(prev.x, curr.x) * cell + cell / 2 : curr.x * cell + cell / 2;
+    // Snap on portal (jumped more than 1 cell)
+    if (!prev || Math.abs(curr.x - prev.x) > 1) return curr.x * cell + cell / 2;
+    return lerp(prev.x, curr.x) * cell + cell / 2;
   };
   const ly = (i: number) => {
     const prev = prevSnake[i];
     const curr = state.snake[i];
-    return prev ? lerp(prev.y, curr.y) * cell + cell / 2 : curr.y * cell + cell / 2;
+    if (!prev || Math.abs(curr.y - prev.y) > 1) return curr.y * cell + cell / 2;
+    return lerp(prev.y, curr.y) * cell + cell / 2;
   };
   const outerW = cell * 0.78;
 
@@ -191,6 +194,8 @@ function drawFrame(
   ctx.lineWidth = outerW;
   for (let i = len - 1; i >= 1; i--) {
     const x1 = lx(i), y1 = ly(i), x2 = lx(i - 1), y2 = ly(i - 1);
+    // Skip segment that crosses the portal gap
+    if (Math.abs(x2 - x1) > cell * 2 || Math.abs(y2 - y1) > cell * 2) continue;
     const grad = ctx.createLinearGradient(x1, y1, x2, y2);
     grad.addColorStop(0, snakeColor(segmentFrac(i, len, now)));
     grad.addColorStop(1, snakeColor(segmentFrac(i - 1, len, now)));
@@ -221,6 +226,17 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
   const lastTickRef = useRef(Date.now());
   const tickDurRef = useRef(TICK_MS);
 
+  // Reinitialize once when dimensions first become valid (initial state has cols=0,rows=0)
+  const dimInitialized = useRef(false);
+  useEffect(() => {
+    if (cols > 0 && rows > 0 && !dimInitialized.current) {
+      dimInitialized.current = true;
+      const s = makeInitial(cols, rows);
+      stateRef.current = s;
+      prevSnakeRef.current = s.snake;
+    }
+  }, [cols, rows]);
+
   const reset = useCallback(() => {
     const s = makeInitial(cols, rows);
     stateRef.current = s;
@@ -245,10 +261,12 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
       lastTickRef.current = Date.now();
       if (!s.over) {
         const dir = s.nextDir;
-        const head = step(s.snake[0], dir);
-        if (head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows) {
-          stateRef.current = { ...s, over: true };
-        } else if (s.snake.some((p) => p.x === head.x && p.y === head.y)) {
+        const raw = step(s.snake[0], dir);
+        const head = {
+          x: ((raw.x % cols) + cols) % cols,
+          y: ((raw.y % rows) + rows) % rows,
+        };
+        if (s.snake.slice(0, -1).some((p) => p.x === head.x && p.y === head.y)) {
           stateRef.current = { ...s, over: true };
         } else {
           const eatenIdx = s.foods.findIndex(f => head.x === f.x && head.y === f.y);
