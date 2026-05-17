@@ -50,6 +50,7 @@ export const DiceView = memo(function DiceView({
   farkleActionPressed = false,
   farkleBankPressed = false,
   farkleBankReady = false,
+  farkleHotDice = false,
 }: {
   dice: DieType[];
   rollsUsed: number;
@@ -71,6 +72,7 @@ export const DiceView = memo(function DiceView({
   farkleActionPressed?: boolean;
   farkleBankPressed?: boolean;
   farkleBankReady?: boolean;
+  farkleHotDice?: boolean;
 }) {
   const heldCount = dice.filter((d) => d.held).length;
   const allHeld = heldCount >= dice.length;
@@ -340,7 +342,7 @@ export const DiceView = memo(function DiceView({
               onAction={onRoll}
               showButton={showButton}
               color={playerColor}
-              hotDice={farkleActionLabel === "HOT DICE!"}
+              hotDice={farkleHotDice}
               pressed={farkleActionPressed}
             />
           </div>
@@ -445,7 +447,9 @@ function SlotLabel({ label }: { label: string }) {
   const prevRef = useRef(label);
   const [anim, setAnim] = useState<{ from: string; to: string; id: number } | null>(null);
 
-  useEffect(() => {
+  // useLayoutEffect fires before paint so the browser never sees the new label
+  // in the static span — it always goes straight into the animation.
+  useLayoutEffect(() => {
     if (label !== prevRef.current) {
       setAnim({ from: prevRef.current, to: label, id: Date.now() });
       prevRef.current = label;

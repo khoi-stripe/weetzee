@@ -453,6 +453,7 @@ export function FarkleView({ game, isAITurn = false, aiPendingAction = null }: {
     farkleActionPressed: aiPendingAction === "roll" || aiPendingAction === "set-aside",
     farkleBankPressed: aiPendingAction === "bank",
     farkleBankReady: state.turnScore > 0,
+    farkleHotDice: hotDiceWaiting,
   }), [
     state.dice, state.rollsUsed, state.farkled, state.setAsideDiceIds, state.turnScore,
     currentPlayer.color, stableActionHandler, stableToggleHold, stableFarkleOnBank,
