@@ -344,6 +344,7 @@ export const DiceView = memo(function DiceView({
               color={playerColor}
               hotDice={farkleHotDice}
               pressed={farkleActionPressed}
+              rollsUsed={rollsUsed}
             />
           </div>
           <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size", order: 2 }}>
@@ -497,6 +498,7 @@ function FarkleActionButton({
   color,
   hotDice,
   pressed = false,
+  rollsUsed = 0,
 }: {
   label: string;
   enabled: boolean;
@@ -505,13 +507,13 @@ function FarkleActionButton({
   color: string;
   hotDice?: boolean;
   pressed?: boolean;
+  rollsUsed?: number;
 }) {
   const [introDone, setIntroDone] = useState(false);
   const animating = showButton && !introDone;
   const showWavy = !!(hotDice && !pressed && showButton);
 
-  // Cycling index for hot dice — lives here so SlotLabel stays permanently
-  // mounted and "ROLL" can never flash through as a plain-text intermediate.
+  // Cycling index for hot dice — lives here so SlotLabel stays permanently mounted.
   const [hotIdx, setHotIdx] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
@@ -524,7 +526,22 @@ function FarkleActionButton({
     return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
   }, [hotDice]);
 
-  const displayLabel = hotDice ? HOT_DICE_LABELS[hotIdx] : label;
+  // Suppress "ROLL" flicker when hotDice briefly goes false mid-cycle.
+  // When hotDice is false but label="ROLL" and we were just in hot dice mode
+  // (lastHotLabelRef is set) and the turn is still in progress (rollsUsed > 0),
+  // hold the last hot dice label instead of showing "ROLL".
+  // Clear the latch on any non-ROLL label (e.g. SELECT DICE) or on a new turn.
+  const lastHotLabelRef = useRef<string | null>(null);
+  let displayLabel: string;
+  if (hotDice) {
+    displayLabel = HOT_DICE_LABELS[hotIdx];
+    lastHotLabelRef.current = displayLabel;
+  } else if (label === "ROLL" && lastHotLabelRef.current !== null && rollsUsed > 0) {
+    displayLabel = lastHotLabelRef.current;
+  } else {
+    lastHotLabelRef.current = null;
+    displayLabel = label;
+  }
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
