@@ -193,6 +193,54 @@ function drawWalls(ctx: CanvasRenderingContext2D, walls: Wall[], snakeLen: numbe
   }
 }
 
+function drawSnake(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  prevSnake: Point[],
+  t: number,
+  cell: number,
+  now: number,
+) {
+  const len = state.snake.length;
+  const lerp = (a: number, b: number) => a + (b - a) * t;
+  const lx = (i: number) => {
+    const prev = prevSnake[i];
+    const curr = state.snake[i];
+    if (!prev || Math.abs(curr.x - prev.x) > 1) return curr.x * cell + cell / 2;
+    return lerp(prev.x, curr.x) * cell + cell / 2;
+  };
+  const ly = (i: number) => {
+    const prev = prevSnake[i];
+    const curr = state.snake[i];
+    if (!prev || Math.abs(curr.y - prev.y) > 1) return curr.y * cell + cell / 2;
+    return lerp(prev.y, curr.y) * cell + cell / 2;
+  };
+  const outerW = cell * 0.78;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = outerW;
+  for (let i = len - 1; i >= 1; i--) {
+    const x1 = lx(i), y1 = ly(i), x2 = lx(i - 1), y2 = ly(i - 1);
+    if (Math.abs(x2 - x1) > cell * 2 || Math.abs(y2 - y1) > cell * 2) continue;
+    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+    grad.addColorStop(0, snakeColor(segmentFrac(i, len, now)));
+    grad.addColorStop(1, snakeColor(segmentFrac(i - 1, len, now)));
+    ctx.beginPath();
+    ctx.strokeStyle = grad;
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.fillStyle = snakeColor(segmentFrac(0, len, now));
+  roundedRect(ctx, lx(0) - outerW / 2, ly(0) - outerW / 2, outerW, outerW, 4);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.fillStyle = snakeColor(segmentFrac(len - 1, len, now));
+  roundedRect(ctx, lx(len - 1) - outerW / 2, ly(len - 1) - outerW / 2, outerW, outerW, 4);
+  ctx.fill();
+}
+
 function drawFrame(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -202,6 +250,7 @@ function drawFrame(
   rows: number,
   cell: number,
   now: number,
+  snakeCanvas: HTMLCanvasElement,
 ) {
   const w = cols * cell;
   const h = rows * cell;
@@ -234,57 +283,17 @@ function drawFrame(
     drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value, pu.color, "#000000", pu.color);
   }
 
-  // Snake — continuous tube with rainbow border + dark inner fill
+  // Snake — draw to offscreen canvas first, then composite at desired alpha
   const intangible = now < state.intangibleUntil;
-  const flashOn = intangible ? Math.floor(now / 200) % 2 === 0 : true;
-  if (intangible) ctx.globalAlpha = flashOn ? 1 : 0.35;
-  const len = state.snake.length;
-  const lerp = (a: number, b: number) => a + (b - a) * t;
-  const lx = (i: number) => {
-    const prev = prevSnake[i];
-    const curr = state.snake[i];
-    // Snap on portal (jumped more than 1 cell)
-    if (!prev || Math.abs(curr.x - prev.x) > 1) return curr.x * cell + cell / 2;
-    return lerp(prev.x, curr.x) * cell + cell / 2;
-  };
-  const ly = (i: number) => {
-    const prev = prevSnake[i];
-    const curr = state.snake[i];
-    if (!prev || Math.abs(curr.y - prev.y) > 1) return curr.y * cell + cell / 2;
-    return lerp(prev.y, curr.y) * cell + cell / 2;
-  };
-  const outerW = cell * 0.78;
-
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  // Body segments — linear gradient per segment for smooth color flow
-  ctx.lineWidth = outerW;
-  for (let i = len - 1; i >= 1; i--) {
-    const x1 = lx(i), y1 = ly(i), x2 = lx(i - 1), y2 = ly(i - 1);
-    // Skip segment that crosses the portal gap
-    if (Math.abs(x2 - x1) > cell * 2 || Math.abs(y2 - y1) > cell * 2) continue;
-    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
-    grad.addColorStop(0, snakeColor(segmentFrac(i, len, now)));
-    grad.addColorStop(1, snakeColor(segmentFrac(i - 1, len, now)));
-    ctx.beginPath();
-    ctx.strokeStyle = grad;
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
-  // Head cap
-  ctx.beginPath();
-  ctx.fillStyle = snakeColor(segmentFrac(0, len, now));
-  roundedRect(ctx, lx(0) - outerW / 2, ly(0) - outerW / 2, outerW, outerW, 4);
-  ctx.fill();
-  // Tail cap
-  ctx.beginPath();
-  ctx.fillStyle = snakeColor(segmentFrac(len - 1, len, now));
-  roundedRect(ctx, lx(len - 1) - outerW / 2, ly(len - 1) - outerW / 2, outerW, outerW, 4);
-  ctx.fill();
-
-  if (intangible) ctx.globalAlpha = 1;
+  const flashAlpha = intangible ? (Math.floor(now / 200) % 2 === 0 ? 1 : 0.35) : 1;
+  snakeCanvas.width = w;
+  snakeCanvas.height = h;
+  const snakeCtx = snakeCanvas.getContext("2d")!;
+  snakeCtx.clearRect(0, 0, w, h);
+  drawSnake(snakeCtx, state, prevSnake, t, cell, now);
+  ctx.globalAlpha = flashAlpha;
+  ctx.drawImage(snakeCanvas, 0, 0);
+  ctx.globalAlpha = 1;
 }
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
@@ -413,6 +422,7 @@ export default function SnakePage() {
   const [started, setStarted] = useState(false);
   const rafRef = useRef<number>(0);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
+  const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     const stored = parseInt(localStorage.getItem(HS_KEY) ?? "0", 10);
@@ -447,13 +457,15 @@ export default function SnakePage() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    if (!snakeCanvasRef.current) snakeCanvasRef.current = document.createElement("canvas");
+    const snakeCanvas = snakeCanvasRef.current;
     let running = true;
     function loop() {
       if (!running) return;
       const s = stateRef.current;
       const now = Date.now();
       const t = s.over ? 1 : Math.min(1, (now - lastTickRef.current) / tickDurRef.current);
-      drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now);
+      drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas);
       setScore(s.score);
       if (s.over && !over) {
         setOver(true);
