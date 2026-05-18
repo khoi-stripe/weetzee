@@ -431,10 +431,7 @@ function RulesModal({
                 }}
               >
                 <div>
-                  <span style={{ ...TYPE.microRegular, color: COLOR.textMuted }}>Playing</span>
-                  <span style={{ ...TYPE.body, color: COLOR.textPrimary, marginLeft: 8 }}>
-                    {rulesetName}
-                  </span>
+                  <span style={{ ...TYPE.headline, color: COLOR.textPrimary }}>Playing {rulesetName}</span>
                 </div>
                 <button
                   onClick={() => { playTap(); (onChangeRuleset ?? (() => router.push("/")))(); }}
@@ -482,7 +479,7 @@ function RulesModal({
               <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
                 <h3
                   style={{
-                    ...TYPE.sectionHeading,
+                    ...TYPE.headline,
                     color: COLOR.textPrimary,
                     marginBottom: 12,
                   }}
