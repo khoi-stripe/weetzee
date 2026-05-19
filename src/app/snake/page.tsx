@@ -1100,22 +1100,22 @@ function SnakePageContent() {
               <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
                 <div className="snake-modal-border" />
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
-                  <span style={{ ...TYPE.headline, fontFamily: "inherit", textTransform: "uppercase" }}>{winner.player.name} wins!</span>
-                  <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}>{winner.score}</span>
+                  <span style={{ ...TYPE.headline, fontFamily: "inherit", textTransform: "uppercase", color: COLOR.inverse }}>{winner.player.name} wins!</span>
+                  <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.inverse }}>{winner.score}</span>
+                  <div style={{ width: "100%", borderTop: "1px solid rgba(0,0,0,0.15)", paddingTop: 12, marginTop: 4, display: "flex", flexDirection: "column", gap: 0 }}>
+                    {ranked.map(({ score: ps, player }) => (
+                      <div key={player.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
+                        <span style={{ ...TYPE.body, fontFamily: "inherit", color: "rgba(0,0,0,0.6)" }}>{player.name}</span>
+                        <span style={{ ...TYPE.body, fontFamily: "inherit", color: COLOR.inverse, fontVariantNumeric: "tabular-nums" }}>{ps}</span>
+                      </div>
+                    ))}
+                    {highScore > 0 && (
+                      <div style={{ ...TYPE.microRegular, fontFamily: "inherit", color: "rgba(0,0,0,0.45)", marginTop: 8, textAlign: "right" }}>
+                        Best {highScore}
+                      </div>
+                    )}
+                  </div>
                 </DialogCard>
-              </div>
-              <div style={{ width: "100%", maxWidth: "min(80vw, 80vh, 400px)", animation: "fade-in 400ms ease 200ms both" }}>
-                {ranked.map(({ score: ps, player }) => (
-                  <div key={player.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${COLOR.borderSubtle}` }}>
-                    <span style={{ ...TYPE.body, fontFamily: "inherit", color: player.color }}>{player.name}</span>
-                    <span style={{ ...TYPE.body, fontFamily: "inherit", color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>{ps}</span>
-                  </div>
-                ))}
-                {highScore > 0 && (
-                  <div style={{ ...TYPE.microRegular, fontFamily: "inherit", color: COLOR.textMuted, marginTop: 12, textAlign: "right" }}>
-                    Best {highScore}
-                  </div>
-                )}
               </div>
               <RoundButton variant="filled" onClick={handleFinalRestart}>
                 Play again
