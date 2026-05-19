@@ -897,8 +897,11 @@ export default function SnakePage() {
       {/* Below-board zone */}
       <div style={{ background: "#0F0F0F", flexShrink: 0, paddingTop: 64, paddingBottom: 16 }}>
       {/* Below-board panel */}
-      <div style={{ marginLeft: "auto", marginRight: "auto", width: "calc(100% - 32px)", maxWidth: 358, background: "#0F0F0F", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, height: 56, position: "relative", overflow: "visible" }}>
-        <div style={{ display: "flex", alignItems: "center", height: "100%", padding: 8, gap: 8 }}>
+      <div
+        onClick={handleTakeHand}
+        style={{ marginLeft: "auto", marginRight: "auto", width: "calc(100% - 32px)", maxWidth: 358, background: "#0F0F0F", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, position: "relative", overflow: "visible", cursor: handSlots.length > 0 ? "pointer" : "default", animation: currentCombo ? "combo-bg-cycle 1.2s linear infinite" : undefined }}
+      >
+        <div style={{ display: "flex", alignItems: "center", padding: 8, gap: 8 }}>
 
           {/* Score circle */}
           <div style={{ width: 40, height: 40, borderRadius: "50%", border: `1px solid ${COLOR.textPrimary}`, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
@@ -926,20 +929,6 @@ export default function SnakePage() {
             );
           })}
 
-          {/* Take hand button */}
-          {(() => {
-            const combo = getComboName(handSlots.map(s => s.value));
-            return (
-              <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <button
-                  onClick={handleTakeHand}
-                  style={{ width: 40, height: 40, background: combo ? "#ffcc00" : "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 4, color: combo ? "#000" : COLOR.textPrimary, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "inherit", lineHeight: 1, outline: "none", animation: combo ? "combo-bg-cycle 1.2s linear infinite" : undefined }}
-                >
-                  +
-                </button>
-              </div>
-            );
-          })()}
         </div>
 
         {/* Combo flash label */}
