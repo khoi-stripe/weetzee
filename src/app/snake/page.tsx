@@ -756,19 +756,17 @@ export default function SnakePage() {
       style={{ height: "100%", background: COLOR.surfaceBg, display: "flex", flexDirection: "column", overflow: "hidden" }}
     >
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0, position: "relative" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", padding: "12px 16px", flexShrink: 0 }}>
         <button
           onClick={() => router.back()}
-          style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}
+          style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, textAlign: "left" }}
         >
           Back
         </button>
-        {currentCombo && (
-          <span style={{ position: "absolute", left: 0, right: 0, textAlign: "center", pointerEvents: "none", fontFamily: "inherit", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", zIndex: 1 }}>
-            {currentCombo}
-          </span>
-        )}
-        <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
+        <span style={{ fontFamily: "inherit", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "center", visibility: currentCombo ? "visible" : "hidden" }}>
+          {currentCombo ?? ""}
+        </span>
+        <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
           Best {highScore}
         </span>
       </div>
