@@ -754,13 +754,21 @@ export default function SnakePage() {
       style={{ height: "100%", background: COLOR.surfaceBg, display: "flex", flexDirection: "column", overflow: "hidden" }}
     >
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0, position: "relative" }}>
         <button
           onClick={() => router.back()}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}
         >
           Back
         </button>
+        {(() => {
+          const combo = getComboName(handSlots.map(s => s.value));
+          return combo ? (
+            <span style={{ position: "absolute", left: 0, right: 0, textAlign: "center", pointerEvents: "none", fontFamily: "inherit", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em" }}>
+              {combo}
+            </span>
+          ) : null;
+        })()}
         <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
           Best {highScore}
         </span>
