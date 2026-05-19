@@ -982,13 +982,7 @@ function SnakePageContent() {
   }
 
   function handleExitToStart() {
-    setCurrentPlayerIdx(0);
-    setPlayerScores(new Array(playerCount).fill(-1));
-    setMpPhase("playing");
-    setInterstitialExiting(false);
-    setScoreScreenExiting(false);
-    resetGameState("pause");
-    setShowExitConfirm(false);
+    router.push("/");
   }
 
   function handlePassToNext() {
