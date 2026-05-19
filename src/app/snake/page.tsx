@@ -295,6 +295,7 @@ function drawFrame(
   now: number,
   snakeCanvas: HTMLCanvasElement,
   poppedDice: PoppedDie[],
+  dpr: number,
 ) {
   const w = cols * cell;
   const h = rows * cell;
@@ -362,13 +363,14 @@ function drawFrame(
   // Snake — draw to offscreen canvas first, then composite at desired alpha
   const intangible = now < state.intangibleUntil;
   const flashAlpha = intangible ? (Math.floor(now / 200) % 2 === 0 ? 1 : 0.35) : 1;
-  snakeCanvas.width = w;
-  snakeCanvas.height = h;
+  snakeCanvas.width = w * dpr;
+  snakeCanvas.height = h * dpr;
   const snakeCtx = snakeCanvas.getContext("2d")!;
+  snakeCtx.scale(dpr, dpr);
   snakeCtx.clearRect(0, 0, w, h);
   drawSnake(snakeCtx, state, prevSnake, t, cell, now);
   ctx.globalAlpha = flashAlpha;
-  ctx.drawImage(snakeCanvas, 0, 0);
+  ctx.drawImage(snakeCanvas, 0, 0, w, h);
   ctx.globalAlpha = 1;
 }
 
@@ -660,6 +662,14 @@ export default function SnakePage() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = cols * cell;
+    const h = rows * cell;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    ctx.scale(dpr, dpr);
     if (!snakeCanvasRef.current) snakeCanvasRef.current = document.createElement("canvas");
     const snakeCanvas = snakeCanvasRef.current;
     let running = true;
@@ -678,7 +688,7 @@ export default function SnakePage() {
       }
       prevPowerUpRef.current = s.powerUp;
       poppedDiceRef.current = poppedDiceRef.current.filter(p => now - p.startTime < POP_DURATION);
-      drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current);
+      drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current, dpr);
       setScore(s.score);
       if (s.intangibleUntil !== 0 && s.intangibleUntil !== lastShownIntangibleRef.current) {
         lastShownIntangibleRef.current = s.intangibleUntil;
@@ -820,8 +830,6 @@ export default function SnakePage() {
         {cell > 0 && (
           <canvas
             ref={canvasRef}
-            width={cols * cell}
-            height={rows * cell}
             style={{ display: "block", margin: "0 auto" }}
           />
         )}
