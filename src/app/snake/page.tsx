@@ -819,9 +819,7 @@ export default function SnakePage() {
         <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: "#ffcc00", letterSpacing: "0.06em", textAlign: "center" }}>
           {currentCombo ? `${currentCombo} · ${currentComboScore}` : ""}
         </span>
-        <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
-          Best {highScore}
-        </span>
+        <span />
       </div>
 
       {/* Canvas */}
