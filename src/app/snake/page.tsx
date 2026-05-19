@@ -1006,7 +1006,7 @@ function SnakePageContent() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0, gap: 8 }}>
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/")}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
         >
           Exit
@@ -1078,9 +1078,14 @@ function SnakePageContent() {
                 )}
               </DialogCard>
             </div>
-            <RoundButton variant="filled" onClick={handleRestart}>
-              Play again
-            </RoundButton>
+            <div style={{ display: "flex", gap: 16 }}>
+              <RoundButton onClick={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }}>
+                New game
+              </RoundButton>
+              <RoundButton variant="filled" onClick={handleRestart}>
+                Play again
+              </RoundButton>
+            </div>
           </Scrim>
         )}
 
@@ -1121,9 +1126,14 @@ function SnakePageContent() {
                   </div>
                 </DialogCard>
               </div>
-              <RoundButton variant="filled" onClick={handleFinalRestart}>
-                Play again
-              </RoundButton>
+              <div style={{ display: "flex", gap: 16 }}>
+                <RoundButton onClick={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }}>
+                  New game
+                </RoundButton>
+                <RoundButton variant="filled" onClick={handleFinalRestart}>
+                  Play again
+                </RoundButton>
+              </div>
             </Scrim>
           );
         })()}
