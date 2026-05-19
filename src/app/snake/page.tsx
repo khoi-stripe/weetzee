@@ -608,6 +608,8 @@ export default function SnakePage() {
   const [popAnim, setPopAnim] = useState<{ score: number; phase: "rise" | "hold" | "exit"; color: string } | null>(null);
   const rafRef = useRef<number>(0);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
+  const startedRef = useRef(started);
+  useEffect(() => { startedRef.current = started; }, [started]);
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const poppedDiceRef = useRef<PoppedDie[]>([]);
   const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
@@ -702,7 +704,12 @@ export default function SnakePage() {
       }
       prevPowerUpRef.current = s.powerUp;
       poppedDiceRef.current = poppedDiceRef.current.filter(p => now - p.startTime < POP_DURATION);
-      drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current, dpr);
+      if (!startedRef.current) {
+        ctx!.fillStyle = COLOR.surfaceBg;
+        ctx!.fillRect(0, 0, cols * cell, rows * cell);
+      } else {
+        drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current, dpr);
+      }
       setScore(s.score);
       if (s.intangibleUntil !== 0 && s.intangibleUntil !== lastShownIntangibleRef.current) {
         lastShownIntangibleRef.current = s.intangibleUntil;
