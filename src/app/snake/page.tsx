@@ -399,17 +399,25 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
     tickDurRef.current = TICK_MS;
   }, [cols, rows]);
 
+  const nudgeRef = useRef<(() => void) | null>(null);
+
   const steer = useCallback((dir: Dir) => {
     const s = stateRef.current;
     if (s.over) return;
-    if (dir !== opposite(s.dir)) s.nextDir = dir;
+    if (dir !== opposite(s.dir)) {
+      s.nextDir = dir;
+      nudgeRef.current?.();
+    }
   }, []);
 
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
+    let pendingId: ReturnType<typeof setTimeout> | null = null;
+
     function tick() {
       if (cancelled) return;
+      pendingId = null;
       const s = stateRef.current;
       prevSnakeRef.current = s.snake;
       lastTickRef.current = Date.now();
@@ -485,10 +493,23 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
       const len = stateRef.current.snake.length;
       const delay = TICK_MS * Math.pow(0.985, len - 3);
       tickDurRef.current = delay;
-      setTimeout(tick, delay);
+      pendingId = setTimeout(tick, delay);
     }
-    const id = setTimeout(tick, TICK_MS);
-    return () => { cancelled = true; clearTimeout(id); };
+
+    nudgeRef.current = () => {
+      const elapsed = Date.now() - lastTickRef.current;
+      if (pendingId !== null && elapsed >= tickDurRef.current * 0.5) {
+        clearTimeout(pendingId);
+        tick();
+      }
+    };
+
+    pendingId = setTimeout(tick, TICK_MS);
+    return () => {
+      cancelled = true;
+      if (pendingId !== null) clearTimeout(pendingId);
+      nudgeRef.current = null;
+    };
   }, [cols, rows, active]);
 
   return { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset };
