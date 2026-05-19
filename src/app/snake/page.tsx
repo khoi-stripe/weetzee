@@ -713,27 +713,47 @@ export default function SnakePage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [steer, started]);
 
-  // Touch swipe — fires on move once threshold exceeded; resets origin after
-  // each swipe so chained gestures work without lifting the finger.
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }, []);
+  // Native (non-passive) touch handlers — assigned each render so closures stay fresh.
+  const nativeTouchRef = useRef<{
+    start: (e: TouchEvent) => void;
+    move: (e: TouchEvent) => void;
+    end: () => void;
+  } | null>(null);
 
-  const onTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchRef.current) return;
-    const dx = e.touches[0].clientX - touchRef.current.x;
-    const dy = e.touches[0].clientY - touchRef.current.y;
-    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    const dir: Dir = Math.abs(dx) > Math.abs(dy)
-      ? dx > 0 ? "right" : "left"
-      : dy > 0 ? "down" : "up";
-    if (!started) setStarted(true);
-    steer(dir);
-  }, [steer, started]);
+  nativeTouchRef.current = {
+    start: (e: TouchEvent) => {
+      touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    },
+    move: (e: TouchEvent) => {
+      e.preventDefault();
+      if (!touchRef.current) return;
+      const dx = e.touches[0].clientX - touchRef.current.x;
+      const dy = e.touches[0].clientY - touchRef.current.y;
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      const dir: Dir = Math.abs(dx) > Math.abs(dy)
+        ? dx > 0 ? "right" : "left"
+        : dy > 0 ? "down" : "up";
+      if (!started) setStarted(true);
+      steer(dir);
+    },
+    end: () => { touchRef.current = null; },
+  };
 
-  const onTouchEnd = useCallback(() => {
-    touchRef.current = null;
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onStart = (e: TouchEvent) => nativeTouchRef.current?.start(e);
+    const onMove  = (e: TouchEvent) => nativeTouchRef.current?.move(e);
+    const onEnd   = ()              => nativeTouchRef.current?.end();
+    el.addEventListener("touchstart", onStart, { passive: false });
+    el.addEventListener("touchmove",  onMove,  { passive: false });
+    el.addEventListener("touchend",   onEnd,   { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove",  onMove);
+      el.removeEventListener("touchend",   onEnd);
+    };
   }, []);
 
   function handleTakeHand() {
@@ -791,10 +811,7 @@ export default function SnakePage() {
       {/* Canvas */}
       <div
         ref={containerRef}
-        style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden", touchAction: "none" }}
       >
         {cell > 0 && (
           <canvas
