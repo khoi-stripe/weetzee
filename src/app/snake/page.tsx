@@ -317,15 +317,16 @@ function drawFrame(
   // Walls
   drawWalls(ctx, state.walls, state.snake.length, cols, rows, cell);
 
-  // Food
+  // Food — colored to match slot color when eaten
   for (const food of state.foods) {
-    drawDie(ctx, food.x * cell, food.y * cell, cell, food.value);
+    const c = VALUE_COLORS[food.value] ?? COLOR.textPrimary;
+    drawDie(ctx, food.x * cell, food.y * cell, cell, food.value, c, "#000000", c);
   }
 
-  // Power-up die (colored bg, white pips)
+  // Power-up die — white (intangible)
   if (state.powerUp) {
     const pu = state.powerUp;
-    drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value, pu.color, "#000000", pu.color);
+    drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value, COLOR.textPrimary, COLOR.surfaceBg, COLOR.textPrimary);
   }
 
   // Pop-out animations for expired power-up dice
