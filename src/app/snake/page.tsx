@@ -1104,6 +1104,11 @@ function SnakePageContent() {
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
                     <span style={{ ...TYPE.headline, fontFamily: "inherit", textTransform: "uppercase", color: COLOR.inverse }}>{winner.player.name} wins!</span>
                     <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.inverse }}>{winner.score}</span>
+                    {highScore > 0 && (
+                      <span style={{ ...TYPE.body, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.inverse }}>
+                        Best {highScore}
+                      </span>
+                    )}
                   </div>
                   <div style={{ width: "100%", paddingTop: 8 }}>
                     <PlayerChipStrip
@@ -1111,11 +1116,6 @@ function SnakePageContent() {
                       currentIndex={0}
                       variant="light"
                     />
-                    {highScore > 0 && (
-                      <div style={{ ...TYPE.microRegular, fontFamily: "inherit", color: "rgba(0,0,0,0.45)", marginTop: 4, textAlign: "right", paddingRight: 4 }}>
-                        Best {highScore}
-                      </div>
-                    )}
                   </div>
                 </DialogCard>
               </div>
