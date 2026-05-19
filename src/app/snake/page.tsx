@@ -797,7 +797,7 @@ export default function SnakePage() {
     stateRef.current = { ...stateRef.current, score: stateRef.current.score + handScore };
     setHandSlots([]);
     popTimersRef.current.forEach(clearTimeout);
-    setPopAnim({ score: handScore, phase: "rise", color: "#ffcc00" });
+    setPopAnim({ score: handScore, phase: "rise", color: COLOR.textPrimary });
     popTimersRef.current = [
       setTimeout(() => setPopAnim(p => p ? { ...p, phase: "hold" } : null), 260),
       setTimeout(() => setPopAnim(p => p ? { ...p, phase: "exit" } : null), 1260),
@@ -836,7 +836,7 @@ export default function SnakePage() {
         >
           Back
         </button>
-        <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: "#ffcc00", letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap" }}>
+        <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap" }}>
           {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
         </span>
       </div>
