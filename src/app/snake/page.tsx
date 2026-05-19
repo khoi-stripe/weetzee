@@ -749,6 +749,8 @@ export default function SnakePage() {
     lastShownIntangibleRef.current = 0;
   }
 
+  const currentCombo = getComboName(handSlots.map(s => s.value));
+
   return (
     <div
       style={{ height: "100%", background: COLOR.surfaceBg, display: "flex", flexDirection: "column", overflow: "hidden" }}
@@ -761,14 +763,11 @@ export default function SnakePage() {
         >
           Back
         </button>
-        {(() => {
-          const combo = getComboName(handSlots.map(s => s.value));
-          return combo ? (
-            <span style={{ position: "absolute", left: 0, right: 0, textAlign: "center", pointerEvents: "none", fontFamily: "inherit", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em" }}>
-              {combo}
-            </span>
-          ) : null;
-        })()}
+        {currentCombo && (
+          <span style={{ position: "absolute", left: 0, right: 0, textAlign: "center", pointerEvents: "none", fontFamily: "inherit", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", zIndex: 1 }}>
+            {currentCombo}
+          </span>
+        )}
         <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
           Best {highScore}
         </span>
