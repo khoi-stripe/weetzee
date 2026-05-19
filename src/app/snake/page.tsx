@@ -399,7 +399,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
   const prevSnakeRef = useRef<Point[]>(stateRef.current.snake);
   const lastTickRef = useRef(Date.now());
   const tickDurRef = useRef(TICK_MS);
-  const wallsEnabledRef = useRef(wallsEnabled);
+  const wallsEnabledRef = useRef(false);
   useEffect(() => { wallsEnabledRef.current = wallsEnabled; }, [wallsEnabled]);
 
   // Reinitialize once when dimensions first become valid (initial state has cols=0,rows=0)
@@ -725,7 +725,7 @@ function SnakePageContent() {
   const startedRef = useRef(started);
   useEffect(() => { startedRef.current = started; }, [started]);
   const currentPlayerIdxRef = useRef(0);
-  const wallsEnabledRenderRef = useRef(true);
+  const wallsEnabledRenderRef = useRef(false);
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const poppedDiceRef = useRef<PoppedDie[]>([]);
   const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
@@ -749,7 +749,7 @@ function SnakePageContent() {
     setHandSlots(next);
   };
 
-  const [wallsEnabled, setWallsEnabled] = useState(true);
+  const [wallsEnabled, setWallsEnabled] = useState(false);
   useEffect(() => { wallsEnabledRenderRef.current = wallsEnabled; }, [wallsEnabled]);
   useEffect(() => {
     const stored = parseInt(localStorage.getItem(HS_KEY) ?? "0", 10);
