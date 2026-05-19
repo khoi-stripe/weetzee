@@ -547,7 +547,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
 function SnakeRulesSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 24 }}>
-      <h3 style={{ fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+      <h3 style={{ ...TYPE.sectionHeading, color: COLOR.textPrimary, marginBottom: 8 }}>
         {title}
       </h3>
       {children}
@@ -1030,13 +1030,15 @@ function SnakePageContent() {
       {showInfo && (
         <div className="fixed inset-0 flex flex-col" style={{ zIndex: Z.modal, background: COLOR.surfaceBg, paddingTop: "env(safe-area-inset-top, 0px)", animation: "interstitial-in 200ms ease forwards" }}>
           <div className="relative shrink-0 w-full" style={{ height: 48 }}>
-            <p className="absolute text-white text-center" style={{ ...TYPE.body, left: "50%", transform: "translateX(-50%)", top: 13.5 }}>Rules</p>
             <button onClick={() => { playTap(); setShowInfo(false); }} className="absolute flex items-center justify-center pressable" style={{ fontSize: 24, fontWeight: WEIGHT.regular, right: 4, top: 2, padding: "8px 12px", background: "none", border: "none", color: COLOR.textPrimary, lineHeight: 1 }} aria-label="Close">×</button>
           </div>
           <div className="flex-1 overflow-y-auto selectable" style={{ padding: "0 24px 48px", fontSize: 14, lineHeight: 1.6, color: COLOR.textReadable, maxWidth: 640, margin: "0 auto", width: "100%" }}>
+            <div style={{ ...TYPE.headline, color: COLOR.textPrimary, paddingBottom: 16, borderBottom: `1px solid ${COLOR.borderSubtle}`, marginBottom: 0 }}>
+              Playing Snake Eyes
+            </div>
             <SnakeRules />
-            <div style={{ marginTop: 24 }}>
-              <h3 style={{ fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+            <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
+              <h3 style={{ ...TYPE.headline, color: COLOR.textPrimary, marginBottom: 12 }}>
                 House rules
               </h3>
               <div
