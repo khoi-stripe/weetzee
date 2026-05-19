@@ -1065,7 +1065,8 @@ function SnakePageContent() {
 
         {/* Single-player game over */}
         {over && playerCount === 1 && (
-          <Scrim position="absolute" zIndex={Z.interstitial}>
+          <Scrim zIndex={Z.interstitial}>
+            <button onClick={() => { playTap(); router.push("/"); }} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 16, background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}>Exit</button>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
@@ -1105,6 +1106,7 @@ function SnakePageContent() {
           const winner = ranked[0];
           return (
             <Scrim zIndex={Z.interstitial}>
+              <button onClick={() => { playTap(); router.push("/"); }} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 16, background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}>Exit</button>
               <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
                 <div className="snake-modal-border" />
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
