@@ -32,6 +32,7 @@ function RulesetContent() {
     if (!el) return;
     function measure() {
       const { width, height } = el!.getBoundingClientRect();
+      if (width === 0 || height === 0) return;
       setLayout(computeSquareGridLayout(
         width - GAP * 2,
         height - GAP * 2 - TITLE_RESERVE,
@@ -39,10 +40,10 @@ function RulesetContent() {
         GAP
       ));
     }
-    measure();
+    const raf = requestAnimationFrame(measure);
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);
 
   function startGame() {
