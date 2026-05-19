@@ -123,6 +123,16 @@ body {
   animation: spin-in 400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+@keyframes combo-button-glow {
+  0%   { border-color: #ffcc00; box-shadow: 0 0 6px 1px #ffcc00; }
+  16%  { border-color: #34c759; box-shadow: 0 0 6px 1px #34c759; }
+  33%  { border-color: #00d4ff; box-shadow: 0 0 6px 1px #00d4ff; }
+  50%  { border-color: #af52de; box-shadow: 0 0 6px 1px #af52de; }
+  66%  { border-color: #ff6b9d; box-shadow: 0 0 6px 1px #ff6b9d; }
+  83%  { border-color: #2dd4bf; box-shadow: 0 0 6px 1px #2dd4bf; }
+  100% { border-color: #ffcc00; box-shadow: 0 0 6px 1px #ffcc00; }
+}
+
 @keyframes combo-flash {
   0%   { transform: translateY(4px); opacity: 0; }
   12%  { transform: translateY(0);   opacity: 1; }

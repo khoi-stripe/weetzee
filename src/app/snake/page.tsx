@@ -872,7 +872,7 @@ export default function SnakePage() {
               <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <button
                   onClick={handleTakeHand}
-                  style={{ width: 40, height: 40, background: combo ? COLOR.textPrimary : "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 4, color: combo ? COLOR.surfaceBg : COLOR.textPrimary, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "inherit", lineHeight: 1, transition: "background 150ms, color 150ms" }}
+                  style={{ width: 40, height: 40, background: combo ? COLOR.textPrimary : "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 4, color: combo ? COLOR.surfaceBg : COLOR.textPrimary, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "inherit", lineHeight: 1, transition: "background 150ms, color 150ms", outline: "none", animation: combo ? "combo-button-glow 1.2s linear infinite" : undefined }}
                 >
                   +
                 </button>
