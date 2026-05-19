@@ -43,10 +43,12 @@ export function Header({
   onSetAIDifficulty,
   exitWithoutConfirm = false,
   onEndGame,
+  playerCount = 1,
 }: {
   showBack?: boolean;
   backLabel?: string;
   exitWithoutConfirm?: boolean;
+  playerCount?: number;
   rulesetId?: string;
   rulesetName?: string;
   showAllRulesets?: boolean;
@@ -168,7 +170,7 @@ export function Header({
             </RoundButton>
             <RoundButton
               variant="filled"
-              onClick={() => { playTap(); onEndGame?.(); router.push("/"); }}
+              onClick={() => { playTap(); onEndGame?.(); router.push(`/ruleset?players=${playerCount}`); }}
             >
               End game
             </RoundButton>

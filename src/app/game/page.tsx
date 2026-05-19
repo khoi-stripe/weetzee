@@ -95,6 +95,7 @@ function GameContent() {
         aiDifficulty={hasCPU ? state.aiDifficulty : undefined}
         onSetAIDifficulty={hasCPU ? game.setAIDifficulty : undefined}
         onEndGame={game.endGame}
+        playerCount={playerCount}
       />
       <GameView game={game} isAITurn={isAITurn} aiPendingAction={aiPendingAction} />
     </div>

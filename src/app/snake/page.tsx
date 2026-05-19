@@ -982,7 +982,7 @@ function SnakePageContent() {
   }
 
   function handleExitToStart() {
-    router.push("/");
+    router.push(`/ruleset?players=${playerCount}`);
   }
 
   function handlePassToNext() {
