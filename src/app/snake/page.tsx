@@ -1009,18 +1009,20 @@ function SnakePageContent() {
           onClick={() => router.back()}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
         >
-          Back
+          Exit
         </button>
         <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap", flex: 1 }}>
           {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
         </span>
-        <button
-          onClick={() => { playTap(); setShowInfo(true); }}
-          style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
-          aria-label="Rules"
-        >
-          i
-        </button>
+        {(!started || over) && (
+          <button
+            onClick={() => { playTap(); setShowInfo(true); }}
+            style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
+            aria-label="Rules"
+          >
+            i
+          </button>
+        )}
       </div>
 
       {/* Canvas */}
