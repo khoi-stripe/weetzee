@@ -240,8 +240,8 @@ body {
 
 @keyframes scale-in {
   0%   { transform: scale(0) rotate(var(--rotate, 0deg)); }
-  65%  { transform: scale(1.06) rotate(var(--rotate, 0deg)); }
-  100% { transform: scale(1) rotate(var(--rotate, 0deg)); }
+  65%  { transform: scale(1.06) rotate(0deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
 @keyframes bust-die-in {

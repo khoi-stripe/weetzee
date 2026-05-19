@@ -613,8 +613,9 @@ function PlayerScoreScreen({ player, score, nextPlayer, onContinue, onExit, exit
       <div
         className="flex flex-col items-center justify-center"
         style={{
-          width: "min(calc(100vw - 32px), calc(100dvh - 120px))",
-          height: "min(calc(100vw - 32px), calc(100dvh - 120px))",
+          width: "100%",
+          maxWidth: "min(80vw, 80vh, 400px)",
+          aspectRatio: "1 / 1",
           borderRadius: 8,
           background: player.color,
           color: COLOR.surfaceBg,
@@ -1028,15 +1029,6 @@ function SnakePageContent() {
         <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap", flex: 1 }}>
           {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
         </span>
-        {(!started || over) && (
-          <button
-            onClick={() => { playTap(); setShowInfo(true); }}
-            style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
-            aria-label="Rules"
-          >
-            i
-          </button>
-        )}
       </div>
 
       {/* Canvas */}
@@ -1071,7 +1063,7 @@ function SnakePageContent() {
         {/* Countdown overlay */}
         {countdown !== null && countdown > 0 && (
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: Z.interstitial }}>
-            <div key={countdown} style={{ width: 72, height: 72, borderRadius: "50%", background: "#000", border: `2px solid ${COLOR.textPrimary}`, display: "flex", alignItems: "center", justifyContent: "center", animation: "scale-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards", "--rotate": `${[0, 120, -90, 45][countdown] ?? 0}deg` } as React.CSSProperties}>
+            <div key={countdown} style={{ width: 72, height: 72, borderRadius: "50%", background: "#000", border: `2px solid ${COLOR.textPrimary}`, display: "flex", alignItems: "center", justifyContent: "center", animation: "scale-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards", "--rotate": "360deg" } as React.CSSProperties}>
               <span style={{ fontFamily: "inherit", fontSize: 36, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, lineHeight: 1 }}>
                 {countdown}
               </span>
