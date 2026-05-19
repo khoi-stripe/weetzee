@@ -365,7 +365,12 @@ function drawFrame(
 
   // Snake — draw to offscreen canvas first, then composite at desired alpha
   const intangible = now < state.intangibleUntil;
-  const flashAlpha = intangible ? (Math.floor(now / 200) % 2 === 0 ? 1 : 0.35) : 1;
+  const flashAlpha = (() => {
+    if (!intangible) return 1;
+    const remaining = state.intangibleUntil - now;
+    const interval = remaining < 1500 ? 75 : remaining < 3000 ? 130 : 220;
+    return Math.floor(now / interval) % 2 === 0 ? 1 : 0.3;
+  })();
   const needsResize = snakeCanvas.width !== w * dpr || snakeCanvas.height !== h * dpr;
   if (needsResize) {
     snakeCanvas.width = w * dpr;
@@ -608,8 +613,8 @@ function PlayerScoreScreen({ player, score, nextPlayer, onContinue, onExit, exit
       <div
         className="flex flex-col items-center justify-center"
         style={{
-          width: "50vmin",
-          height: "50vmin",
+          width: "min(calc(100vw - 32px), calc(100dvh - 120px))",
+          height: "min(calc(100vw - 32px), calc(100dvh - 120px))",
           borderRadius: 8,
           background: player.color,
           color: COLOR.surfaceBg,
@@ -662,50 +667,6 @@ function PlayerInterstitial({ player, exiting }: { player: SnakePlayer; exiting:
 
 const INTANGIBLE_DURATION = 10000;
 
-function IntangibleTimer({ until, color, onExpire, size = 18 }: { until: number; color: string; onExpire: () => void; size?: number }) {
-  const [fraction, setFraction] = useState(() =>
-    Math.max(0, Math.min(1, (until - Date.now()) / INTANGIBLE_DURATION))
-  );
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    let raf: number;
-    let fadeTimer: ReturnType<typeof setTimeout>;
-    function tick() {
-      const f = Math.max(0, Math.min(1, (until - Date.now()) / INTANGIBLE_DURATION));
-      setFraction(f);
-      if (f > 0) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setFading(true);
-        fadeTimer = setTimeout(onExpire, 300);
-      }
-    }
-    raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); clearTimeout(fadeTimer); };
-  }, [until]);
-
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = cx - 1.5;
-
-  let piePath = "";
-  if (fraction >= 0.9999) {
-    piePath = `M ${cx} ${cy - r} A ${r} ${r} 0 1 0 ${cx} ${cy + r} A ${r} ${r} 0 1 0 ${cx} ${cy - r} Z`;
-  } else if (fraction > 0) {
-    const angle = fraction * Math.PI * 2;
-    const ex = +(cx - r * Math.sin(angle)).toFixed(3);
-    const ey = +(cy - r * Math.cos(angle)).toFixed(3);
-    const largeArc = angle > Math.PI ? 1 : 0;
-    piePath = `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 ${largeArc} 0 ${ex} ${ey} Z`;
-  }
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transition: "opacity 300ms ease-out", opacity: fading ? 0 : 1 }}>
-      {piePath && <path d={piePath} fill={color} />}
-    </svg>
-  );
-}
 
 function SlotDie({ value, color }: { value: number; color: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -741,9 +702,6 @@ function SnakePageContent() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [over, setOver] = useState(false);
-  const [intangibleUntil, setIntangibleUntil] = useState(0);
-  const [intangibleColor, setIntangibleColor] = useState("");
-  const [showTimer, setShowTimer] = useState(false);
   const [started, setStarted] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [handSlots, setHandSlots] = useState<Array<{ value: number; color: string }>>([]);
@@ -755,7 +713,6 @@ function SnakePageContent() {
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const poppedDiceRef = useRef<PoppedDie[]>([]);
   const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
-  const lastShownIntangibleRef = useRef(0);
   const popTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [comboFlash, setComboFlash] = useState<string | null>(null);
   const comboFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -857,12 +814,6 @@ function SnakePageContent() {
         drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current, dpr);
       }
       setScore(s.score);
-      if (s.intangibleUntil !== 0 && s.intangibleUntil !== lastShownIntangibleRef.current) {
-        lastShownIntangibleRef.current = s.intangibleUntil;
-        setIntangibleUntil(s.intangibleUntil);
-        setIntangibleColor(s.intangibleColor);
-        setShowTimer(true);
-      }
       if (s.over && !over) {
         setOver(true);
         const finalScore = s.score;
@@ -979,7 +930,6 @@ function SnakePageContent() {
     reset();
     setOver(false);
     setScore(0);
-    setShowTimer(false);
     setHandSlots([]);
     setPopAnim(null);
     setComboFlash(null);
@@ -987,7 +937,6 @@ function SnakePageContent() {
     if (comboFlashTimerRef.current) clearTimeout(comboFlashTimerRef.current);
     poppedDiceRef.current = [];
     prevPowerUpRef.current = null;
-    lastShownIntangibleRef.current = 0;
     if (mode === true) {
       setStarted(false);
       setCountdown(3);
@@ -1114,7 +1063,7 @@ function SnakePageContent() {
               </DialogCard>
             </div>
             <RoundButton variant="filled" onClick={() => setCountdown(3)}>
-              Play
+              Start
             </RoundButton>
           </Scrim>
         )}
@@ -1122,7 +1071,7 @@ function SnakePageContent() {
         {/* Countdown overlay */}
         {countdown !== null && countdown > 0 && (
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: Z.interstitial }}>
-            <div key={countdown} style={{ width: 72, height: 72, borderRadius: "50%", background: "#000", border: `2px solid ${COLOR.textPrimary}`, display: "flex", alignItems: "center", justifyContent: "center", animation: "scale-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards" }}>
+            <div key={countdown} style={{ width: 72, height: 72, borderRadius: "50%", background: "#000", border: `2px solid ${COLOR.textPrimary}`, display: "flex", alignItems: "center", justifyContent: "center", animation: "scale-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards", "--rotate": `${[0, 120, -90, 45][countdown] ?? 0}deg` } as React.CSSProperties}>
               <span style={{ fontFamily: "inherit", fontSize: 36, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, lineHeight: 1 }}>
                 {countdown}
               </span>
@@ -1134,6 +1083,7 @@ function SnakePageContent() {
         {over && playerCount === 1 && (
           <Scrim zIndex={Z.interstitial}>
             <button onClick={() => { playTap(); router.push("/"); }} style={EXIT_BTN_STYLE}>Exit</button>
+            <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
@@ -1186,6 +1136,7 @@ function SnakePageContent() {
           return (
             <Scrim zIndex={Z.interstitial}>
               <button onClick={() => { playTap(); router.push("/"); }} style={EXIT_BTN_STYLE}>Exit</button>
+              <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
               <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
                 <div className="snake-modal-border" />
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
@@ -1230,13 +1181,8 @@ function SnakePageContent() {
         <div style={{ display: "flex", alignItems: "center", padding: 8, gap: 8 }}>
 
           {/* Score pill */}
-          <div style={{ height: 40, minWidth: 40, paddingLeft: 10, paddingRight: 10, borderRadius: 9999, border: `1px solid ${isEndState ? "#000000" : COLOR.textPrimary}`, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
-            {showTimer && (
-              <div style={{ position: "absolute", inset: 0, display: "flex" }}>
-                <IntangibleTimer until={intangibleUntil} color={intangibleColor || COLOR.textPrimary} onExpire={() => setShowTimer(false)} size={40} />
-              </div>
-            )}
-            <span style={{ position: "relative", zIndex: 1, fontWeight: WEIGHT.semibold, fontSize: 13, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", fontFamily: "inherit", letterSpacing: "0.05em" }}>
+          <div style={{ height: 40, minWidth: 40, paddingLeft: 10, paddingRight: 10, borderRadius: 9999, border: `1px solid ${isEndState ? "#000000" : COLOR.textPrimary}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ fontWeight: WEIGHT.semibold, fontSize: 13, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", fontFamily: "inherit", letterSpacing: "0.05em" }}>
               {String(score).padStart(4, "0")}
             </span>
           </div>
