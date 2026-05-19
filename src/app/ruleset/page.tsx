@@ -138,7 +138,7 @@ function RulesetContent() {
       {showCpuWarning && (
         <Scrim>
           <DialogCard>
-            <p style={{ ...TYPE.title, fontSize: 20, textTransform: "uppercase" }}>Snake Eyes is pass-and-play</p>
+            <p style={{ ...TYPE.title, fontSize: 20, textTransform: "uppercase", whiteSpace: "pre-line" }}>Snake Eyes is{"\n"}pass-and-play</p>
             <p style={{ ...TYPE.bodyRegular, fontSize: 16, marginTop: 8 }}>
               CPU players can&apos;t participate — Snake Eyes requires a real person to hold the phone. Only your human players will take turns.
             </p>
