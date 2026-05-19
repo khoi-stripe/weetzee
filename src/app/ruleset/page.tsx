@@ -139,7 +139,7 @@ function RulesetContent() {
         <Scrim>
           <DialogCard>
             <p style={{ ...TYPE.title }}>Snake Eyes is pass-and-play</p>
-            <p style={{ ...TYPE.bodyRegular, color: COLOR.textPrimary, marginTop: 8 }}>
+            <p style={{ ...TYPE.bodyRegular, marginTop: 8 }}>
               CPU players can&apos;t participate — Snake Eyes requires a real person to hold the phone. Only your human players will take turns.
             </p>
           </DialogCard>
