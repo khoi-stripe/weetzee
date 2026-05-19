@@ -919,7 +919,7 @@ export default function SnakePage() {
           {Array.from({ length: 5 }, (_, i) => {
             const slot = handSlots[i];
             return (
-              <div key={i} style={{ flex: 1, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div key={i} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {slot ? (
                   <SlotDie value={slot.value} color={slot.color} />
                 ) : (
