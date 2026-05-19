@@ -462,7 +462,7 @@ function RulesModal({
 
             {showAllRulesets ? (
               <>
-                <SupportSection position="top" />
+                {/* <SupportSection position="top" /> */}
                 {VISIBLE_RULESETS.map((r, i) => (
                   <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} first={i === 0} />
                 ))}
@@ -586,7 +586,7 @@ function RulesModal({
               </div>
             )}
 
-            {!showAllRulesets && <SupportSection />}
+            {/* {!showAllRulesets && <SupportSection />} */}
             <InstallSection />
           </>
         )}
@@ -723,7 +723,7 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
 function AboutContent() {
   return (
     <>
-      <SupportSection position="top" />
+      {/* <SupportSection position="top" /> */}
       <Section title="What is Weetzee?" titleSize={20}>
         <p>
           Weetzee is a collection of dice games — pass-and-play with friends or

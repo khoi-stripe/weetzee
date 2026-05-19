@@ -11,7 +11,9 @@ import { TYPE } from "@/lib/type";
 import { COLOR } from "@/lib/color";
 import { RoundButton } from "@/components/ui/RoundButton";
 
-const ITEM_COUNT = VISIBLE_RULESETS.length + 1;
+const SNAKE_EYES_RULESET = { id: "snake", name: "Snake Eyes" };
+const ALL_GAME_OPTIONS = [...VISIBLE_RULESETS, SNAKE_EYES_RULESET];
+const ITEM_COUNT = ALL_GAME_OPTIONS.length + 1;
 const TITLE_RESERVE = 48;
 
 
@@ -45,6 +47,10 @@ function RulesetContent() {
 
   function startGame() {
     playTap();
+    if (rulesetId === "snake") {
+      router.push("/snake");
+      return;
+    }
     const aiSuffix = aiParam ? `&ai=${aiParam}` : "";
     router.push(`/game?players=${playerCount}&ruleset=${rulesetId}${aiSuffix}`);
   }
@@ -94,7 +100,7 @@ function RulesetContent() {
             gap: GAP,
           }}
         >
-          {VISIBLE_RULESETS.map((r, i) => {
+          {ALL_GAME_OPTIONS.map((r, i) => {
             const selected = r.id === rulesetId;
             return (
               <div

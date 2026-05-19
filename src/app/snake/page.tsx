@@ -10,7 +10,7 @@ import { hasNOfAKind, isSmallStraight, isLargeStraight, isFullHouse, sum } from 
 import { Scrim } from "@/components/ui/Scrim";
 import { DialogCard } from "@/components/ui/DialogCard";
 import { RoundButton } from "@/components/ui/RoundButton";
-import { playSnakeEat, playSelect } from "@/lib/sounds";
+import { playSnakeEat, playSelect, playTap } from "@/lib/sounds";
 import { hapticLight } from "@/lib/haptics";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -522,6 +522,63 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+function SnakeRulesSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginTop: 24 }}>
+      <h3 style={{ fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
+function SnakeRules() {
+  return (
+    <>
+      <SnakeRulesSection title="How to play">
+        <p>Swipe to steer the snake around the board. Eat the colored dice to collect them into your hand. Once you have a scoring combo, tap the score panel to bank your points.</p>
+      </SnakeRulesSection>
+
+      <SnakeRulesSection title="Scoring">
+        <p>Your hand holds up to 5 dice. When they form a recognized combo, the score panel starts flashing — tap it to take the points and clear your hand.</p>
+        <div style={{ marginTop: 10 }}>
+          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>3 of a kind</span>
+          <span style={{ color: "rgba(255,255,255,0.5)" }}> — sum of all dice</span>
+        </div>
+        <div style={{ marginTop: 6 }}>
+          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>4 of a kind</span>
+          <span style={{ color: "rgba(255,255,255,0.5)" }}> — sum of all dice</span>
+        </div>
+        <div style={{ marginTop: 6 }}>
+          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Small straight</span>
+          <span style={{ color: "rgba(255,255,255,0.5)" }}> — any 4 in a row — 30 pts</span>
+        </div>
+        <div style={{ marginTop: 6 }}>
+          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Full house</span>
+          <span style={{ color: "rgba(255,255,255,0.5)" }}> — 3 + 2 of a kind — 25 pts</span>
+        </div>
+        <div style={{ marginTop: 6 }}>
+          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Large straight</span>
+          <span style={{ color: "rgba(255,255,255,0.5)" }}> — 1–2–3–4–5 or 2–3–4–5–6 — 40 pts</span>
+        </div>
+        <div style={{ marginTop: 6 }}>
+          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>WEETZEE</span>
+          <span style={{ color: "rgba(255,255,255,0.5)" }}> — 5 of a kind — 50 pts</span>
+        </div>
+      </SnakeRulesSection>
+
+      <SnakeRulesSection title="Hazards">
+        <p>The snake dies if it hits itself or a moving wall segment. Walls grow longer as the snake gets bigger, so the board gets tighter over time.</p>
+      </SnakeRulesSection>
+
+      <SnakeRulesSection title="Power-up">
+        <p>Occasionally a hollow die appears on the board. Eat it to become intangible for 10 seconds — you can pass through walls and your own tail without dying.</p>
+      </SnakeRulesSection>
+    </>
+  );
+}
+
 const INTANGIBLE_DURATION = 10000;
 
 function IntangibleTimer({ until, color, onExpire, size = 18 }: { until: number; color: string; onExpire: () => void; size?: number }) {
@@ -829,11 +886,25 @@ export default function SnakePage() {
 
   const currentCombo = getComboName(handSlots.map(s => s.value));
   const currentComboScore = currentCombo ? scoreSnakeHand(handSlots.map(s => s.value)) : null;
+  const [showInfo, setShowInfo] = useState(false);
 
   return (
     <div
       style={{ height: "100%", background: COLOR.surfaceBg, display: "flex", flexDirection: "column", overflow: "hidden" }}
     >
+      {/* Info modal */}
+      {showInfo && (
+        <div className="fixed inset-0 flex flex-col" style={{ zIndex: Z.modal, background: COLOR.surfaceBg, paddingTop: "env(safe-area-inset-top, 0px)", animation: "interstitial-in 200ms ease forwards" }}>
+          <div className="relative shrink-0 w-full" style={{ height: 48 }}>
+            <p className="absolute text-white text-center" style={{ ...TYPE.body, left: "50%", transform: "translateX(-50%)", top: 13.5 }}>Rules</p>
+            <button onClick={() => { playTap(); setShowInfo(false); }} className="absolute flex items-center justify-center pressable" style={{ fontSize: 24, fontWeight: WEIGHT.regular, right: 4, top: 2, padding: "8px 12px", background: "none", border: "none", color: COLOR.textPrimary, lineHeight: 1 }} aria-label="Close">×</button>
+          </div>
+          <div className="flex-1 overflow-y-auto selectable" style={{ padding: "0 24px 48px", fontSize: 14, lineHeight: 1.6, color: COLOR.textReadable, maxWidth: 640, margin: "0 auto", width: "100%" }}>
+            <SnakeRules />
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0, gap: 8 }}>
         <button
@@ -842,9 +913,16 @@ export default function SnakePage() {
         >
           Back
         </button>
-        <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap" }}>
+        <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap", flex: 1 }}>
           {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
         </span>
+        <button
+          onClick={() => { playTap(); setShowInfo(true); }}
+          style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
+          aria-label="Rules"
+        >
+          i
+        </button>
       </div>
 
       {/* Canvas */}
@@ -908,7 +986,7 @@ export default function SnakePage() {
       </div>
 
       {/* Below-board zone */}
-      <div style={{ background: "#0F0F0F", flexShrink: 0, paddingTop: 64, paddingBottom: 16 }}>
+      <div style={{ background: "#121212", flexShrink: 0, paddingTop: 64, paddingBottom: 16 }}>
       {/* Below-board panel */}
       <div
         onClick={over ? undefined : handleTakeHand}
@@ -936,7 +1014,7 @@ export default function SnakePage() {
                 {slot ? (
                   <SlotDie value={slot.value} color={slot.color} />
                 ) : (
-                  <div style={{ width: 40, height: 40, borderRadius: 4, background: "#0F0F0F" }} />
+                  <div style={{ width: 40, height: 40, borderRadius: 4, background: "#121212" }} />
                 )}
               </div>
             );
