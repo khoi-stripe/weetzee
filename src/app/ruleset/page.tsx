@@ -10,6 +10,8 @@ import { playTap } from "@/lib/sounds";
 import { TYPE } from "@/lib/type";
 import { COLOR } from "@/lib/color";
 import { RoundButton } from "@/components/ui/RoundButton";
+import { Scrim } from "@/components/ui/Scrim";
+import { DialogCard } from "@/components/ui/DialogCard";
 
 const SNAKE_EYES_RULESET = { id: "snake", name: "Snake Eyes" };
 const ALL_GAME_OPTIONS = [...VISIBLE_RULESETS, SNAKE_EYES_RULESET];
@@ -22,6 +24,7 @@ function RulesetContent() {
   const playerCount = params.get("players") ?? "1";
   const aiParam = params.get("ai") ?? "";
   const [rulesetId, setRulesetId] = useState("farkle");
+  const [showCpuWarning, setShowCpuWarning] = useState(false);
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState({ cols: 2, rows: 3, cellSize: 0 });
@@ -49,6 +52,7 @@ function RulesetContent() {
   function startGame() {
     playTap();
     if (rulesetId === "snake") {
+      if (aiParam) { setShowCpuWarning(true); return; }
       router.push(`/snake?players=${playerCount}`);
       return;
     }
@@ -130,6 +134,21 @@ function RulesetContent() {
           </div>
         </div>
       </div>
+
+      {showCpuWarning && (
+        <Scrim>
+          <DialogCard>
+            <p style={{ ...TYPE.title }}>CPU not supported</p>
+            <p style={{ ...TYPE.bodyRegular, color: COLOR.textMuted, marginTop: 8 }}>
+              Snake Eyes doesn&apos;t support CPU players. Continuing will start the game with human players only.
+            </p>
+          </DialogCard>
+          <div className="flex justify-center" style={{ gap: 16 }}>
+            <RoundButton onClick={() => { playTap(); setShowCpuWarning(false); }}>Back</RoundButton>
+            <RoundButton variant="filled" onClick={() => { playTap(); router.push(`/snake?players=${playerCount}`); }}>Continue</RoundButton>
+          </div>
+        </Scrim>
+      )}
     </div>
   );
 }
