@@ -18,11 +18,18 @@ if (typeof window !== "undefined") {
   const warmUp = () => ensureCtx();
   window.addEventListener("pointerdown", warmUp, { capture: true, passive: true });
   window.addEventListener("keydown", warmUp, { capture: true, passive: true });
-  // iOS suspends AudioContext on lock/background/app-switch. Without this, the
-  // first sound after returning to foreground (e.g. an auto-fired playTurnChange
-  // from a setTimeout) drops because resume() hasn't run yet.
+  // iOS can put the AudioContext into a zombie suspended state after backgrounding
+  // where resume() silently does nothing. Closing and nulling on hide guarantees
+  // ensureCtx() creates a fresh context on the next foreground/interaction.
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") warmUp();
+    if (document.visibilityState === "hidden") {
+      if (_ctx) {
+        _ctx.close().catch(() => {});
+        _ctx = null;
+      }
+    } else {
+      warmUp();
+    }
   });
   window.addEventListener("pageshow", warmUp);
 }

@@ -67,12 +67,13 @@ function RulesetContent() {
       <div
         ref={containerRef}
         className="flex flex-col flex-1 min-h-0 items-center justify-center"
-        style={{ padding: `${GAP}px ${GAP}px 32px`, gap: 24 }}
+        style={{ padding: 20, gap: 24 }}
       >
         <p
           className="shrink-0"
           style={{
             ...TYPE.title,
+            fontSize: 20,
             color: COLOR.textPrimary,
             textAlign: "center",
             width: gridW,

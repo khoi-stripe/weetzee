@@ -108,12 +108,13 @@ export function PlayerSelector({
     <div
       ref={containerRef}
       className="flex flex-col items-center justify-center"
-      style={{ flex: 1, minHeight: 0, width: "100%", padding: `${GAP}px ${GAP}px 64px`, gap: 24 }}
+      style={{ flex: 1, minHeight: 0, width: "100%", padding: 20, gap: 24 }}
     >
       <div className="shrink-0" style={{ textAlign: "center", width: gridW }}>
         <p
           style={{
             ...TYPE.title,
+            fontSize: 20,
             color: COLOR.textPrimary,
           }}
         >
