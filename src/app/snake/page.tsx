@@ -17,7 +17,7 @@ import { hapticLight } from "@/lib/haptics";
 
 const COLORS = PLAYER_COLORS;
 const SPIN_MS = 10000;
-const TICK_MS = 180;
+const TICK_MS = 150;
 const FOOD_COUNT = 5;
 const FOOD_LIFETIME = 10000;
 const RADIUS_RATIO = 0.25; // segment corner radius as fraction of cell size
@@ -704,7 +704,7 @@ export default function SnakePage() {
     if (!touchRef.current || swipeFiredRef.current) return;
     const dx = e.touches[0].clientX - touchRef.current.x;
     const dy = e.touches[0].clientY - touchRef.current.y;
-    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
     swipeFiredRef.current = true;
     touchRef.current = null;
     const dir: Dir = Math.abs(dx) > Math.abs(dy)
