@@ -863,8 +863,8 @@ export default function SnakePage() {
 
         {/* Countdown overlay */}
         {countdown !== null && countdown > 0 && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#000", border: `2px solid ${COLOR.textPrimary}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: Z.interstitial }}>
+            <div key={countdown} style={{ width: 72, height: 72, borderRadius: "50%", background: "#000", border: `2px solid ${COLOR.textPrimary}`, display: "flex", alignItems: "center", justifyContent: "center", animation: "scale-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards" }}>
               <span style={{ fontFamily: "inherit", fontSize: 36, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, lineHeight: 1 }}>
                 {countdown}
               </span>
