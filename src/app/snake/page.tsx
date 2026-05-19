@@ -11,7 +11,6 @@ import { hasNOfAKind, isSmallStraight, isLargeStraight, isFullHouse, sum } from 
 import { Scrim } from "@/components/ui/Scrim";
 import { DialogCard } from "@/components/ui/DialogCard";
 import { RoundButton } from "@/components/ui/RoundButton";
-import { PlayerChipStrip, type PlayerChip } from "@/components/ui/PlayerChipStrip";
 import { playSnakeEat, playSelect, playTap, playTurnChange } from "@/lib/sounds";
 import { hapticLight } from "@/lib/haptics";
 
@@ -1011,23 +1010,9 @@ function SnakePageContent() {
         >
           Back
         </button>
-        {playerCount > 1 ? (
-          <div style={{ flex: 1 }}>
-            <PlayerChipStrip
-              players={players.map<PlayerChip>((p, i) => ({
-                id: p.id,
-                name: p.name,
-                color: p.color,
-                score: playerScores[i] >= 0 ? playerScores[i] : i === currentPlayerIdx ? score : "—",
-              }))}
-              currentIndex={currentPlayerIdx}
-            />
-          </div>
-        ) : (
-          <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap", flex: 1 }}>
-            {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
-          </span>
-        )}
+        <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap", flex: 1 }}>
+          {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
+        </span>
         <button
           onClick={() => { playTap(); setShowInfo(true); }}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
@@ -1105,33 +1090,39 @@ function SnakePageContent() {
         )}
 
         {/* Multiplayer: final scoreboard */}
-        {mpPhase === "done" && (
-          <Scrim position="absolute" zIndex={Z.interstitial}>
-            <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
-              <div className="snake-modal-border" />
-              <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
-                <span style={{ ...TYPE.body, fontFamily: "inherit" }}>Game over</span>
-                {[...playerScores]
-                  .map((s, i) => ({ score: s, player: players[i] }))
-                  .sort((a, b) => b.score - a.score)
-                  .map(({ score: ps, player }, rank) => (
-                    <div key={player.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <span style={{ ...TYPE.body, fontFamily: "inherit", color: player.color, minWidth: 28 }}>{player.name}</span>
-                      <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", fontSize: rank === 0 ? 40 : 28, color: rank === 0 ? COLOR.textPrimary : COLOR.textMuted }}>{ps}</span>
-                    </div>
-                  ))}
+        {mpPhase === "done" && (() => {
+          const ranked = [...playerScores]
+            .map((s, i) => ({ score: s, player: players[i] }))
+            .sort((a, b) => b.score - a.score);
+          const winner = ranked[0];
+          return (
+            <Scrim position="absolute" zIndex={Z.interstitial}>
+              <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
+                <div className="snake-modal-border" />
+                <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
+                  <span style={{ ...TYPE.headline, fontFamily: "inherit", textTransform: "uppercase" }}>{winner.player.name} wins!</span>
+                  <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}>{winner.score}</span>
+                </DialogCard>
+              </div>
+              <div style={{ width: "100%", maxWidth: "min(80vw, 80vh, 400px)", animation: "fade-in 400ms ease 200ms both" }}>
+                {ranked.map(({ score: ps, player }) => (
+                  <div key={player.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${COLOR.borderSubtle}` }}>
+                    <span style={{ ...TYPE.body, fontFamily: "inherit", color: player.color }}>{player.name}</span>
+                    <span style={{ ...TYPE.body, fontFamily: "inherit", color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>{ps}</span>
+                  </div>
+                ))}
                 {highScore > 0 && (
-                  <span style={{ ...TYPE.body, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.textMuted }}>
+                  <div style={{ ...TYPE.microRegular, fontFamily: "inherit", color: COLOR.textMuted, marginTop: 12, textAlign: "right" }}>
                     Best {highScore}
-                  </span>
+                  </div>
                 )}
-              </DialogCard>
-            </div>
-            <RoundButton variant="filled" onClick={handleFinalRestart}>
-              Play again
-            </RoundButton>
-          </Scrim>
-        )}
+              </div>
+              <RoundButton variant="filled" onClick={handleFinalRestart}>
+                Play again
+              </RoundButton>
+            </Scrim>
+          );
+        })()}
       </div>
 
       {/* Below-board zone */}
