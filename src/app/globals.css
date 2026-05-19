@@ -133,6 +133,16 @@ body {
   100% { border-color: #ffcc00; box-shadow: 0 0 6px 1px #ffcc00; }
 }
 
+@keyframes combo-bg-cycle {
+  0%   { background-color: #ffcc00; }
+  16%  { background-color: #34c759; }
+  33%  { background-color: #00d4ff; }
+  50%  { background-color: #af52de; }
+  66%  { background-color: #ff6b9d; }
+  83%  { background-color: #2dd4bf; }
+  100% { background-color: #ffcc00; }
+}
+
 @keyframes combo-flash {
   0%   { transform: translateY(4px); opacity: 0; }
   12%  { transform: translateY(0);   opacity: 1; }
