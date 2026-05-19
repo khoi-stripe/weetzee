@@ -603,6 +603,7 @@ export default function SnakePage() {
   const [intangibleColor, setIntangibleColor] = useState("");
   const [showTimer, setShowTimer] = useState(false);
   const [started, setStarted] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const [handSlots, setHandSlots] = useState<Array<{ value: number; color: string }>>([]);
   const [popAnim, setPopAnim] = useState<{ score: number; phase: "rise" | "hold" | "exit"; color: string } | null>(null);
   const rafRef = useRef<number>(0);
@@ -634,6 +635,18 @@ export default function SnakePage() {
     const stored = parseInt(localStorage.getItem(HS_KEY) ?? "0", 10);
     if (!isNaN(stored)) setHighScore(stored);
   }, []);
+
+  // Countdown before game starts
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown === 0) {
+      setCountdown(null);
+      setStarted(true);
+      return;
+    }
+    const id = setTimeout(() => setCountdown(n => (n ?? 1) - 1), 1000);
+    return () => clearTimeout(id);
+  }, [countdown]);
 
   // Measure container → compute grid
   useEffect(() => {
@@ -842,10 +855,21 @@ export default function SnakePage() {
                 <div style={{ ...TYPE.subDisplayBold, fontFamily: "inherit" }}>SNAKE EYES</div>
               </DialogCard>
             </div>
-            <RoundButton variant="filled" onClick={() => setStarted(true)}>
+            <RoundButton variant="filled" onClick={() => setCountdown(3)}>
               Play
             </RoundButton>
           </Scrim>
+        )}
+
+        {/* Countdown overlay */}
+        {countdown !== null && countdown > 0 && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#000", border: `2px solid ${COLOR.textPrimary}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontFamily: "inherit", fontSize: 36, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, lineHeight: 1 }}>
+                {countdown}
+              </span>
+            </div>
+          </div>
         )}
 
         {/* Game over */}
