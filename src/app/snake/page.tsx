@@ -1103,7 +1103,7 @@ function SnakePageContent() {
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
                   <span style={{ ...TYPE.headline, fontFamily: "inherit", textTransform: "uppercase", color: COLOR.inverse }}>{winner.player.name} wins!</span>
                   <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.inverse }}>{winner.score}</span>
-                  <div style={{ width: "100%", borderTop: "1px solid rgba(0,0,0,0.15)", paddingTop: 8, marginTop: 4 }}>
+                  <div style={{ width: "100%", paddingTop: 8, marginTop: 4 }}>
                     <PlayerChipStrip
                       players={ranked.map(({ score: ps, player }) => ({ id: player.id, name: player.name, color: player.color, score: ps }))}
                       currentIndex={0}
