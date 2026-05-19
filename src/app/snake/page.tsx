@@ -981,6 +981,16 @@ function SnakePageContent() {
     resetGameState(true);
   }
 
+  function handleExitToStart() {
+    setCurrentPlayerIdx(0);
+    setPlayerScores(new Array(playerCount).fill(-1));
+    setMpPhase("playing");
+    setInterstitialExiting(false);
+    setScoreScreenExiting(false);
+    resetGameState("pause");
+    setShowExitConfirm(false);
+  }
+
   function handlePassToNext() {
     playTap();
     setScoreScreenExiting(true);
@@ -1021,6 +1031,7 @@ function SnakePageContent() {
   const currentComboScore = currentCombo ? scoreSnakeHand(handSlots.map(s => s.value)) : null;
   const isEndState = (over && playerCount === 1) || mpPhase === "done" || mpPhase === "score";
   const [showInfo, setShowInfo] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   return (
     <div
@@ -1058,10 +1069,23 @@ function SnakePageContent() {
         </div>
       )}
 
+      {/* Exit confirmation */}
+      {showExitConfirm && (
+        <Scrim zIndex={Z.modal}>
+          <DialogCard>
+            <p style={{ ...TYPE.title }}>End this game?</p>
+          </DialogCard>
+          <div className="flex justify-center" style={{ gap: 16 }}>
+            <RoundButton onClick={() => { playTap(); setShowExitConfirm(false); }}>Cancel</RoundButton>
+            <RoundButton variant="filled" onClick={() => { playTap(); handleExitToStart(); }}>End game</RoundButton>
+          </div>
+        </Scrim>
+      )}
+
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0, gap: 8 }}>
         <button
-          onClick={() => router.push("/")}
+          onClick={() => { playTap(); if (started && !over) { setShowExitConfirm(true); } else { router.push("/"); } }}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
         >
           Exit
