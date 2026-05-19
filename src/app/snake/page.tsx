@@ -704,7 +704,7 @@ export default function SnakePage() {
       longPressIntervalRef.current = setInterval(() => {
         stateRef.current = { ...stateRef.current, score: Math.max(0, stateRef.current.score - 1) };
       }, 100);
-    }, 200);
+    }, 0);
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
