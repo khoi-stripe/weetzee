@@ -711,6 +711,7 @@ function SnakePageContent() {
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const startedRef = useRef(started);
   useEffect(() => { startedRef.current = started; }, [started]);
+  const currentPlayerIdxRef = useRef(0);
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const poppedDiceRef = useRef<PoppedDie[]>([]);
   const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
@@ -826,10 +827,10 @@ function SnakePageContent() {
         if (playerCount > 1) {
           setPlayerScores(prev => {
             const next = [...prev];
-            next[currentPlayerIdx] = finalScore;
+            next[currentPlayerIdxRef.current] = finalScore;
             return next;
           });
-          const isLast = currentPlayerIdx === playerCount - 1;
+          const isLast = currentPlayerIdxRef.current === playerCount - 1;
           setTimeout(() => {
             if (!isLast) resetGameState("pause");
             setMpPhase(isLast ? "done" : "score");
@@ -840,7 +841,7 @@ function SnakePageContent() {
     }
     rafRef.current = requestAnimationFrame(loop);
     return () => { running = false; cancelAnimationFrame(rafRef.current); };
-  }, [cell, cols, rows, over, currentPlayerIdx]);
+  }, [cell, cols, rows, over]);
 
   // Keyboard
   useEffect(() => {
@@ -908,6 +909,7 @@ function SnakePageContent() {
     [playerCount]
   );
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
+  useEffect(() => { currentPlayerIdxRef.current = currentPlayerIdx; }, [currentPlayerIdx]);
   const [playerScores, setPlayerScores] = useState<number[]>(() => new Array(playerCount).fill(-1));
   const [mpPhase, setMpPhase] = useState<"playing" | "score" | "between" | "done">("playing");
   const [interstitialExiting, setInterstitialExiting] = useState(false);
