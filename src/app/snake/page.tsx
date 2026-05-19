@@ -954,7 +954,7 @@ export default function SnakePage() {
 
         {/* Score pop animation */}
         {popAnim && (
-          <div style={{ position: "absolute", bottom: "calc(100% + 16px)", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 32, fontWeight: WEIGHT.semibold, color: popAnim.color, fontFamily: "inherit", animation: popAnim.phase === "rise" ? "bank-score-rise 260ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" : popAnim.phase === "exit" ? "bank-score-exit 200ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" : undefined }}>
+          <div style={{ position: "absolute", bottom: "calc(100% + 8px)", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 32, fontWeight: WEIGHT.semibold, color: popAnim.color, fontFamily: "inherit", animation: popAnim.phase === "rise" ? "bank-score-rise 260ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" : popAnim.phase === "exit" ? "bank-score-exit 200ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" : undefined }}>
             {popAnim.score}
           </div>
         )}
