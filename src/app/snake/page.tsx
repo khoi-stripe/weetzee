@@ -46,6 +46,7 @@ type GameState = {
   wallTick: number;
   powerUp: (Point & { value: number; color: string }) | null;
   intangibleUntil: number;
+  intangibleColor: string;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -118,7 +119,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false, walls, wallTick: 0, powerUp: null, intangibleUntil: 0 };
+  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false, walls, wallTick: 0, powerUp: null, intangibleUntil: 0, intangibleColor: "" };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -390,6 +391,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
             wallTick: newWallTick,
             powerUp: newPowerUp,
             intangibleUntil: atePowerUp ? now + 10000 : s.intangibleUntil,
+            intangibleColor: atePowerUp ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
           };
         }
       }
@@ -407,6 +409,51 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const INTANGIBLE_DURATION = 10000;
+
+function IntangibleTimer({ until, color, onExpire }: { until: number; color: string; onExpire: () => void }) {
+  const [fraction, setFraction] = useState(() =>
+    Math.max(0, Math.min(1, (until - Date.now()) / INTANGIBLE_DURATION))
+  );
+
+  useEffect(() => {
+    let raf: number;
+    function tick() {
+      const f = Math.max(0, Math.min(1, (until - Date.now()) / INTANGIBLE_DURATION));
+      setFraction(f);
+      if (f > 0) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        onExpire();
+      }
+    }
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [until]);
+
+  const size = 18;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = cx - 1.5;
+
+  let piePath = "";
+  if (fraction >= 0.9999) {
+    piePath = `M ${cx} ${cy - r} A ${r} ${r} 0 1 0 ${cx} ${cy + r} A ${r} ${r} 0 1 0 ${cx} ${cy - r} Z`;
+  } else if (fraction > 0) {
+    const angle = fraction * Math.PI * 2;
+    const ex = +(cx - r * Math.sin(angle)).toFixed(3);
+    const ey = +(cy - r * Math.cos(angle)).toFixed(3);
+    const largeArc = angle > Math.PI ? 1 : 0;
+    piePath = `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 ${largeArc} 0 ${ex} ${ey} Z`;
+  }
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {piePath && <path d={piePath} fill={color} />}
+    </svg>
+  );
+}
+
 const HS_KEY = "weetzee-snake-highscore";
 
 export default function SnakePage() {
@@ -419,6 +466,9 @@ export default function SnakePage() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [over, setOver] = useState(false);
+  const [intangibleUntil, setIntangibleUntil] = useState(0);
+  const [intangibleColor, setIntangibleColor] = useState("");
+  const [showTimer, setShowTimer] = useState(false);
   const [started, setStarted] = useState(false);
   const rafRef = useRef<number>(0);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
@@ -467,6 +517,11 @@ export default function SnakePage() {
       const t = s.over ? 1 : Math.min(1, (now - lastTickRef.current) / tickDurRef.current);
       drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas);
       setScore(s.score);
+      if (s.intangibleUntil !== 0) {
+        setIntangibleUntil(s.intangibleUntil);
+        setIntangibleColor(s.intangibleColor);
+        setShowTimer(true);
+      }
       if (s.over && !over) {
         setOver(true);
         setHighScore((prev) => {
@@ -529,6 +584,7 @@ export default function SnakePage() {
     reset();
     setOver(false);
     setScore(0);
+    setShowTimer(false);
     setStarted(true);
   }
 
@@ -544,9 +600,15 @@ export default function SnakePage() {
         >
           Back
         </button>
-        <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
-          {score}
-        </span>
+        <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center" }}>
+          {showTimer ? (
+            <IntangibleTimer until={intangibleUntil} color={intangibleColor || COLOR.textPrimary} onExpire={() => setShowTimer(false)} />
+          ) : (
+            <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
+              {score}
+            </span>
+          )}
+        </div>
         <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
           Best {highScore}
         </span>
@@ -576,7 +638,6 @@ export default function SnakePage() {
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
                 <div style={{ ...TYPE.subDisplayBold, fontFamily: "inherit" }}>SNAKE EYES</div>
-                <span style={{ ...TYPE.body, fontFamily: "inherit", opacity: 0.5 }}>Swipe or use arrow keys</span>
               </DialogCard>
             </div>
             <RoundButton variant="filled" onClick={() => setStarted(true)}>
