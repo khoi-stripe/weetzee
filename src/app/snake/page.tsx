@@ -903,15 +903,15 @@ export default function SnakePage() {
       >
         <div style={{ display: "flex", alignItems: "center", padding: 8, gap: 8 }}>
 
-          {/* Score circle */}
-          <div style={{ width: 40, height: 40, borderRadius: "50%", border: `1px solid ${COLOR.textPrimary}`, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+          {/* Score pill */}
+          <div style={{ height: 40, minWidth: 40, paddingLeft: 10, paddingRight: 10, borderRadius: 9999, border: `1px solid ${COLOR.textPrimary}`, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
             {showTimer && (
               <div style={{ position: "absolute", inset: 0, display: "flex" }}>
                 <IntangibleTimer until={intangibleUntil} color={intangibleColor || COLOR.textPrimary} onExpire={() => setShowTimer(false)} size={40} />
               </div>
             )}
-            <span style={{ position: "relative", zIndex: 1, fontWeight: WEIGHT.semibold, fontSize: score >= 1000 ? 10 : 13, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", fontFamily: "inherit" }}>
-              {score}
+            <span style={{ position: "relative", zIndex: 1, fontWeight: WEIGHT.semibold, fontSize: 13, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", fontFamily: "inherit", letterSpacing: "0.05em" }}>
+              {String(score).padStart(4, "0")}
             </span>
           </div>
 
