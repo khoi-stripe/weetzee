@@ -830,7 +830,7 @@ export default function SnakePage() {
           Back
         </button>
         <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: "#ffcc00", letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap" }}>
-          {currentCombo ? `${currentCombo} · ${currentComboScore}` : ""}
+          {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
         </span>
       </div>
 
