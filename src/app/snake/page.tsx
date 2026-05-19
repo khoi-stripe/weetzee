@@ -840,7 +840,7 @@ function SnakePageContent() {
     }
     rafRef.current = requestAnimationFrame(loop);
     return () => { running = false; cancelAnimationFrame(rafRef.current); };
-  }, [cell, cols, rows, over]);
+  }, [cell, cols, rows, over, currentPlayerIdx]);
 
   // Keyboard
   useEffect(() => {
