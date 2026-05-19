@@ -756,14 +756,14 @@ export default function SnakePage() {
       style={{ height: "100%", background: COLOR.surfaceBg, display: "flex", flexDirection: "column", overflow: "hidden" }}
     >
       {/* Header */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", padding: "12px 16px", flexShrink: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", alignItems: "center", padding: "12px 16px", flexShrink: 0 }}>
         <button
           onClick={() => router.back()}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, textAlign: "left" }}
         >
           Back
         </button>
-        <span style={{ fontFamily: "inherit", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "center", visibility: currentCombo ? "visible" : "hidden" }}>
+        <span style={{ fontFamily: "inherit", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "center" }}>
           {currentCombo ?? ""}
         </span>
         <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
