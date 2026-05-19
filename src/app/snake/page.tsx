@@ -431,6 +431,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
 
   useEffect(() => {
     if (!active) return;
+    stateRef.current = { ...stateRef.current, intangibleUntil: Date.now() + 5000, intangibleColor: "" };
     let cancelled = false;
     let pendingId: ReturnType<typeof setTimeout> | null = null;
 
