@@ -138,9 +138,9 @@ function RulesetContent() {
       {showCpuWarning && (
         <Scrim>
           <DialogCard>
-            <p style={{ ...TYPE.title }}>CPU not supported</p>
-            <p style={{ ...TYPE.bodyRegular, color: COLOR.textMuted, marginTop: 8 }}>
-              Snake Eyes doesn&apos;t support CPU players. Continuing will start the game with human players only.
+            <p style={{ ...TYPE.title }}>Snake Eyes is pass-and-play</p>
+            <p style={{ ...TYPE.bodyRegular, color: COLOR.textPrimary, marginTop: 8 }}>
+              CPU players can&apos;t participate — Snake Eyes requires a real person to hold the phone. Only your human players will take turns.
             </p>
           </DialogCard>
           <div className="flex justify-center" style={{ gap: 16 }}>
