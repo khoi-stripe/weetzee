@@ -321,6 +321,44 @@ export function playSnakeEat() {
   });
 }
 
+// ===== Countdown tick =====
+// Ascending sine tones for 3→2→1, brighter two-note burst on go (0).
+
+const COUNTDOWN_TICK_FREQS: Record<number, number> = { 3: 392, 2: 523, 1: 659 };
+
+export function playCountdownTick(n: number) {
+  hapticLight();
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  if (n === 0) {
+    [784, 1047].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const s = t + i * 0.07;
+      gain.gain.setValueAtTime(0.12, s);
+      gain.gain.exponentialRampToValueAtTime(0.001, s + 0.2);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(s);
+      osc.stop(s + 0.22);
+    });
+  } else {
+    const freq = COUNTDOWN_TICK_FREQS[n] ?? 440;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.85, t + 0.13);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.16);
+  }
+}
+
 // ===== Toggle switch =====
 // Quick pitch bend — up for on, down for off.
 
@@ -339,4 +377,59 @@ export function playToggle(on: boolean) {
   osc.connect(gain).connect(ctx.destination);
   osc.start(t);
   osc.stop(t + 0.08);
+}
+
+// ===== Snake power-up collected =====
+// Shimmering rising arpeggio — magical and energetic.
+
+export function playSnakePowerUp() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  [523, 659, 784, 1047, 1319].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    const s = t + i * 0.055;
+    gain.gain.setValueAtTime(0.1, s);
+    gain.gain.exponentialRampToValueAtTime(0.001, s + 0.18);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(s);
+    osc.stop(s + 0.2);
+  });
+}
+
+// ===== Snake death =====
+// Descending chromatic slide — heavy, gut-punch drop.
+
+export function playSnakeDeath() {
+  hapticLight();
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc1.type = "sawtooth";
+  osc2.type = "square";
+  osc1.frequency.setValueAtTime(300, t);
+  osc1.frequency.exponentialRampToValueAtTime(60, t + 0.6);
+  osc2.frequency.setValueAtTime(155, t);
+  osc2.frequency.exponentialRampToValueAtTime(40, t + 0.6);
+
+  gain.gain.setValueAtTime(0.12, t);
+  gain.gain.linearRampToValueAtTime(0.08, t + 0.3);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc1.start(t);
+  osc2.start(t);
+  osc1.stop(t + 0.7);
+  osc2.stop(t + 0.7);
 }

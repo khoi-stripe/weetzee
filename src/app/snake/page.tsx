@@ -12,7 +12,7 @@ import { Scrim } from "@/components/ui/Scrim";
 import { DialogCard } from "@/components/ui/DialogCard";
 import { RoundButton } from "@/components/ui/RoundButton";
 import { PlayerChipStrip } from "@/components/ui/PlayerChipStrip";
-import { playSnakeEat, playSelect, playTap, playTurnChange } from "@/lib/sounds";
+import { playSnakeEat, playSelect, playTap, playTurnChange, playCountdownTick, playSnakePowerUp, playSnakeDeath } from "@/lib/sounds";
 import { hapticLight } from "@/lib/haptics";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -461,6 +461,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
         );
         const hitSelf = !intangible && s.snake.slice(0, -1).some((p) => p.x === head.x && p.y === head.y);
         if (hitSelf || hitWall) {
+          playSnakeDeath();
           stateRef.current = { ...s, over: true, intangibleUntil: 0 };
         } else {
           const eatenIdx = s.foods.findIndex(f => head.x === f.x && head.y === f.y);
@@ -480,7 +481,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
             return f;
           });
           if (ate) { onFoodEatenRef.current(s.foods[eatenIdx].value); }
-          if (ate || atePowerUp) { hapticLight(); playSnakeEat(); }
+          if (atePowerUp) { playSnakePowerUp(); } else if (ate) { hapticLight(); playSnakeEat(); }
           // Expire power-up after 10 seconds
           const powerUpExpired = s.powerUp !== null && now >= s.powerUpExpiry;
           // Spawn a power-up with ~20% chance when food is eaten and none exists
@@ -751,6 +752,7 @@ function SnakePageContent() {
   // Countdown before game starts
   useEffect(() => {
     if (countdown === null) return;
+    playCountdownTick(countdown);
     if (countdown === 0) {
       setCountdown(null);
       setStarted(true);
