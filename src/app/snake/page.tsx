@@ -11,6 +11,7 @@ import { hasNOfAKind, isSmallStraight, isLargeStraight, isFullHouse, sum } from 
 import { Scrim } from "@/components/ui/Scrim";
 import { DialogCard } from "@/components/ui/DialogCard";
 import { RoundButton } from "@/components/ui/RoundButton";
+import { PlayerChipStrip } from "@/components/ui/PlayerChipStrip";
 import { playSnakeEat, playSelect, playTap, playTurnChange } from "@/lib/sounds";
 import { hapticLight } from "@/lib/haptics";
 
@@ -1102,15 +1103,14 @@ function SnakePageContent() {
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
                   <span style={{ ...TYPE.headline, fontFamily: "inherit", textTransform: "uppercase", color: COLOR.inverse }}>{winner.player.name} wins!</span>
                   <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.inverse }}>{winner.score}</span>
-                  <div style={{ width: "100%", borderTop: "1px solid rgba(0,0,0,0.15)", paddingTop: 12, marginTop: 4, display: "flex", flexDirection: "column", gap: 0 }}>
-                    {ranked.map(({ score: ps, player }) => (
-                      <div key={player.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(0,0,0,0.1)" }}>
-                        <span style={{ ...TYPE.body, fontFamily: "inherit", color: "rgba(0,0,0,0.6)" }}>{player.name}</span>
-                        <span style={{ ...TYPE.body, fontFamily: "inherit", color: COLOR.inverse, fontVariantNumeric: "tabular-nums" }}>{ps}</span>
-                      </div>
-                    ))}
+                  <div style={{ width: "100%", borderTop: "1px solid rgba(0,0,0,0.15)", paddingTop: 8, marginTop: 4 }}>
+                    <PlayerChipStrip
+                      players={ranked.map(({ score: ps, player }) => ({ id: player.id, name: player.name, color: player.color, score: ps }))}
+                      currentIndex={0}
+                      variant="light"
+                    />
                     {highScore > 0 && (
-                      <div style={{ ...TYPE.microRegular, fontFamily: "inherit", color: "rgba(0,0,0,0.45)", marginTop: 8, textAlign: "right" }}>
+                      <div style={{ ...TYPE.microRegular, fontFamily: "inherit", color: "rgba(0,0,0,0.45)", marginTop: 4, textAlign: "right", paddingRight: 4 }}>
                         Best {highScore}
                       </div>
                     )}
