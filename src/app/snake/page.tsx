@@ -377,7 +377,7 @@ function drawFrame(
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
 
-function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>) {
+function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>, expiredFoodsRef: React.MutableRefObject<Array<{ x: number; y: number; value: number; color: string }>>) {
   const stateRef = useRef<GameState>(makeInitial(cols, rows));
   const prevSnakeRef = useRef<Point[]>(stateRef.current.snake);
   const lastTickRef = useRef(Date.now());
@@ -455,11 +455,13 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
                randomFood([...newSnake, ...s.foods.filter((_, i) => i !== eatenIdx)], cols, rows, now)]
             : s.foods;
           // Replace any expired food dice with new ones at fresh positions
-          const newFoods = afterEat.map((f, i) =>
-            now >= f.expiry
-              ? randomFood([...newSnake, ...afterEat.filter((_, j) => j !== i)], cols, rows, now)
-              : f
-          );
+          const newFoods = afterEat.map((f, i) => {
+            if (now >= f.expiry) {
+              expiredFoodsRef.current.push({ x: f.x, y: f.y, value: f.value, color: VALUE_COLORS[f.value] ?? COLOR.textPrimary });
+              return randomFood([...newSnake, ...afterEat.filter((_, j) => j !== i)], cols, rows, now);
+            }
+            return f;
+          });
           if (ate) { onFoodEatenRef.current(s.foods[eatenIdx].value); }
           if (ate || atePowerUp) { hapticLight(); playSnakeEat(); }
           // Expire power-up after 10 seconds
@@ -617,6 +619,7 @@ export default function SnakePage() {
   const popTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [comboFlash, setComboFlash] = useState<string | null>(null);
   const comboFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const expiredFoodsRef = useRef<Array<{ x: number; y: number; value: number; color: string }>>([]);
   const onFoodEatenRef = useRef<(value: number) => void>(() => {});
   onFoodEatenRef.current = (value: number) => {
     const color = VALUE_COLORS[value] ?? COLOR.textPrimary;
@@ -669,7 +672,7 @@ export default function SnakePage() {
     return () => ro.disconnect();
   }, []);
 
-  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, onFoodEatenRef);
+  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, onFoodEatenRef, expiredFoodsRef);
 
   // Render loop
   useEffect(() => {
@@ -703,6 +706,9 @@ export default function SnakePage() {
         }
       }
       prevPowerUpRef.current = s.powerUp;
+      // Drain expired food dice into pop animation queue
+      const expiredFoods = expiredFoodsRef.current.splice(0);
+      expiredFoods.forEach(f => poppedDiceRef.current.push({ ...f, startTime: now }));
       poppedDiceRef.current = poppedDiceRef.current.filter(p => now - p.startTime < POP_DURATION);
       if (!startedRef.current) {
         ctx!.fillStyle = COLOR.surfaceBg;
@@ -849,7 +855,7 @@ export default function SnakePage() {
         {cell > 0 && (
           <canvas
             ref={canvasRef}
-            style={{ display: "block", margin: "0 auto" }}
+            style={{ display: "block", margin: "0 auto", position: "relative", zIndex: 0 }}
           />
         )}
 
@@ -906,7 +912,7 @@ export default function SnakePage() {
       {/* Below-board panel */}
       <div
         onClick={over ? undefined : handleTakeHand}
-        style={{ marginLeft: "auto", marginRight: "auto", width: "fit-content", background: "#0F0F0F", border: currentCombo ? "none" : `1px solid ${COLOR.textPrimary}`, borderRadius: 8, position: "relative", overflow: "visible", cursor: handSlots.length > 0 ? "pointer" : "default", animation: currentCombo ? "combo-bg-cycle 1.2s linear infinite" : undefined }}
+        style={{ marginLeft: "auto", marginRight: "auto", width: "fit-content", background: "#000000", border: currentCombo ? "none" : `1px solid ${COLOR.textPrimary}`, borderRadius: 8, position: "relative", overflow: "visible", cursor: handSlots.length > 0 ? "pointer" : "default", animation: currentCombo ? "combo-bg-cycle 1.2s linear infinite" : undefined }}
       >
         <div style={{ display: "flex", alignItems: "center", padding: 8, gap: 8 }}>
 
@@ -930,7 +936,7 @@ export default function SnakePage() {
                 {slot ? (
                   <SlotDie value={slot.value} color={slot.color} />
                 ) : (
-                  <div style={{ width: 40, height: 40, borderRadius: 4, border: `1px solid ${COLOR.textPrimary}`, opacity: 0.3 }} />
+                  <div style={{ width: 40, height: 40, borderRadius: 4, background: "#0F0F0F" }} />
                 )}
               </div>
             );
