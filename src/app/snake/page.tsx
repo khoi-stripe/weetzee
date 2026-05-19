@@ -864,7 +864,7 @@ export default function SnakePage() {
       </div>
 
       {/* Below-board panel */}
-      <div style={{ marginTop: 64, marginBottom: 16, marginLeft: "auto", marginRight: "auto", width: "calc(100% - 32px)", maxWidth: 358, background: "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, flexShrink: 0, height: 56, position: "relative", overflow: "visible" }}>
+      <div style={{ marginTop: 64, marginBottom: 16, marginLeft: "auto", marginRight: "auto", width: "calc(100% - 32px)", maxWidth: 358, background: "#0F0F0F", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, flexShrink: 0, height: 56, position: "relative", overflow: "visible" }}>
         <div style={{ display: "flex", alignItems: "center", height: "100%", padding: 8, gap: 8 }}>
 
           {/* Score circle */}
