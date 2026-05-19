@@ -1097,7 +1097,7 @@ function SnakePageContent() {
             .sort((a, b) => b.score - a.score);
           const winner = ranked[0];
           return (
-            <Scrim position="absolute" zIndex={Z.interstitial}>
+            <Scrim zIndex={Z.interstitial}>
               <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
                 <div className="snake-modal-border" />
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
