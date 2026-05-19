@@ -802,6 +802,7 @@ export default function SnakePage() {
   }
 
   const currentCombo = getComboName(handSlots.map(s => s.value));
+  const currentComboScore = currentCombo ? scoreSnakeHand(handSlots.map(s => s.value)) : null;
 
   return (
     <div
@@ -816,7 +817,7 @@ export default function SnakePage() {
           Back
         </button>
         <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: "#ffcc00", letterSpacing: "0.06em", textAlign: "center" }}>
-          {currentCombo ?? ""}
+          {currentCombo ? `${currentCombo} · ${currentComboScore}` : ""}
         </span>
         <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
           Best {highScore}
