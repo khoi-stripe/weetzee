@@ -323,10 +323,10 @@ function drawFrame(
     drawDie(ctx, food.x * cell, food.y * cell, cell, food.value, c, "#000000", c);
   }
 
-  // Power-up die — white (intangible)
+  // Power-up die — hollow (black bg, white border/pips)
   if (state.powerUp) {
     const pu = state.powerUp;
-    drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value, COLOR.textPrimary, COLOR.surfaceBg, COLOR.textPrimary);
+    drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value);
   }
 
   // Pop-out animations for expired power-up dice
