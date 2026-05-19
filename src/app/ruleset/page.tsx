@@ -48,7 +48,7 @@ function RulesetContent() {
   function startGame() {
     playTap();
     if (rulesetId === "snake") {
-      router.push("/snake");
+      router.push(`/snake?players=${playerCount}`);
       return;
     }
     const aiSuffix = aiParam ? `&ai=${aiParam}` : "";
