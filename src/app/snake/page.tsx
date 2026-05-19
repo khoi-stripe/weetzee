@@ -1101,9 +1101,11 @@ function SnakePageContent() {
               <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
                 <div className="snake-modal-border" />
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
-                  <span style={{ ...TYPE.headline, fontFamily: "inherit", textTransform: "uppercase", color: COLOR.inverse }}>{winner.player.name} wins!</span>
-                  <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.inverse }}>{winner.score}</span>
-                  <div style={{ width: "100%", paddingTop: 8, marginTop: "auto" }}>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                    <span style={{ ...TYPE.headline, fontFamily: "inherit", textTransform: "uppercase", color: COLOR.inverse }}>{winner.player.name} wins!</span>
+                    <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.inverse }}>{winner.score}</span>
+                  </div>
+                  <div style={{ width: "100%", paddingTop: 8 }}>
                     <PlayerChipStrip
                       players={ranked.map(({ score: ps, player }) => ({ id: player.id, name: player.name, color: player.color, score: ps }))}
                       currentIndex={0}
