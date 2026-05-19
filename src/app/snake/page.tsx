@@ -899,7 +899,7 @@ export default function SnakePage() {
       {/* Below-board panel */}
       <div
         onClick={handleTakeHand}
-        style={{ marginLeft: "auto", marginRight: "auto", width: "calc(100% - 32px)", maxWidth: 358, background: "#0F0F0F", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, position: "relative", overflow: "visible", cursor: handSlots.length > 0 ? "pointer" : "default", animation: currentCombo ? "combo-bg-cycle 1.2s linear infinite" : undefined }}
+        style={{ marginLeft: "auto", marginRight: "auto", width: "fit-content", background: "#0F0F0F", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, position: "relative", overflow: "visible", cursor: handSlots.length > 0 ? "pointer" : "default", animation: currentCombo ? "combo-bg-cycle 1.2s linear infinite" : undefined }}
       >
         <div style={{ display: "flex", alignItems: "center", padding: 8, gap: 8 }}>
 
