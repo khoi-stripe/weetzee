@@ -278,7 +278,7 @@ function scoreSnakeHand(values: number[]): number {
   if (isSmallStraight(values)) return 30;
   if (hasNOfAKind(values, 4)) return sum(values);
   if (hasNOfAKind(values, 3)) return sum(values);
-  return 0;
+  return sum(values);
 }
 
 type PoppedDie = { x: number; y: number; value: number; color: string; startTime: number };
@@ -471,7 +471,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
             dir,
             nextDir: dir,
             foods: newFoods,
-            score: ate ? s.score + s.foods[eatenIdx].value : s.score,
+            score: s.score,
             over: false,
             walls: newWalls,
             wallTick: newWallTick,
