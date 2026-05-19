@@ -286,9 +286,9 @@ function FarkleRules() {
   );
 }
 
-function GameRulesBlock({ id, name, diceCount, description }: { id: string; name: string; diceCount: number; description: string }) {
+function GameRulesBlock({ id, name, diceCount, description, first = false }: { id: string; name: string; diceCount: number; description: string; first?: boolean }) {
   return (
-    <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
+    <div style={{ marginTop: 32, borderTop: first ? undefined : `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
       <h2
         style={{
           ...TYPE.headline,
@@ -463,8 +463,8 @@ function RulesModal({
             {showAllRulesets ? (
               <>
                 <SupportSection position="top" />
-                {VISIBLE_RULESETS.map((r) => (
-                  <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} />
+                {VISIBLE_RULESETS.map((r, i) => (
+                  <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} first={i === 0} />
                 ))}
               </>
             ) : rulesetId === "kismet" ? (
@@ -627,7 +627,7 @@ function SupportSection({ position = "bottom" }: { position?: "top" | "bottom" }
       borderBottom: position === "top" ? `1px solid ${COLOR.borderSubtle}` : undefined,
       paddingBottom: position === "top" ? 24 : 0,
     }}>
-      <h3 style={{ ...TYPE.sectionHeading, color: COLOR.textPrimary, marginBottom: 8 }}>
+      <h3 style={{ ...TYPE.sectionHeading, fontSize: 20, color: COLOR.textPrimary, marginBottom: 8 }}>
         {isSupporter ? "Supporter" : "Support Weetzee"}
       </h3>
       {isSupporter ? (
@@ -724,7 +724,7 @@ function AboutContent() {
   return (
     <>
       <SupportSection position="top" />
-      <Section title="What is Weetzee?">
+      <Section title="What is Weetzee?" titleSize={20}>
         <p>
           Weetzee is a collection of dice games — pass-and-play with friends or
           solo against the CPU. Pick a ruleset, roll, score, and try to beat
@@ -856,12 +856,13 @@ function InstallSection({ alwaysShow = false }: { alwaysShow?: boolean }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, titleSize, children }: { title: string; titleSize?: number; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 24 }}>
       <h3
         style={{
           ...TYPE.sectionHeading,
+          fontSize: titleSize ?? TYPE.sectionHeading.fontSize,
           color: COLOR.textPrimary,
           marginBottom: 8,
         }}

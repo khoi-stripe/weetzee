@@ -14,7 +14,7 @@ import { RoundButton } from "@/components/ui/RoundButton";
 
 const COLORS = PLAYER_COLORS;
 const SPIN_MS = 10000;
-const TICK_MS = 140;
+const TICK_MS = 180;
 const FOOD_COUNT = 3;
 const RADIUS_RATIO = 0.25; // segment corner radius as fraction of cell size
 
@@ -396,7 +396,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
         }
       }
       const len = stateRef.current.snake.length;
-      const delay = TICK_MS * Math.pow(0.97, len - 3);
+      const delay = TICK_MS * Math.pow(0.985, len - 3);
       tickDurRef.current = delay;
       setTimeout(tick, delay);
     }

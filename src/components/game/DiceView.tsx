@@ -624,11 +624,13 @@ function FarkleBankButton({
   const [bankAnim, setBankAnim] = useState<"idle" | "exit" | "score" | "flash">("idle");
   const [done, setDone] = useState(false);
   const [size, setSize] = useState(0);
+  const [latchedLabel, setLatchedLabel] = useState(label);
   const containerRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const animating = showButton && !introDone;
-  const scoreOnly = label.replace(/[^0-9]/g, "");
+  const activeLabel = bankAnim !== "idle" ? latchedLabel : label;
+  const scoreOnly = activeLabel.replace(/[^0-9]/g, "");
 
   useLayoutEffect(() => {
     const el = containerRef.current;
@@ -646,6 +648,7 @@ function FarkleBankButton({
   }, [showButton]);
 
   function runBankAnim() {
+    setLatchedLabel(label);
     timers.current.forEach(clearTimeout);
     setBankAnim("exit");
     setDone(false);
@@ -736,7 +739,7 @@ function FarkleBankButton({
             }}
           >
             <span style={{ transform: "rotate(-45deg)", display: "block", textAlign: "center" }}>
-              {label}
+              {activeLabel}
             </span>
           </button>
         </div>

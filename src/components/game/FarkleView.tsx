@@ -718,7 +718,7 @@ export function FarkleBustScreen({
         <span style={{ ...TYPE.titleBold }}>
           {player.name}
         </span>
-        <span style={{ ...TYPE.subDisplayBold, color: COLOR.surfaceBg, textAlign: "center" }}>
+        <span style={{ ...TYPE.subDisplayBold, fontSize: 20, color: COLOR.surfaceBg, textAlign: "center" }}>
           FARKLE!
         </span>
 
