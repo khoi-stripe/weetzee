@@ -567,17 +567,21 @@ function IntangibleTimer({ until, color, onExpire, size = 18 }: { until: number;
 function SlotDie({ value, color }: { value: number; color: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const SIZE = 40;
-  const CELL = SIZE / 0.8; // make die face fill full SIZE (drawDie pads by 10% each side)
-  const OFFSET = -(CELL - SIZE) / 2;
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = SIZE * dpr;
+    canvas.height = SIZE * dpr;
+    ctx.scale(dpr, dpr);
+    const CELL = SIZE / 0.8;
+    const OFFSET = -(CELL - SIZE) / 2;
     ctx.clearRect(0, 0, SIZE, SIZE);
     drawDie(ctx, OFFSET, OFFSET, CELL, value, color, "#000000", color);
   }, [value, color]);
-  return <canvas ref={canvasRef} width={SIZE} height={SIZE} style={{ display: "block" }} />;
+  return <canvas ref={canvasRef} style={{ display: "block", width: SIZE, height: SIZE }} />;
 }
 
 const HS_KEY = "weetzee-snake-highscore";
