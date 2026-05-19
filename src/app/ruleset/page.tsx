@@ -138,7 +138,8 @@ function RulesetContent() {
       {showCpuWarning && (
         <Scrim>
           <DialogCard>
-            <p style={{ ...TYPE.title, fontSize: 20, textTransform: "uppercase", whiteSpace: "pre-line" }}>Snake Eyes needs a real player at the controls.{"\n"}CPU slots will be skipped.</p>
+            <p style={{ ...TYPE.title, fontSize: 20, textTransform: "uppercase" }}>Snake Eyes needs a real player at the controls.</p>
+            <p style={{ ...TYPE.bodyRegular, fontSize: 16, marginTop: 8 }}>CPU slots will be skipped.</p>
           </DialogCard>
           <div className="flex justify-center" style={{ gap: 16 }}>
             <RoundButton onClick={() => { playTap(); setShowCpuWarning(false); }}>Back</RoundButton>
