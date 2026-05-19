@@ -947,7 +947,7 @@ export default function SnakePage() {
 
         {/* Combo flash label */}
         {comboFlash && (
-          <div style={{ position: "absolute", bottom: "calc(100% + 36px)", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, fontFamily: "inherit", letterSpacing: "0.06em", animation: "combo-flash 1500ms ease-in-out forwards" }}>
+          <div style={{ position: "absolute", bottom: "calc(100% + 29px)", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, fontFamily: "inherit", letterSpacing: "0.06em", animation: "combo-flash 1500ms ease-in-out forwards" }}>
             {comboFlash}
           </div>
         )}
