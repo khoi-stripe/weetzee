@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PLAYER_COLORS } from "@/lib/types";
 import { COLOR } from "@/lib/color";
-import { TYPE } from "@/lib/type";
+import { TYPE, WEIGHT } from "@/lib/type";
 import { Z } from "@/lib/tokens";
+import { hasNOfAKind, isSmallStraight, isLargeStraight, isFullHouse, sum } from "@/lib/rulesets/classic";
 import { Scrim } from "@/components/ui/Scrim";
 import { DialogCard } from "@/components/ui/DialogCard";
 import { RoundButton } from "@/components/ui/RoundButton";
+import { playSnakeEat } from "@/lib/sounds";
+import { hapticLight } from "@/lib/haptics";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const COLORS = PLAYER_COLORS;
 const SPIN_MS = 10000;
 const TICK_MS = 180;
-const FOOD_COUNT = 3;
+const FOOD_COUNT = 5;
+const FOOD_LIFETIME = 10000;
 const RADIUS_RATIO = 0.25; // segment corner radius as fraction of cell size
 
 const PIP_PATTERNS: Record<number, [number, number][]> = {
@@ -31,7 +35,7 @@ const PIP_PATTERNS: Record<number, [number, number][]> = {
 
 type Point = { x: number; y: number };
 type Dir = "up" | "down" | "left" | "right";
-type Food = Point & { value: number };
+type Food = Point & { value: number; expiry: number };
 type WallSide = "top" | "bottom" | "left" | "right";
 type Wall = { side: WallSide; offset: number; dir: 1 | -1 };
 
@@ -45,14 +49,15 @@ type GameState = {
   walls: Wall[];
   wallTick: number;
   powerUp: (Point & { value: number; color: string }) | null;
+  powerUpExpiry: number;
   intangibleUntil: number;
   intangibleColor: string;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function randomFood(excluded: Point[], cols: number, rows: number): Food {
-  if (cols <= 0 || rows <= 0) return { x: 0, y: 0, value: 1 };
+function randomFood(excluded: Point[], cols: number, rows: number, now: number): Food {
+  if (cols <= 0 || rows <= 0) return { x: 0, y: 0, value: 1, expiry: now + FOOD_LIFETIME };
   let p: Point;
   let attempts = 0;
   do {
@@ -60,7 +65,7 @@ function randomFood(excluded: Point[], cols: number, rows: number): Food {
     attempts++;
     if (attempts > cols * rows) break;
   } while (excluded.some((s) => s.x === p.x && s.y === p.y));
-  return { ...p, value: Math.floor(Math.random() * 6) + 1 };
+  return { ...p, value: Math.floor(Math.random() * 6) + 1, expiry: now + FOOD_LIFETIME };
 }
 
 function step(p: Point, dir: Dir): Point {
@@ -107,11 +112,12 @@ function advanceWall(wall: Wall, length: number, cols: number, rows: number): Wa
 }
 
 function makeInitial(cols: number, rows: number): GameState {
+  const now = Date.now();
   const mid = { x: Math.floor(cols / 2), y: Math.floor(rows / 2) };
   const snake = [mid, { x: mid.x - 1, y: mid.y }, { x: mid.x - 2, y: mid.y }];
   const foods: Food[] = [];
   for (let i = 0; i < FOOD_COUNT; i++) {
-    foods.push(randomFood([...snake, ...foods], cols, rows));
+    foods.push(randomFood([...snake, ...foods], cols, rows, now));
   }
   const walls: Wall[] = [
     { side: "top",    offset: 0,                         dir: 1 },
@@ -119,7 +125,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false, walls, wallTick: 0, powerUp: null, intangibleUntil: 0, intangibleColor: "" };
+  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "" };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -242,6 +248,20 @@ function drawSnake(
   ctx.fill();
 }
 
+// ─── Hand scoring ─────────────────────────────────────────────────────────────
+
+function scoreSnakeHand(values: number[]): number {
+  if (values.length === 0) return 0;
+  if (hasNOfAKind(values, 5)) return 50;
+  if (isLargeStraight(values)) return 40;
+  if (isFullHouse(values)) return 25;
+  if (isSmallStraight(values)) return 30;
+  return sum(values);
+}
+
+type PoppedDie = { x: number; y: number; value: number; color: string; startTime: number };
+const POP_DURATION = 125;
+
 function drawFrame(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -252,6 +272,7 @@ function drawFrame(
   cell: number,
   now: number,
   snakeCanvas: HTMLCanvasElement,
+  poppedDice: PoppedDie[],
 ) {
   const w = cols * cell;
   const h = rows * cell;
@@ -284,6 +305,38 @@ function drawFrame(
     drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value, pu.color, "#000000", pu.color);
   }
 
+  // Pop-out animations for expired power-up dice
+  for (const pd of poppedDice) {
+    const prog = (now - pd.startTime) / POP_DURATION;
+    if (prog >= 1) continue;
+    const eased = 1 - Math.pow(1 - prog, 3); // cubic ease-out
+    const scale = 1 + eased * 1.0;
+    const alpha = Math.pow(1 - prog, 0.6);
+    const cx = pd.x * cell + cell / 2;
+    const cy = pd.y * cell + cell / 2;
+    // Die scaling out
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+    ctx.translate(-cell / 2, -cell / 2);
+    drawDie(ctx, 0, 0, cell, pd.value, pd.color, "#000000", pd.color);
+    ctx.restore();
+    // Stars shooting out in 4 cardinal directions
+    const starDist = eased * cell * 1.8;
+    const fontSize = Math.max(8, cell * 0.55);
+    ctx.save();
+    ctx.globalAlpha = Math.pow(1 - prog, 0.5);
+    ctx.fillStyle = pd.color;
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+      ctx.fillText("*", cx + dx * starDist, cy + dy * starDist);
+    }
+    ctx.restore();
+  }
+
   // Snake — draw to offscreen canvas first, then composite at desired alpha
   const intangible = now < state.intangibleUntil;
   const flashAlpha = intangible ? (Math.floor(now / 200) % 2 === 0 ? 1 : 0.35) : 1;
@@ -299,7 +352,7 @@ function drawFrame(
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
 
-function useSnakeGame(cols: number, rows: number, active: boolean) {
+function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>) {
   const stateRef = useRef<GameState>(makeInitial(cols, rows));
   const prevSnakeRef = useRef<Point[]>(stateRef.current.snake);
   const lastTickRef = useRef(Date.now());
@@ -364,18 +417,29 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
           const ate = eatenIdx >= 0;
           const atePowerUp = s.powerUp !== null && head.x === s.powerUp.x && head.y === s.powerUp.y;
           const newSnake = [head, ...s.snake.slice(0, ate ? undefined : -1)];
-          const newFoods = ate
+          const afterEat: Food[] = ate
             ? [...s.foods.slice(0, eatenIdx), ...s.foods.slice(eatenIdx + 1),
-               randomFood([...newSnake, ...s.foods.filter((_, i) => i !== eatenIdx)], cols, rows)]
+               randomFood([...newSnake, ...s.foods.filter((_, i) => i !== eatenIdx)], cols, rows, now)]
             : s.foods;
+          // Replace any expired food dice with new ones at fresh positions
+          const newFoods = afterEat.map((f, i) =>
+            now >= f.expiry
+              ? randomFood([...newSnake, ...afterEat.filter((_, j) => j !== i)], cols, rows, now)
+              : f
+          );
+          if (ate) { onFoodEatenRef.current(s.foods[eatenIdx].value); }
+          if (ate || atePowerUp) { hapticLight(); playSnakeEat(); }
+          // Expire power-up after 10 seconds
+          const powerUpExpired = s.powerUp !== null && now >= s.powerUpExpiry;
           // Spawn a power-up with ~20% chance when food is eaten and none exists
           const spawnPowerUp = ate && s.powerUp === null && Math.random() < 0.20;
           const allOccupied = [...newSnake, ...newFoods];
-          const newPowerUp = atePowerUp
+          const newPowerUpExpiry = spawnPowerUp ? now + 10000 : atePowerUp || powerUpExpired ? 0 : s.powerUpExpiry;
+          const newPowerUp = atePowerUp || powerUpExpired
             ? null
             : spawnPowerUp
               ? (() => {
-                  const p = randomFood(allOccupied, cols, rows);
+                  const p = randomFood(allOccupied, cols, rows, now);
                   const color = COLORS[Math.floor(Math.random() * COLORS.length)];
                   return { ...p, color };
                 })()
@@ -390,6 +454,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
             walls: newWalls,
             wallTick: newWallTick,
             powerUp: newPowerUp,
+            powerUpExpiry: newPowerUpExpiry,
             intangibleUntil: atePowerUp ? now + 10000 : s.intangibleUntil,
             intangibleColor: atePowerUp ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
           };
@@ -411,27 +476,29 @@ function useSnakeGame(cols: number, rows: number, active: boolean) {
 
 const INTANGIBLE_DURATION = 10000;
 
-function IntangibleTimer({ until, color, onExpire }: { until: number; color: string; onExpire: () => void }) {
+function IntangibleTimer({ until, color, onExpire, size = 18 }: { until: number; color: string; onExpire: () => void; size?: number }) {
   const [fraction, setFraction] = useState(() =>
     Math.max(0, Math.min(1, (until - Date.now()) / INTANGIBLE_DURATION))
   );
+  const [fading, setFading] = useState(false);
 
   useEffect(() => {
     let raf: number;
+    let fadeTimer: ReturnType<typeof setTimeout>;
     function tick() {
       const f = Math.max(0, Math.min(1, (until - Date.now()) / INTANGIBLE_DURATION));
       setFraction(f);
       if (f > 0) {
         raf = requestAnimationFrame(tick);
       } else {
-        onExpire();
+        setFading(true);
+        fadeTimer = setTimeout(onExpire, 300);
       }
     }
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); clearTimeout(fadeTimer); };
   }, [until]);
 
-  const size = 18;
   const cx = size / 2;
   const cy = size / 2;
   const r = cx - 1.5;
@@ -448,10 +515,24 @@ function IntangibleTimer({ until, color, onExpire }: { until: number; color: str
   }
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transition: "opacity 300ms ease-out", opacity: fading ? 0 : 1 }}>
       {piePath && <path d={piePath} fill={color} />}
     </svg>
   );
+}
+
+function SlotDie({ value, color }: { value: number; color: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const SIZE = 38;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    drawDie(ctx, 0, 0, SIZE, value, color, "#000000", color);
+  }, [value, color]);
+  return <canvas ref={canvasRef} width={SIZE} height={SIZE} style={{ display: "block" }} />;
 }
 
 const HS_KEY = "weetzee-snake-highscore";
@@ -470,9 +551,20 @@ export default function SnakePage() {
   const [intangibleColor, setIntangibleColor] = useState("");
   const [showTimer, setShowTimer] = useState(false);
   const [started, setStarted] = useState(false);
+  const [handSlots, setHandSlots] = useState<Array<{ value: number; color: string }>>([]);
+  const [popAnim, setPopAnim] = useState<{ score: number; phase: "rise" | "exit" } | null>(null);
   const rafRef = useRef<number>(0);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const poppedDiceRef = useRef<PoppedDie[]>([]);
+  const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
+  const lastShownIntangibleRef = useRef(0);
+  const popTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const onFoodEatenRef = useRef<(value: number) => void>(() => {});
+  onFoodEatenRef.current = (value: number) => {
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    setHandSlots(prev => [{ value, color }, ...prev].slice(0, 5));
+  };
 
   useEffect(() => {
     const stored = parseInt(localStorage.getItem(HS_KEY) ?? "0", 10);
@@ -498,7 +590,7 @@ export default function SnakePage() {
     return () => ro.disconnect();
   }, []);
 
-  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over);
+  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, onFoodEatenRef);
 
   // Render loop
   useEffect(() => {
@@ -515,9 +607,20 @@ export default function SnakePage() {
       const s = stateRef.current;
       const now = Date.now();
       const t = s.over ? 1 : Math.min(1, (now - lastTickRef.current) / tickDurRef.current);
-      drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas);
+      // Detect power-up expiry (disappeared without being eaten by snake head)
+      const prev = prevPowerUpRef.current;
+      if (prev !== null && s.powerUp === null) {
+        const headAtPU = s.snake[0].x === prev.x && s.snake[0].y === prev.y;
+        if (!headAtPU) {
+          poppedDiceRef.current.push({ x: prev.x, y: prev.y, value: prev.value, color: prev.color, startTime: now });
+        }
+      }
+      prevPowerUpRef.current = s.powerUp;
+      poppedDiceRef.current = poppedDiceRef.current.filter(p => now - p.startTime < POP_DURATION);
+      drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current);
       setScore(s.score);
-      if (s.intangibleUntil !== 0) {
+      if (s.intangibleUntil !== 0 && s.intangibleUntil !== lastShownIntangibleRef.current) {
+        lastShownIntangibleRef.current = s.intangibleUntil;
         setIntangibleUntil(s.intangibleUntil);
         setIntangibleColor(s.intangibleColor);
         setShowTimer(true);
@@ -580,12 +683,31 @@ export default function SnakePage() {
     swipeFiredRef.current = false;
   }, []);
 
+  function handleTakeHand() {
+    if (handSlots.length === 0) return;
+    const handScore = scoreSnakeHand(handSlots.map(s => s.value));
+    stateRef.current = { ...stateRef.current, score: stateRef.current.score + handScore };
+    setHandSlots([]);
+    popTimersRef.current.forEach(clearTimeout);
+    setPopAnim({ score: handScore, phase: "rise" });
+    popTimersRef.current = [
+      setTimeout(() => setPopAnim(p => p ? { ...p, phase: "exit" } : null), 260),
+      setTimeout(() => setPopAnim(null), 460),
+    ];
+  }
+
   function handleRestart() {
     reset();
     setOver(false);
     setScore(0);
     setShowTimer(false);
     setStarted(true);
+    setHandSlots([]);
+    setPopAnim(null);
+    popTimersRef.current.forEach(clearTimeout);
+    poppedDiceRef.current = [];
+    prevPowerUpRef.current = null;
+    lastShownIntangibleRef.current = 0;
   }
 
   return (
@@ -593,23 +715,14 @@ export default function SnakePage() {
       style={{ height: "100%", background: COLOR.surfaceBg, display: "flex", flexDirection: "column", overflow: "hidden" }}
     >
       {/* Header */}
-      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0 }}>
         <button
           onClick={() => router.back()}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}
         >
           Back
         </button>
-        <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center" }}>
-          {showTimer ? (
-            <IntangibleTimer until={intangibleUntil} color={intangibleColor || COLOR.textPrimary} onExpire={() => setShowTimer(false)} />
-          ) : (
-            <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
-              {score}
-            </span>
-          )}
-        </div>
-        <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>
+        <span style={{ ...TYPE.bodyEmphasis, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums" }}>
           Best {highScore}
         </span>
       </div>
@@ -617,7 +730,7 @@ export default function SnakePage() {
       {/* Canvas */}
       <div
         ref={containerRef}
-        style={{ flex: 1, minHeight: 0, position: "relative" }}
+        style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -665,6 +778,55 @@ export default function SnakePage() {
               Play again
             </RoundButton>
           </Scrim>
+        )}
+      </div>
+
+      {/* Below-board panel */}
+      <div style={{ margin: 16, marginLeft: "auto", marginRight: "auto", width: "calc(100% - 32px)", maxWidth: 358, background: "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, flexShrink: 0, height: 56, position: "relative", overflow: "visible" }}>
+        <div style={{ display: "flex", alignItems: "center", height: "100%", padding: 8, gap: 8 }}>
+
+          {/* Score circle */}
+          <div style={{ width: 40, height: 40, borderRadius: "50%", border: `1px solid ${COLOR.textPrimary}`, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+            {showTimer && (
+              <div style={{ position: "absolute", inset: 0, display: "flex" }}>
+                <IntangibleTimer until={intangibleUntil} color={intangibleColor || COLOR.textPrimary} onExpire={() => setShowTimer(false)} size={40} />
+              </div>
+            )}
+            <span style={{ position: "relative", zIndex: 1, fontWeight: WEIGHT.semibold, fontSize: score >= 1000 ? 10 : 13, color: COLOR.textPrimary, fontVariantNumeric: "tabular-nums", fontFamily: "inherit" }}>
+              {score}
+            </span>
+          </div>
+
+          {/* Die slots */}
+          {Array.from({ length: 5 }, (_, i) => {
+            const slot = handSlots[i];
+            return (
+              <div key={i} style={{ flex: 1, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {slot ? (
+                  <SlotDie value={slot.value} color={slot.color} />
+                ) : (
+                  <div style={{ width: 38, height: 38, borderRadius: 4, border: `1px solid ${COLOR.textPrimary}`, opacity: 0.3 }} />
+                )}
+              </div>
+            );
+          })}
+
+          {/* Take hand button */}
+          <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <button
+              onClick={handleTakeHand}
+              style={{ width: 38, height: 38, background: "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 4, color: COLOR.textPrimary, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "inherit", lineHeight: 1 }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Score pop animation */}
+        {popAnim && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 20, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, fontFamily: "inherit", animation: popAnim.phase === "rise" ? "bank-score-rise 260ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" : "bank-score-exit 200ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" }}>
+            {popAnim.score}
+          </div>
         )}
       </div>
     </div>

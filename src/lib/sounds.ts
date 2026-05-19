@@ -297,6 +297,30 @@ export function playBank() {
   });
 }
 
+// ===== Snake eat =====
+// Bright two-note ascending lick — quick E5→B5 chirp, happy and snappy.
+
+export function playSnakeEat() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  ([
+    [659, 0, 0.07],
+    [988, 0.055, 0.09],
+  ] as [number, number, number][]).forEach(([freq, offset, dur]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = freq;
+    const s = t + offset;
+    gain.gain.setValueAtTime(0.1, s);
+    gain.gain.exponentialRampToValueAtTime(0.001, s + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(s);
+    osc.stop(s + dur + 0.01);
+  });
+}
+
 // ===== Toggle switch =====
 // Quick pitch bend — up for on, down for off.
 
