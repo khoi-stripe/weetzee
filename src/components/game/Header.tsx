@@ -774,6 +774,10 @@ function AboutContent() {
             </span>
           </div>
         ))}
+        <div style={{ marginTop: 10 }}>
+          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Snake Eyes</span>
+          <span style={{ color: COLOR.textMuted }}> — Arcade snake. Eat dice to build combos, bank before you die.</span>
+        </div>
       </Section>
 
       <Section title="CPU players">
