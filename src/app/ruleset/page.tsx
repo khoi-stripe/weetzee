@@ -88,6 +88,7 @@ function RulesetContent() {
             color: COLOR.textPrimary,
             textAlign: "center",
             width: gridW,
+            whiteSpace: "nowrap",
           }}
         >
           Choose game

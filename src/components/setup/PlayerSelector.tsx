@@ -117,6 +117,7 @@ export function PlayerSelector({
             ...TYPE.title,
             fontSize: 20,
             color: COLOR.textPrimary,
+            whiteSpace: "nowrap",
           }}
         >
           {title}
