@@ -74,8 +74,8 @@ export function SplashIntro({ forceShow = false }: { forceShow?: boolean }) {
 
     requestAnimationFrame(() => setPhase("intro"));
     const holdTimer = setTimeout(() => setPhase("hold"), 1600 + MAX_LAYER_DELAY + 400);
-    const fadeTimer = setTimeout(() => setPhase("fade"), 3200 + MAX_LAYER_DELAY + 400);
-    const doneTimer = setTimeout(() => setPhase("done"), 3900 + MAX_LAYER_DELAY + 400);
+    const fadeTimer = setTimeout(() => setPhase("fade"), 1600 + MAX_LAYER_DELAY + 400 + 1000);
+    const doneTimer = setTimeout(() => setPhase("done"), 1600 + MAX_LAYER_DELAY + 400 + 1000 + 700);
     return () => {
       clearTimeout(holdTimer);
       clearTimeout(fadeTimer);
