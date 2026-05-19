@@ -75,7 +75,7 @@ export function SplashIntro({ forceShow = false }: { forceShow?: boolean }) {
     requestAnimationFrame(() => setPhase("intro"));
     const holdTimer = setTimeout(() => setPhase("hold"), 1600 + MAX_LAYER_DELAY + 400);
     const fadeTimer = setTimeout(() => setPhase("fade"), 1600 + MAX_LAYER_DELAY + 400 + 1000);
-    const doneTimer = setTimeout(() => setPhase("done"), 1600 + MAX_LAYER_DELAY + 400 + 1000 + 700);
+    const doneTimer = setTimeout(() => setPhase("done"), 1600 + MAX_LAYER_DELAY + 400 + 1000 + 500);
     return () => {
       clearTimeout(holdTimer);
       clearTimeout(fadeTimer);
@@ -99,7 +99,7 @@ export function SplashIntro({ forceShow = false }: { forceShow?: boolean }) {
         transform: phase === "fade" ? "scale(0.95)" : "scale(1)",
         filter: phase === "fade" ? "blur(4px)" : "blur(0px)",
         transition: phase === "fade"
-          ? "opacity 600ms ease, transform 600ms ease, filter 600ms ease"
+          ? "opacity 500ms ease, transform 500ms ease, filter 500ms ease"
           : undefined,
         pointerEvents: "none",
       }}
