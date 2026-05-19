@@ -1034,22 +1034,24 @@ function SnakePageContent() {
             <button onClick={() => { playTap(); setShowInfo(false); }} className="absolute flex items-center justify-center pressable" style={{ fontSize: 24, fontWeight: WEIGHT.regular, right: 4, top: 2, padding: "8px 12px", background: "none", border: "none", color: COLOR.textPrimary, lineHeight: 1 }} aria-label="Close">×</button>
           </div>
           <div className="flex-1 overflow-y-auto selectable" style={{ padding: "0 24px 48px", fontSize: 14, lineHeight: 1.6, color: COLOR.textReadable, maxWidth: 640, margin: "0 auto", width: "100%" }}>
-            <div className="flex items-center justify-between" style={{ paddingBottom: 20, borderBottom: `1px solid ${COLOR.borderSubtle}`, marginBottom: 24 }}>
-              <span style={{ ...TYPE.body, color: COLOR.textPrimary }}>Walls</span>
-              <button
-                className="pressable"
-                onClick={() => {
-                  playToggle(!wallsEnabled);
-                  const next = !wallsEnabled;
-                  setWallsEnabled(next);
-                  localStorage.setItem(WALLS_KEY, next ? "1" : "0");
-                }}
-                style={{ background: wallsEnabled ? COLOR.textPrimary : "transparent", border: `1px solid ${COLOR.textPrimary}`, color: wallsEnabled ? COLOR.surfaceBg : COLOR.textPrimary, fontFamily: "inherit", fontSize: 13, cursor: "pointer", padding: "6px 16px", borderRadius: 9999 }}
-              >
-                {wallsEnabled ? "On" : "Off"}
-              </button>
-            </div>
             <SnakeRules />
+            <div style={{ marginTop: 24 }}>
+              <h3 style={{ fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                House rules
+              </h3>
+              <div
+                onClick={() => { playToggle(!wallsEnabled); const next = !wallsEnabled; setWallsEnabled(next); localStorage.setItem(WALLS_KEY, next ? "1" : "0"); }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", cursor: "pointer" }}
+              >
+                <div>
+                  <div style={{ ...TYPE.body, color: COLOR.textPrimary }}>Walls</div>
+                  <div style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 2 }}>Moving wall segments that grow as the snake gets longer.</div>
+                </div>
+                <div className="pressable" style={{ width: 40, height: 22, borderRadius: 11, background: wallsEnabled ? "#34c759" : COLOR.borderSubtle, position: "relative", transition: "background 200ms", flexShrink: 0, marginLeft: 16 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 9, background: COLOR.textPrimary, position: "absolute", top: 2, left: wallsEnabled ? 20 : 2, transition: `left 200ms ${EASE.spring}` }} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
