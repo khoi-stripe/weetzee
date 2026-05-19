@@ -847,7 +847,7 @@ export default function SnakePage() {
         )}
 
         {/* Start prompt */}
-        {!started && !over && (
+        {!started && !over && countdown === null && (
           <Scrim position="absolute" zIndex={Z.interstitial}>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
