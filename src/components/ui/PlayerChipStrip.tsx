@@ -114,10 +114,7 @@ export function PlayerChipStrip({
   }, []);
 
   const isLight = variant === "light";
-  // Both variants outline in white: it's the strong border on dark surfaces,
-  // and on the light card it stands out against the player-color active cell
-  // and the black inactive cells.
-  const outlineColor = COLOR.borderStrong;
+  const outlineColor = isLight ? COLOR.inverse : COLOR.borderStrong;
   const dividerColor = outlineColor;
 
   return (

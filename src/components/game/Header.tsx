@@ -286,6 +286,32 @@ function FarkleRules() {
   );
 }
 
+function SnakeEyesRules() {
+  return (
+    <>
+      <Section title="How to play">
+        <p>Swipe to steer the snake. Eat colored dice to collect them into your hand. Once your hand forms a scoring combo, tap the score panel to bank your points and clear your hand.</p>
+      </Section>
+      <Section title="Scoring">
+        <ScoreTable>
+          <ScoreRow name="3 of a kind" value="Sum of all dice" />
+          <ScoreRow name="4 of a kind" value="Sum of all dice" />
+          <ScoreRow name="Small straight" value="Any 4 in a row — 30 pts" />
+          <ScoreRow name="Full house" value="3 + 2 of a kind — 25 pts" />
+          <ScoreRow name="Large straight" value="1–2–3–4–5 or 2–3–4–5–6 — 40 pts" />
+          <ScoreRow name="WEETZEE" value="5 of a kind — 50 pts" />
+        </ScoreTable>
+      </Section>
+      <Section title="Hazards">
+        <p>The snake dies if it hits itself or a moving wall segment. Walls grow longer as the snake gets bigger, so the board gets tighter over time.</p>
+      </Section>
+      <Section title="Power-up">
+        <p>Occasionally a hollow die appears. Eat it to become intangible for 10 seconds — pass through walls and your own tail without dying.</p>
+      </Section>
+    </>
+  );
+}
+
 function GameRulesBlock({ id, name, diceCount, description, first = false }: { id: string; name: string; diceCount: number; description: string; first?: boolean }) {
   return (
     <div style={{ marginTop: 32, borderTop: first ? undefined : `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
@@ -466,6 +492,11 @@ function RulesModal({
                 {VISIBLE_RULESETS.map((r, i) => (
                   <GameRulesBlock key={r.id} id={r.id} name={r.name} diceCount={r.diceCount} description={r.description} first={i === 0} />
                 ))}
+                <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
+                  <h2 style={{ ...TYPE.headline, color: COLOR.textPrimary, marginBottom: 4 }}>Snake Eyes</h2>
+                  <p style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginBottom: 8 }}>Arcade snake — eat dice to build combos, bank before you die</p>
+                  <SnakeEyesRules />
+                </div>
               </>
             ) : rulesetId === "kismet" ? (
               <KismetRules />

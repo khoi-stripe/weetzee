@@ -366,10 +366,13 @@ function drawFrame(
   // Snake — draw to offscreen canvas first, then composite at desired alpha
   const intangible = now < state.intangibleUntil;
   const flashAlpha = intangible ? (Math.floor(now / 200) % 2 === 0 ? 1 : 0.35) : 1;
-  snakeCanvas.width = w * dpr;
-  snakeCanvas.height = h * dpr;
+  const needsResize = snakeCanvas.width !== w * dpr || snakeCanvas.height !== h * dpr;
+  if (needsResize) {
+    snakeCanvas.width = w * dpr;
+    snakeCanvas.height = h * dpr;
+  }
   const snakeCtx = snakeCanvas.getContext("2d")!;
-  snakeCtx.scale(dpr, dpr);
+  if (needsResize) snakeCtx.scale(dpr, dpr);
   snakeCtx.clearRect(0, 0, w, h);
   drawSnake(snakeCtx, state, prevSnake, t, cell, now);
   ctx.globalAlpha = flashAlpha;
@@ -471,7 +474,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
           // Spawn a power-up with ~20% chance when food is eaten and none exists
           const spawnPowerUp = ate && s.powerUp === null && Math.random() < 0.20;
           const allOccupied = [...newSnake, ...newFoods];
-          const newPowerUpExpiry = spawnPowerUp ? now + 10000 : atePowerUp || powerUpExpired ? 0 : s.powerUpExpiry;
+          const newPowerUpExpiry = spawnPowerUp ? now + INTANGIBLE_DURATION : atePowerUp || powerUpExpired ? 0 : s.powerUpExpiry;
           const newPowerUp = atePowerUp || powerUpExpired
             ? null
             : spawnPowerUp
@@ -492,7 +495,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
             wallTick: newWallTick,
             powerUp: newPowerUp,
             powerUpExpiry: newPowerUpExpiry,
-            intangibleUntil: atePowerUp ? now + 10000 : s.intangibleUntil,
+            intangibleUntil: atePowerUp ? now + INTANGIBLE_DURATION : s.intangibleUntil,
             intangibleColor: atePowerUp ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
           };
         }
@@ -582,6 +585,52 @@ function SnakeRules() {
 }
 
 type SnakePlayer = { id: number; name: string; color: string };
+
+const EXIT_BTN_STYLE: React.CSSProperties = { position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 16, background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 };
+
+function PlayerScoreScreen({ player, score, nextPlayer, onContinue, onExit, exiting }: {
+  player: SnakePlayer;
+  score: number;
+  nextPlayer: SnakePlayer;
+  onContinue: () => void;
+  onExit: () => void;
+  exiting: boolean;
+}) {
+  return (
+    <Scrim
+      exiting={exiting}
+      position="fixed"
+      zIndex={Z.interstitial}
+      enterDuration={DURATION.modal}
+      exitDuration={DURATION.slow}
+    >
+      <button onClick={onExit} style={EXIT_BTN_STYLE}>Exit</button>
+      <div
+        className="flex flex-col items-center justify-center"
+        style={{
+          width: "50vmin",
+          height: "50vmin",
+          borderRadius: 8,
+          background: player.color,
+          color: COLOR.surfaceBg,
+          animation: exiting
+            ? `scale-out ${DURATION.slow}ms ${EASE.spring} forwards`
+            : `spin-in ${DURATION.expressive}ms ${EASE.standard} 150ms both`,
+          gap: 4,
+        }}
+      >
+        <span style={{ ...TYPE.body, fontFamily: "inherit", color: COLOR.surfaceBg }}>{player.name}</span>
+        <span style={{ ...TYPE.displayBold, fontFamily: "inherit", fontVariantNumeric: "tabular-nums", color: COLOR.surfaceBg }}>{score}</span>
+      </div>
+      <button
+        onClick={onContinue}
+        style={{ background: "none", border: `1px solid ${COLOR.textPrimary}`, color: COLOR.textPrimary, fontFamily: "inherit", fontSize: 15, cursor: "pointer", padding: "10px 24px", borderRadius: 9999, marginTop: 24 }}
+      >
+        Pass to {nextPlayer.name}
+      </button>
+    </Scrim>
+  );
+}
 
 function PlayerInterstitial({ player, exiting }: { player: SnakePlayer; exiting: boolean }) {
   return (
@@ -829,14 +878,17 @@ function SnakePageContent() {
             return next;
           });
           const isLast = currentPlayerIdx === playerCount - 1;
-          setTimeout(() => setMpPhase(isLast ? "done" : "between"), 800);
+          setTimeout(() => {
+            if (!isLast) resetGameState("pause");
+            setMpPhase(isLast ? "done" : "score");
+          }, 800);
         }
       }
       rafRef.current = requestAnimationFrame(loop);
     }
     rafRef.current = requestAnimationFrame(loop);
     return () => { running = false; cancelAnimationFrame(rafRef.current); };
-  }, [cell, cols, rows, stateRef, over]);
+  }, [cell, cols, rows, over]);
 
   // Keyboard
   useEffect(() => {
@@ -905,8 +957,9 @@ function SnakePageContent() {
   );
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
   const [playerScores, setPlayerScores] = useState<number[]>(() => new Array(playerCount).fill(-1));
-  const [mpPhase, setMpPhase] = useState<"playing" | "between" | "done">("playing");
+  const [mpPhase, setMpPhase] = useState<"playing" | "score" | "between" | "done">("playing");
   const [interstitialExiting, setInterstitialExiting] = useState(false);
+  const [scoreScreenExiting, setScoreScreenExiting] = useState(false);
 
   function handleTakeHand() {
     if (handSlots.length === 0) return;
@@ -922,7 +975,7 @@ function SnakePageContent() {
     ];
   }
 
-  function resetGameState(startImmediately = false) {
+  function resetGameState(mode: boolean | "pause" = false) {
     reset();
     setOver(false);
     setScore(0);
@@ -935,24 +988,35 @@ function SnakePageContent() {
     poppedDiceRef.current = [];
     prevPowerUpRef.current = null;
     lastShownIntangibleRef.current = 0;
-    if (startImmediately) {
+    if (mode === true) {
       setStarted(false);
       setCountdown(3);
+    } else if (mode === "pause") {
+      setStarted(false);
+      setCountdown(null);
     } else {
       setStarted(true);
     }
   }
 
   function handleRestart() {
-    resetGameState(false);
     if (playerCount > 1) {
       setCurrentPlayerIdx(0);
       setPlayerScores(new Array(playerCount).fill(-1));
       setMpPhase("playing");
       setInterstitialExiting(false);
-      setStarted(false);
-      setCountdown(null);
+      setScoreScreenExiting(false);
     }
+    resetGameState(true);
+  }
+
+  function handlePassToNext() {
+    playTap();
+    setScoreScreenExiting(true);
+    setTimeout(() => {
+      setScoreScreenExiting(false);
+      setMpPhase("between");
+    }, DURATION.slow);
   }
 
   function handleNextPlayer(nextIdx: number) {
@@ -960,6 +1024,7 @@ function SnakePageContent() {
     setCurrentPlayerIdx(nextIdx);
     setMpPhase("playing");
     setInterstitialExiting(false);
+    setScoreScreenExiting(false);
     playTurnChange();
   }
 
@@ -968,9 +1033,8 @@ function SnakePageContent() {
     setPlayerScores(new Array(playerCount).fill(-1));
     setMpPhase("playing");
     setInterstitialExiting(false);
-    resetGameState(false);
-    setStarted(false);
-    setCountdown(null);
+    setScoreScreenExiting(false);
+    resetGameState(true);
   }
 
   // Auto-advance between players
@@ -980,10 +1044,11 @@ function SnakePageContent() {
     const exitTimer = setTimeout(() => setInterstitialExiting(true), 1600);
     const advanceTimer = setTimeout(() => handleNextPlayer(nextIdx), 2000);
     return () => { clearTimeout(exitTimer); clearTimeout(advanceTimer); };
-  }, [mpPhase]);
+  }, [mpPhase, currentPlayerIdx]);
 
   const currentCombo = getComboName(handSlots.map(s => s.value));
   const currentComboScore = currentCombo ? scoreSnakeHand(handSlots.map(s => s.value)) : null;
+  const isEndState = (over && playerCount === 1) || mpPhase === "done" || mpPhase === "score";
   const [showInfo, setShowInfo] = useState(false);
 
   return (
@@ -1039,7 +1104,9 @@ function SnakePageContent() {
 
         {/* Start prompt */}
         {!started && !over && countdown === null && mpPhase === "playing" && (
-          <Scrim position="absolute" zIndex={Z.interstitial}>
+          <Scrim position="fixed" zIndex={Z.interstitial}>
+            <button onClick={() => { playTap(); router.push("/"); }} style={EXIT_BTN_STYLE}>Exit</button>
+            <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
@@ -1066,7 +1133,7 @@ function SnakePageContent() {
         {/* Single-player game over */}
         {over && playerCount === 1 && (
           <Scrim zIndex={Z.interstitial}>
-            <button onClick={() => { playTap(); router.push("/"); }} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 16, background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}>Exit</button>
+            <button onClick={() => { playTap(); router.push("/"); }} style={EXIT_BTN_STYLE}>Exit</button>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
@@ -1090,6 +1157,18 @@ function SnakePageContent() {
           </Scrim>
         )}
 
+        {/* Multiplayer: score pause screen before next player */}
+        {mpPhase === "score" && (
+          <PlayerScoreScreen
+            player={players[currentPlayerIdx]}
+            score={playerScores[currentPlayerIdx]}
+            nextPlayer={players[currentPlayerIdx + 1]}
+            onContinue={handlePassToNext}
+            onExit={() => { playTap(); router.push("/"); }}
+            exiting={scoreScreenExiting}
+          />
+        )}
+
         {/* Multiplayer: between-player interstitial */}
         {mpPhase === "between" && (
           <PlayerInterstitial
@@ -1106,7 +1185,7 @@ function SnakePageContent() {
           const winner = ranked[0];
           return (
             <Scrim zIndex={Z.interstitial}>
-              <button onClick={() => { playTap(); router.push("/"); }} style={{ position: "absolute", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 16, background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}>Exit</button>
+              <button onClick={() => { playTap(); router.push("/"); }} style={EXIT_BTN_STYLE}>Exit</button>
               <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
                 <div className="snake-modal-border" />
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
@@ -1146,12 +1225,12 @@ function SnakePageContent() {
       {/* Below-board panel */}
       <div
         onClick={over ? undefined : handleTakeHand}
-        style={{ marginLeft: "auto", marginRight: "auto", width: "fit-content", background: "#000000", border: currentCombo ? "none" : `1px solid ${COLOR.textPrimary}`, borderRadius: 8, position: "relative", overflow: "visible", cursor: handSlots.length > 0 ? "pointer" : "default", animation: currentCombo ? "combo-bg-cycle 1.2s linear infinite" : undefined }}
+        style={{ marginLeft: "auto", marginRight: "auto", width: "fit-content", background: "#000000", border: currentCombo ? "none" : `1px solid ${isEndState ? "#000000" : COLOR.textPrimary}`, borderRadius: 8, position: "relative", overflow: "visible", cursor: handSlots.length > 0 ? "pointer" : "default", animation: currentCombo ? "combo-bg-cycle 1.2s linear infinite" : undefined }}
       >
         <div style={{ display: "flex", alignItems: "center", padding: 8, gap: 8 }}>
 
           {/* Score pill */}
-          <div style={{ height: 40, minWidth: 40, paddingLeft: 10, paddingRight: 10, borderRadius: 9999, border: `1px solid ${COLOR.textPrimary}`, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+          <div style={{ height: 40, minWidth: 40, paddingLeft: 10, paddingRight: 10, borderRadius: 9999, border: `1px solid ${isEndState ? "#000000" : COLOR.textPrimary}`, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
             {showTimer && (
               <div style={{ position: "absolute", inset: 0, display: "flex" }}>
                 <IntangibleTimer until={intangibleUntil} color={intangibleColor || COLOR.textPrimary} onExpire={() => setShowTimer(false)} size={40} />
