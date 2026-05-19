@@ -374,7 +374,7 @@ function drawFrame(
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
 
-function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>, speedBoostRef: React.MutableRefObject<boolean>) {
+function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>) {
   const stateRef = useRef<GameState>(makeInitial(cols, rows));
   const prevSnakeRef = useRef<Point[]>(stateRef.current.snake);
   const lastTickRef = useRef(Date.now());
@@ -483,7 +483,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
         }
       }
       const len = stateRef.current.snake.length;
-      const delay = TICK_MS * Math.pow(0.985, len - 3) * (speedBoostRef.current ? 0.9 : 1);
+      const delay = TICK_MS * Math.pow(0.985, len - 3);
       tickDurRef.current = delay;
       setTimeout(tick, delay);
     }
@@ -546,13 +546,15 @@ function IntangibleTimer({ until, color, onExpire, size = 18 }: { until: number;
 function SlotDie({ value, color }: { value: number; color: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const SIZE = 40;
+  const CELL = SIZE / 0.8; // make die face fill full SIZE (drawDie pads by 10% each side)
+  const OFFSET = -(CELL - SIZE) / 2;
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, SIZE, SIZE);
-    drawDie(ctx, 0, 0, SIZE, value, color, "#000000", color);
+    drawDie(ctx, OFFSET, OFFSET, CELL, value, color, "#000000", color);
   }, [value, color]);
   return <canvas ref={canvasRef} width={SIZE} height={SIZE} style={{ display: "block" }} />;
 }
@@ -582,9 +584,6 @@ export default function SnakePage() {
   const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
   const lastShownIntangibleRef = useRef(0);
   const popTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const speedBoostRef = useRef(false);
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [comboFlash, setComboFlash] = useState<string | null>(null);
   const comboFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onFoodEatenRef = useRef<(value: number) => void>(() => {});
@@ -627,7 +626,7 @@ export default function SnakePage() {
     return () => ro.disconnect();
   }, []);
 
-  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, onFoodEatenRef, speedBoostRef);
+  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, onFoodEatenRef);
 
   // Render loop
   useEffect(() => {
@@ -699,12 +698,6 @@ export default function SnakePage() {
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     swipeFiredRef.current = false;
-    longPressTimerRef.current = setTimeout(() => {
-      speedBoostRef.current = true;
-      longPressIntervalRef.current = setInterval(() => {
-        stateRef.current = { ...stateRef.current, score: Math.max(0, stateRef.current.score - 1) };
-      }, 100);
-    }, 0);
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
@@ -714,9 +707,6 @@ export default function SnakePage() {
     if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
     swipeFiredRef.current = true;
     touchRef.current = null;
-    if (longPressTimerRef.current) { clearTimeout(longPressTimerRef.current); longPressTimerRef.current = null; }
-    if (longPressIntervalRef.current) { clearInterval(longPressIntervalRef.current); longPressIntervalRef.current = null; }
-    speedBoostRef.current = false;
     const dir: Dir = Math.abs(dx) > Math.abs(dy)
       ? dx > 0 ? "right" : "left"
       : dy > 0 ? "down" : "up";
@@ -727,9 +717,6 @@ export default function SnakePage() {
   const onTouchEnd = useCallback(() => {
     touchRef.current = null;
     swipeFiredRef.current = false;
-    if (longPressTimerRef.current) { clearTimeout(longPressTimerRef.current); longPressTimerRef.current = null; }
-    if (longPressIntervalRef.current) { clearInterval(longPressIntervalRef.current); longPressIntervalRef.current = null; }
-    speedBoostRef.current = false;
   }, []);
 
   function handleTakeHand() {
@@ -757,8 +744,6 @@ export default function SnakePage() {
     setComboFlash(null);
     popTimersRef.current.forEach(clearTimeout);
     if (comboFlashTimerRef.current) clearTimeout(comboFlashTimerRef.current);
-    if (longPressIntervalRef.current) { clearInterval(longPressIntervalRef.current); longPressIntervalRef.current = null; }
-    speedBoostRef.current = false;
     poppedDiceRef.current = [];
     prevPowerUpRef.current = null;
     lastShownIntangibleRef.current = 0;
