@@ -10,7 +10,7 @@ import { hasNOfAKind, isSmallStraight, isLargeStraight, isFullHouse, sum } from 
 import { Scrim } from "@/components/ui/Scrim";
 import { DialogCard } from "@/components/ui/DialogCard";
 import { RoundButton } from "@/components/ui/RoundButton";
-import { playSnakeEat } from "@/lib/sounds";
+import { playSnakeEat, playSelect } from "@/lib/sounds";
 import { hapticLight } from "@/lib/haptics";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -250,13 +250,35 @@ function drawSnake(
 
 // ─── Hand scoring ─────────────────────────────────────────────────────────────
 
+const VALUE_COLORS: Record<number, string> = {
+  1: COLORS[0], // yellow
+  2: COLORS[1], // green
+  3: COLORS[2], // cyan
+  4: COLORS[3], // violet
+  5: COLORS[4], // pink
+  6: COLORS[5], // teal
+};
+
+function getComboName(values: number[]): string | null {
+  if (values.length === 0) return null;
+  if (hasNOfAKind(values, 5)) return "WEETZEE";
+  if (isLargeStraight(values)) return "LG. STRAIGHT";
+  if (isFullHouse(values)) return "FULL HOUSE";
+  if (isSmallStraight(values)) return "SM. STRAIGHT";
+  if (hasNOfAKind(values, 4)) return "4 OF A KIND";
+  if (hasNOfAKind(values, 3)) return "3 OF A KIND";
+  return null;
+}
+
 function scoreSnakeHand(values: number[]): number {
   if (values.length === 0) return 0;
   if (hasNOfAKind(values, 5)) return 50;
   if (isLargeStraight(values)) return 40;
   if (isFullHouse(values)) return 25;
   if (isSmallStraight(values)) return 30;
-  return sum(values);
+  if (hasNOfAKind(values, 4)) return sum(values);
+  if (hasNOfAKind(values, 3)) return sum(values);
+  return 0;
 }
 
 type PoppedDie = { x: number; y: number; value: number; color: string; startTime: number };
@@ -352,7 +374,7 @@ function drawFrame(
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
 
-function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>) {
+function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>, speedBoostRef: React.MutableRefObject<boolean>) {
   const stateRef = useRef<GameState>(makeInitial(cols, rows));
   const prevSnakeRef = useRef<Point[]>(stateRef.current.snake);
   const lastTickRef = useRef(Date.now());
@@ -461,7 +483,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
         }
       }
       const len = stateRef.current.snake.length;
-      const delay = TICK_MS * Math.pow(0.985, len - 3);
+      const delay = TICK_MS * Math.pow(0.985, len - 3) * (speedBoostRef.current ? 0.9 : 1);
       tickDurRef.current = delay;
       setTimeout(tick, delay);
     }
@@ -523,7 +545,7 @@ function IntangibleTimer({ until, color, onExpire, size = 18 }: { until: number;
 
 function SlotDie({ value, color }: { value: number; color: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const SIZE = 38;
+  const SIZE = 40;
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -552,7 +574,7 @@ export default function SnakePage() {
   const [showTimer, setShowTimer] = useState(false);
   const [started, setStarted] = useState(false);
   const [handSlots, setHandSlots] = useState<Array<{ value: number; color: string }>>([]);
-  const [popAnim, setPopAnim] = useState<{ score: number; phase: "rise" | "exit" } | null>(null);
+  const [popAnim, setPopAnim] = useState<{ score: number; phase: "rise" | "hold" | "exit"; color: string } | null>(null);
   const rafRef = useRef<number>(0);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -560,10 +582,25 @@ export default function SnakePage() {
   const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
   const lastShownIntangibleRef = useRef(0);
   const popTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const speedBoostRef = useRef(false);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [comboFlash, setComboFlash] = useState<string | null>(null);
+  const comboFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onFoodEatenRef = useRef<(value: number) => void>(() => {});
   onFoodEatenRef.current = (value: number) => {
-    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    setHandSlots(prev => [{ value, color }, ...prev].slice(0, 5));
+    const color = VALUE_COLORS[value] ?? COLOR.textPrimary;
+    const next = [{ value, color }, ...handSlots].slice(0, 5);
+    const prevCombo = getComboName(handSlots.map(s => s.value));
+    const nextCombo = getComboName(next.map(s => s.value));
+    if (nextCombo && nextCombo !== prevCombo) {
+      hapticLight();
+      playSelect();
+      setComboFlash(nextCombo);
+      if (comboFlashTimerRef.current) clearTimeout(comboFlashTimerRef.current);
+      comboFlashTimerRef.current = setTimeout(() => setComboFlash(null), 1500);
+    }
+    setHandSlots(next);
   };
 
   useEffect(() => {
@@ -590,7 +627,7 @@ export default function SnakePage() {
     return () => ro.disconnect();
   }, []);
 
-  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, onFoodEatenRef);
+  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, onFoodEatenRef, speedBoostRef);
 
   // Render loop
   useEffect(() => {
@@ -662,6 +699,12 @@ export default function SnakePage() {
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     swipeFiredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      speedBoostRef.current = true;
+      longPressIntervalRef.current = setInterval(() => {
+        stateRef.current = { ...stateRef.current, score: Math.max(0, stateRef.current.score - 1) };
+      }, 100);
+    }, 200);
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
@@ -671,6 +714,9 @@ export default function SnakePage() {
     if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
     swipeFiredRef.current = true;
     touchRef.current = null;
+    if (longPressTimerRef.current) { clearTimeout(longPressTimerRef.current); longPressTimerRef.current = null; }
+    if (longPressIntervalRef.current) { clearInterval(longPressIntervalRef.current); longPressIntervalRef.current = null; }
+    speedBoostRef.current = false;
     const dir: Dir = Math.abs(dx) > Math.abs(dy)
       ? dx > 0 ? "right" : "left"
       : dy > 0 ? "down" : "up";
@@ -681,6 +727,9 @@ export default function SnakePage() {
   const onTouchEnd = useCallback(() => {
     touchRef.current = null;
     swipeFiredRef.current = false;
+    if (longPressTimerRef.current) { clearTimeout(longPressTimerRef.current); longPressTimerRef.current = null; }
+    if (longPressIntervalRef.current) { clearInterval(longPressIntervalRef.current); longPressIntervalRef.current = null; }
+    speedBoostRef.current = false;
   }, []);
 
   function handleTakeHand() {
@@ -689,10 +738,11 @@ export default function SnakePage() {
     stateRef.current = { ...stateRef.current, score: stateRef.current.score + handScore };
     setHandSlots([]);
     popTimersRef.current.forEach(clearTimeout);
-    setPopAnim({ score: handScore, phase: "rise" });
+    setPopAnim({ score: handScore, phase: "rise", color: COLORS[Math.floor(Math.random() * COLORS.length)] });
     popTimersRef.current = [
-      setTimeout(() => setPopAnim(p => p ? { ...p, phase: "exit" } : null), 260),
-      setTimeout(() => setPopAnim(null), 460),
+      setTimeout(() => setPopAnim(p => p ? { ...p, phase: "hold" } : null), 260),
+      setTimeout(() => setPopAnim(p => p ? { ...p, phase: "exit" } : null), 1260),
+      setTimeout(() => setPopAnim(null), 1460),
     ];
   }
 
@@ -704,7 +754,11 @@ export default function SnakePage() {
     setStarted(true);
     setHandSlots([]);
     setPopAnim(null);
+    setComboFlash(null);
     popTimersRef.current.forEach(clearTimeout);
+    if (comboFlashTimerRef.current) clearTimeout(comboFlashTimerRef.current);
+    if (longPressIntervalRef.current) { clearInterval(longPressIntervalRef.current); longPressIntervalRef.current = null; }
+    speedBoostRef.current = false;
     poppedDiceRef.current = [];
     prevPowerUpRef.current = null;
     lastShownIntangibleRef.current = 0;
@@ -782,7 +836,7 @@ export default function SnakePage() {
       </div>
 
       {/* Below-board panel */}
-      <div style={{ margin: 16, marginLeft: "auto", marginRight: "auto", width: "calc(100% - 32px)", maxWidth: 358, background: "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, flexShrink: 0, height: 56, position: "relative", overflow: "visible" }}>
+      <div style={{ marginTop: 64, marginBottom: 16, marginLeft: "auto", marginRight: "auto", width: "calc(100% - 32px)", maxWidth: 358, background: "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 8, flexShrink: 0, height: 56, position: "relative", overflow: "visible" }}>
         <div style={{ display: "flex", alignItems: "center", height: "100%", padding: 8, gap: 8 }}>
 
           {/* Score circle */}
@@ -805,26 +859,38 @@ export default function SnakePage() {
                 {slot ? (
                   <SlotDie value={slot.value} color={slot.color} />
                 ) : (
-                  <div style={{ width: 38, height: 38, borderRadius: 4, border: `1px solid ${COLOR.textPrimary}`, opacity: 0.3 }} />
+                  <div style={{ width: 40, height: 40, borderRadius: 4, border: `1px solid ${COLOR.textPrimary}`, opacity: 0.3 }} />
                 )}
               </div>
             );
           })}
 
           {/* Take hand button */}
-          <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <button
-              onClick={handleTakeHand}
-              style={{ width: 38, height: 38, background: "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 4, color: COLOR.textPrimary, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "inherit", lineHeight: 1 }}
-            >
-              +
-            </button>
-          </div>
+          {(() => {
+            const combo = getComboName(handSlots.map(s => s.value));
+            return (
+              <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <button
+                  onClick={handleTakeHand}
+                  style={{ width: 40, height: 40, background: combo ? COLOR.textPrimary : "#000", border: `1px solid ${COLOR.textPrimary}`, borderRadius: 4, color: combo ? COLOR.surfaceBg : COLOR.textPrimary, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "inherit", lineHeight: 1, transition: "background 150ms, color 150ms" }}
+                >
+                  +
+                </button>
+              </div>
+            );
+          })()}
         </div>
+
+        {/* Combo flash label */}
+        {comboFlash && (
+          <div style={{ position: "absolute", bottom: "calc(100% + 16px)", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 16, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, fontFamily: "inherit", letterSpacing: "0.06em", animation: "combo-flash 1500ms ease-in-out forwards" }}>
+            {comboFlash}
+          </div>
+        )}
 
         {/* Score pop animation */}
         {popAnim && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 20, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, fontFamily: "inherit", animation: popAnim.phase === "rise" ? "bank-score-rise 260ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" : "bank-score-exit 200ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" }}>
+          <div style={{ position: "absolute", bottom: "calc(100% + 16px)", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 32, fontWeight: WEIGHT.semibold, color: popAnim.color, fontFamily: "inherit", animation: popAnim.phase === "rise" ? "bank-score-rise 260ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" : popAnim.phase === "exit" ? "bank-score-exit 200ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards" : undefined }}>
             {popAnim.score}
           </div>
         )}
