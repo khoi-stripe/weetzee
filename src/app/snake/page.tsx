@@ -12,7 +12,7 @@ import { Scrim } from "@/components/ui/Scrim";
 import { DialogCard } from "@/components/ui/DialogCard";
 import { RoundButton } from "@/components/ui/RoundButton";
 import { PlayerChipStrip } from "@/components/ui/PlayerChipStrip";
-import { playSnakeEat, playSelect, playTap, playTurnChange, playCountdownTick, playSnakePowerUp, playSnakeDeath } from "@/lib/sounds";
+import { playSnakeEat, playSelect, playTap, playTurnChange, playCountdownTick, playSnakePowerUp, playSnakeDeath, playToggle } from "@/lib/sounds";
 import { hapticLight } from "@/lib/haptics";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -304,6 +304,7 @@ function drawFrame(
   snakeCanvas: HTMLCanvasElement,
   poppedDice: PoppedDie[],
   dpr: number,
+  wallsEnabled: boolean,
 ) {
   const w = cols * cell;
   const h = rows * cell;
@@ -323,7 +324,7 @@ function drawFrame(
   }
 
   // Walls
-  drawWalls(ctx, state.walls, state.snake.length, cols, rows, cell);
+  if (wallsEnabled) drawWalls(ctx, state.walls, state.snake.length, cols, rows, cell);
 
   // Food — colored to match slot color when eaten
   for (const food of state.foods) {
@@ -393,11 +394,13 @@ function drawFrame(
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
 
-function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>, expiredFoodsRef: React.MutableRefObject<Array<{ x: number; y: number; value: number; color: string }>>) {
+function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>, expiredFoodsRef: React.MutableRefObject<Array<{ x: number; y: number; value: number; color: string }>>) {
   const stateRef = useRef<GameState>(makeInitial(cols, rows));
   const prevSnakeRef = useRef<Point[]>(stateRef.current.snake);
   const lastTickRef = useRef(Date.now());
   const tickDurRef = useRef(TICK_MS);
+  const wallsEnabledRef = useRef(wallsEnabled);
+  useEffect(() => { wallsEnabledRef.current = wallsEnabled; }, [wallsEnabled]);
 
   // Reinitialize once when dimensions first become valid (initial state has cols=0,rows=0)
   const dimInitialized = useRef(false);
@@ -455,7 +458,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
           : s.walls;
         const now = Date.now();
         const intangible = now < s.intangibleUntil;
-        const hitWall = !intangible && newWalls.some(w =>
+        const hitWall = wallsEnabledRef.current && !intangible && newWalls.some(w =>
           wallCells(w, wallLength(snakeLen, w.side === "top" || w.side === "bottom" ? cols : rows), cols, rows)
             .some(c => c.x === head.x && c.y === head.y)
         );
@@ -699,6 +702,7 @@ function SlotDie({ value, color }: { value: number; color: string }) {
 }
 
 const HS_KEY = "weetzee-snake-highscore";
+const WALLS_KEY = "weetzee-snake-walls";
 
 function SnakePageContent() {
   const router = useRouter();
@@ -721,6 +725,7 @@ function SnakePageContent() {
   const startedRef = useRef(started);
   useEffect(() => { startedRef.current = started; }, [started]);
   const currentPlayerIdxRef = useRef(0);
+  const wallsEnabledRenderRef = useRef(true);
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const poppedDiceRef = useRef<PoppedDie[]>([]);
   const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
@@ -744,9 +749,13 @@ function SnakePageContent() {
     setHandSlots(next);
   };
 
+  const [wallsEnabled, setWallsEnabled] = useState(true);
+  useEffect(() => { wallsEnabledRenderRef.current = wallsEnabled; }, [wallsEnabled]);
   useEffect(() => {
     const stored = parseInt(localStorage.getItem(HS_KEY) ?? "0", 10);
     if (!isNaN(stored)) setHighScore(stored);
+    const walls = localStorage.getItem(WALLS_KEY);
+    if (walls !== null) setWallsEnabled(walls !== "0");
   }, []);
 
   // Countdown before game starts
@@ -781,7 +790,7 @@ function SnakePageContent() {
     return () => ro.disconnect();
   }, []);
 
-  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, onFoodEatenRef, expiredFoodsRef);
+  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, wallsEnabled, onFoodEatenRef, expiredFoodsRef);
 
   // Render loop
   useEffect(() => {
@@ -823,7 +832,7 @@ function SnakePageContent() {
         ctx!.fillStyle = COLOR.surfaceBg;
         ctx!.fillRect(0, 0, cols * cell, rows * cell);
       } else {
-        drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current, dpr);
+        drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current, dpr, wallsEnabledRenderRef.current);
       }
       setScore(s.score);
       if (s.over && !over) {
@@ -1025,6 +1034,21 @@ function SnakePageContent() {
             <button onClick={() => { playTap(); setShowInfo(false); }} className="absolute flex items-center justify-center pressable" style={{ fontSize: 24, fontWeight: WEIGHT.regular, right: 4, top: 2, padding: "8px 12px", background: "none", border: "none", color: COLOR.textPrimary, lineHeight: 1 }} aria-label="Close">×</button>
           </div>
           <div className="flex-1 overflow-y-auto selectable" style={{ padding: "0 24px 48px", fontSize: 14, lineHeight: 1.6, color: COLOR.textReadable, maxWidth: 640, margin: "0 auto", width: "100%" }}>
+            <div className="flex items-center justify-between" style={{ paddingBottom: 20, borderBottom: `1px solid ${COLOR.borderSubtle}`, marginBottom: 24 }}>
+              <span style={{ ...TYPE.body, color: COLOR.textPrimary }}>Walls</span>
+              <button
+                className="pressable"
+                onClick={() => {
+                  playToggle(!wallsEnabled);
+                  const next = !wallsEnabled;
+                  setWallsEnabled(next);
+                  localStorage.setItem(WALLS_KEY, next ? "1" : "0");
+                }}
+                style={{ background: wallsEnabled ? COLOR.textPrimary : "transparent", border: `1px solid ${COLOR.textPrimary}`, color: wallsEnabled ? COLOR.surfaceBg : COLOR.textPrimary, fontFamily: "inherit", fontSize: 13, cursor: "pointer", padding: "6px 16px", borderRadius: 9999 }}
+              >
+                {wallsEnabled ? "On" : "Off"}
+              </button>
+            </div>
             <SnakeRules />
           </div>
         </div>
