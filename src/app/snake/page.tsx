@@ -1079,7 +1079,7 @@ function SnakePageContent() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0, gap: 8 }}>
         <button
-          onClick={() => { playTap(); if (started && !over) { setShowExitConfirm(true); } else { router.push("/"); } }}
+          onClick={() => { playTap(); if (started && !over) { setShowExitConfirm(true); } else { router.push(`/ruleset?players=${playerCount}`); } }}
           style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
         >
           Exit
@@ -1104,7 +1104,7 @@ function SnakePageContent() {
         {/* Start prompt */}
         {!started && !over && countdown === null && mpPhase === "playing" && (
           <Scrim position="fixed" zIndex={Z.interstitial}>
-            <button onClick={() => { playTap(); router.push("/"); }} style={EXIT_BTN_STYLE}>Exit</button>
+            <button onClick={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }} style={EXIT_BTN_STYLE}>Exit</button>
             <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
@@ -1132,7 +1132,7 @@ function SnakePageContent() {
         {/* Single-player game over */}
         {over && playerCount === 1 && (
           <Scrim zIndex={Z.interstitial}>
-            <button onClick={() => { playTap(); router.push("/"); }} style={EXIT_BTN_STYLE}>Exit</button>
+            <button onClick={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }} style={EXIT_BTN_STYLE}>Exit</button>
             <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
@@ -1164,7 +1164,7 @@ function SnakePageContent() {
             score={playerScores[currentPlayerIdx]}
             nextPlayer={players[currentPlayerIdx + 1]}
             onContinue={handlePassToNext}
-            onExit={() => { playTap(); router.push("/"); }}
+            onExit={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }}
             exiting={scoreScreenExiting}
           />
         )}
@@ -1185,7 +1185,7 @@ function SnakePageContent() {
           const winner = ranked[0];
           return (
             <Scrim zIndex={Z.interstitial}>
-              <button onClick={() => { playTap(); router.push("/"); }} style={EXIT_BTN_STYLE}>Exit</button>
+              <button onClick={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }} style={EXIT_BTN_STYLE}>Exit</button>
               <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
               <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
                 <div className="snake-modal-border" />
