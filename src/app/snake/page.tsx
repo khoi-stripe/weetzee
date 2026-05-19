@@ -20,7 +20,11 @@ import { hapticLight } from "@/lib/haptics";
 const COLORS = PLAYER_COLORS;
 const SPIN_MS = 10000;
 const TICK_MS = 150;
-const FOOD_COUNT = 5;
+const MOBILE_FOOD_COUNT = 5;
+const MOBILE_AREA = 432; // ~16×27 cells on a phone
+function computeFoodCount(cols: number, rows: number) {
+  return Math.max(MOBILE_FOOD_COUNT, Math.round(MOBILE_FOOD_COUNT * Math.sqrt((cols * rows) / MOBILE_AREA)));
+}
 const FOOD_LIFETIME = 10000;
 const RADIUS_RATIO = 0.25; // segment corner radius as fraction of cell size
 
@@ -46,6 +50,7 @@ type GameState = {
   dir: Dir;
   nextDir: Dir;
   foods: Food[];
+  foodCount: number;
   score: number;
   over: boolean;
   walls: Wall[];
@@ -117,8 +122,9 @@ function makeInitial(cols: number, rows: number): GameState {
   const now = Date.now();
   const mid = { x: Math.floor(cols / 2), y: Math.floor(rows / 2) };
   const snake = [mid, { x: mid.x - 1, y: mid.y }, { x: mid.x - 2, y: mid.y }];
+  const foodCount = computeFoodCount(cols, rows);
   const foods: Food[] = [];
-  for (let i = 0; i < FOOD_COUNT; i++) {
+  for (let i = 0; i < foodCount; i++) {
     foods.push(randomFood([...snake, ...foods], cols, rows, now));
   }
   const walls: Wall[] = [
@@ -127,7 +133,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "" };
+  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "" };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -494,6 +500,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, onFoodEatenRe
             dir,
             nextDir: dir,
             foods: newFoods,
+            foodCount: s.foodCount,
             score: s.score,
             over: false,
             walls: newWalls,
