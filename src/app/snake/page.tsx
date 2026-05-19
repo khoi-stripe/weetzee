@@ -713,21 +713,18 @@ export default function SnakePage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [steer, started]);
 
-  // Touch swipe — fires on move once threshold exceeded, not on lift
-  const swipeFiredRef = useRef(false);
-
+  // Touch swipe — fires on move once threshold exceeded; resets origin after
+  // each swipe so chained gestures work without lifting the finger.
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    swipeFiredRef.current = false;
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchRef.current || swipeFiredRef.current) return;
+    if (!touchRef.current) return;
     const dx = e.touches[0].clientX - touchRef.current.x;
     const dy = e.touches[0].clientY - touchRef.current.y;
     if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-    swipeFiredRef.current = true;
-    touchRef.current = null;
+    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     const dir: Dir = Math.abs(dx) > Math.abs(dy)
       ? dx > 0 ? "right" : "left"
       : dy > 0 ? "down" : "up";
@@ -737,7 +734,6 @@ export default function SnakePage() {
 
   const onTouchEnd = useCallback(() => {
     touchRef.current = null;
-    swipeFiredRef.current = false;
   }, []);
 
   function handleTakeHand() {
