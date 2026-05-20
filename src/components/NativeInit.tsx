@@ -11,6 +11,8 @@ export function NativeInit() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
+    document.documentElement.classList.add("native");
+
     import("@capacitor/splash-screen").then(({ SplashScreen }) => {
       SplashScreen.hide({ fadeOutDuration: 0 });
     }).catch(() => {});
