@@ -11,8 +11,6 @@ import { playTap, playToggle } from "@/lib/sounds";
 import { TYPE } from "@/lib/type";
 import { RoundButton } from "@/components/ui/RoundButton";
 
-const TITLE_RESERVE = 48;
-
 
 export function PlayerSelector({
   title,
@@ -34,24 +32,19 @@ export function PlayerSelector({
   colors?: string[];
 }) {
   const playerColors = colors ?? getPlayerColors();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const gridAreaRef = useRef<HTMLDivElement>(null);
   const ITEM_COUNT = max + 1;
   const [layout, setLayout] = useState({ cols: 1, rows: ITEM_COUNT, cellSize: 0 });
   const GAP = 16;
 
   useEffect(() => {
-    const el = containerRef.current;
+    const el = gridAreaRef.current;
     if (!el) return;
 
     function measure() {
       const { width, height } = el!.getBoundingClientRect();
       if (width === 0 || height === 0) return;
-      setLayout(computeSquareGridLayout(
-        width - GAP * 2,
-        height - GAP * 2 - TITLE_RESERVE,
-        ITEM_COUNT,
-        GAP
-      ));
+      setLayout(computeSquareGridLayout(width, height, ITEM_COUNT, GAP));
     }
 
     const raf = requestAnimationFrame(measure);
@@ -107,9 +100,8 @@ export function PlayerSelector({
 
   return (
     <div
-      ref={containerRef}
-      className="flex flex-col items-center justify-center"
-      style={{ flex: 1, minHeight: 0, width: "100%", padding: 20, gap: 24 }}
+      className="flex flex-col items-center"
+      style={{ flex: 1, minHeight: 0, width: "100%", padding: 20, gap: 16 }}
     >
       <div className="shrink-0" style={{ textAlign: "center", width: gridW }}>
         <p
@@ -124,72 +116,79 @@ export function PlayerSelector({
         </p>
       </div>
 
+      {/* Grid area: takes all remaining space — measured directly for layout */}
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: layout.cellSize > 0
-            ? `repeat(${layout.cols}, ${layout.cellSize}px)`
-            : `repeat(1, 1fr)`,
-          gridTemplateRows: layout.cellSize > 0
-            ? `repeat(${layout.rows}, ${layout.cellSize}px)`
-            : `repeat(${ITEM_COUNT}, 1fr)`,
-          gap: GAP,
-        }}
+        ref={gridAreaRef}
+        className="flex items-center justify-center"
+        style={{ flex: 1, minHeight: 0, width: "100%" }}
       >
-        {Array.from({ length: max }, (_, i) => {
-          const playerNum = i + 1;
-          const isSelected = playerNum <= count;
-          const isCpu = cpuPlayers?.has(i) ?? false;
-          const color = playerColors[i] ?? COLOR.textPrimary;
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: layout.cellSize > 0
+              ? `repeat(${layout.cols}, ${layout.cellSize}px)`
+              : `repeat(1, 1fr)`,
+            gridTemplateRows: layout.cellSize > 0
+              ? `repeat(${layout.rows}, ${layout.cellSize}px)`
+              : `repeat(${ITEM_COUNT}, 1fr)`,
+            gap: GAP,
+          }}
+        >
+          {Array.from({ length: max }, (_, i) => {
+            const playerNum = i + 1;
+            const isSelected = playerNum <= count;
+            const isCpu = cpuPlayers?.has(i) ?? false;
+            const color = playerColors[i] ?? COLOR.textPrimary;
 
-          return (
-            <div
-              key={i}
-              style={{
-                width: layout.cellSize || "100%",
-                height: layout.cellSize || "100%",
-                position: "relative",
-                transform: pressedIndex === i ? "scale(0.88)" : "scale(1)",
-                transition: pressedIndex === i
-                  ? "transform 400ms cubic-bezier(0.2, 0, 0.2, 1)"
-                  : `transform 200ms ${EASE.spring}`,
-              }}
-              onPointerDown={() => handlePointerDown(i)}
-              onPointerUp={() => handlePointerUp(i)}
-              onPointerCancel={handlePointerCancel}
-              onPointerLeave={handlePointerCancel}
-            >
-              <Die
-                value={playerNum}
-                held={isSelected}
-                heldColor={color}
-                label={isCpu && isSelected ? "CPU" : undefined}
-              />
-              {isCpu && isSelected && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "4%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "20%",
-                    height: "20%",
-                    borderRadius: "50%",
-                    background: color,
-                    opacity: 0.6,
-                  }}
+            return (
+              <div
+                key={i}
+                style={{
+                  width: layout.cellSize || "100%",
+                  height: layout.cellSize || "100%",
+                  position: "relative",
+                  transform: pressedIndex === i ? "scale(0.88)" : "scale(1)",
+                  transition: pressedIndex === i
+                    ? "transform 400ms cubic-bezier(0.2, 0, 0.2, 1)"
+                    : `transform 200ms ${EASE.spring}`,
+                }}
+                onPointerDown={() => handlePointerDown(i)}
+                onPointerUp={() => handlePointerUp(i)}
+                onPointerCancel={handlePointerCancel}
+                onPointerLeave={handlePointerCancel}
+              >
+                <Die
+                  value={playerNum}
+                  held={isSelected}
+                  heldColor={color}
+                  label={isCpu && isSelected ? "CPU" : undefined}
                 />
-              )}
-            </div>
-          );
-        })}
-        <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
-          <RoundButton
-            onClick={onNext}
-            style={{ width: "100%", height: "100%", fontSize: "clamp(9px, 8cqi, 100px)" }}
-          >
-            Next
-          </RoundButton>
+                {isCpu && isSelected && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "4%",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: "20%",
+                      height: "20%",
+                      borderRadius: "50%",
+                      background: color,
+                      opacity: 0.6,
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+          <div style={{ width: layout.cellSize || "100%", height: layout.cellSize || "100%", containerType: "inline-size" }}>
+            <RoundButton
+              onClick={onNext}
+              style={{ width: "100%", height: "100%", fontSize: "clamp(9px, 8cqi, 100px)" }}
+            >
+              Next
+            </RoundButton>
+          </div>
         </div>
       </div>
 

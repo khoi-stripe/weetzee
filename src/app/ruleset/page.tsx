@@ -16,7 +16,6 @@ import { DialogCard } from "@/components/ui/DialogCard";
 const SNAKE_EYES_RULESET = { id: "snake", name: "Snake Eyes" };
 const ALL_GAME_OPTIONS = [...VISIBLE_RULESETS, SNAKE_EYES_RULESET];
 const ITEM_COUNT = ALL_GAME_OPTIONS.length + 1;
-const TITLE_RESERVE = 48;
 
 
 function RulesetContent() {
@@ -26,22 +25,17 @@ function RulesetContent() {
   const [rulesetId, setRulesetId] = useState("farkle");
   const [showCpuWarning, setShowCpuWarning] = useState(false);
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const gridAreaRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState({ cols: 2, rows: 3, cellSize: 0 });
   const GAP = 16;
 
   useEffect(() => {
-    const el = containerRef.current;
+    const el = gridAreaRef.current;
     if (!el) return;
     function measure() {
       const { width, height } = el!.getBoundingClientRect();
       if (width === 0 || height === 0) return;
-      setLayout(computeSquareGridLayout(
-        width - GAP * 2,
-        height - GAP * 2 - TITLE_RESERVE,
-        ITEM_COUNT,
-        GAP
-      ));
+      setLayout(computeSquareGridLayout(width, height, ITEM_COUNT, GAP));
     }
     const raf = requestAnimationFrame(measure);
     const ro = new ResizeObserver(measure);
@@ -76,9 +70,8 @@ function RulesetContent() {
       <Header showBack={true} backLabel="Back" showAllRulesets />
 
       <div
-        ref={containerRef}
-        className="flex flex-col flex-1 min-h-0 items-center justify-center"
-        style={{ padding: 20, gap: 24 }}
+        className="flex flex-col flex-1 min-h-0 items-center"
+        style={{ padding: 20, gap: 16 }}
       >
         <p
           className="shrink-0"
@@ -94,6 +87,11 @@ function RulesetContent() {
           Choose game
         </p>
 
+        {/* Grid area: measured directly so cells use all available space */}
+        <div
+          ref={gridAreaRef}
+          className="flex flex-1 min-h-0 items-center justify-center w-full"
+        >
         <div
           style={{
             display: "grid",
@@ -133,6 +131,7 @@ function RulesetContent() {
               Start
             </RoundButton>
           </div>
+        </div>
         </div>
       </div>
 
