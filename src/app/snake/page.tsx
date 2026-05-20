@@ -724,8 +724,7 @@ function SnakePageContent() {
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const startedRef = useRef(started);
   useEffect(() => { startedRef.current = started; }, [started]);
-  const [isDesktop, setIsDesktop] = useState(false);
-  useEffect(() => { setIsDesktop(window.matchMedia("(pointer: fine)").matches); }, []);
+  const isDesktop = typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const handleTakeHandRef = useRef<() => void>(() => {});
   const currentPlayerIdxRef = useRef(0);
   const wallsEnabledRenderRef = useRef(false);
