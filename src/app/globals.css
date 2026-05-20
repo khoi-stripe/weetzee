@@ -58,27 +58,6 @@ html {
 }
 
 body {
-  height: 100dvh;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* iOS Safari PWA standalone: 100dvh already excludes the status bar, so
-   env(safe-area-inset-top) would double-subtract it. Zero it out here. */
-@media (display-mode: standalone) {
-  body {
-    padding-top: 0;
-  }
-}
-
-/* Capacitor native also matches display-mode:standalone, so restore padding. */
-html.native body {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
-body {
   overflow: hidden;
   overscroll-behavior: none;
   background: var(--surface-bg);
