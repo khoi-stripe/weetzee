@@ -124,7 +124,7 @@ export function useAI(
         }
       } catch (err) {
         if (err !== CANCELLED) {
-          // Unexpected error — clear pending action so the UI doesn't lock.
+          console.error("[useAI] Unexpected error:", err);
           setAIPendingAction(null);
         }
       }

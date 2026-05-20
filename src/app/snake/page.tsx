@@ -724,7 +724,7 @@ function SnakePageContent() {
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const startedRef = useRef(started);
   useEffect(() => { startedRef.current = started; }, [started]);
-  const isDesktop = typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const isDesktop = useRef(typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches).current;
   const handleTakeHandRef = useRef<() => void>(() => {});
   const currentPlayerIdxRef = useRef(0);
   const wallsEnabledRenderRef = useRef(false);
@@ -739,8 +739,9 @@ function SnakePageContent() {
   onFoodEatenRef.current = (value: number) => {
     const color = VALUE_COLORS[value] ?? COLOR.textPrimary;
     const next = [{ value, color }, ...handSlots].slice(0, 5);
-    const prevCombo = getComboName(handSlots.map(s => s.value));
-    const nextCombo = getComboName(next.map(s => s.value));
+    const prevValues = handSlots.map(s => s.value);
+    const prevCombo = getComboName(prevValues);
+    const nextCombo = getComboName([value, ...prevValues].slice(0, 5));
     if (nextCombo && nextCombo !== prevCombo) {
       hapticLight();
       playSelect();
