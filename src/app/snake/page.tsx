@@ -555,15 +555,15 @@ function SnakeRulesSection({ title, children }: { title: string; children: React
   );
 }
 
-function SnakeRules() {
+function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
   return (
     <>
       <SnakeRulesSection title="How to play">
-        <p>Swipe to steer the snake around the board. Eat the colored dice to collect them into your hand. Once you have a scoring combo, tap the score panel to bank your points.</p>
+        <p>{isDesktop ? "Use arrow keys or WASD to steer the snake." : "Swipe to steer the snake around the board."} Eat the colored dice to collect them into your hand. Once you have a scoring combo, {isDesktop ? "press Space" : "tap the score panel"} to bank your points.</p>
       </SnakeRulesSection>
 
       <SnakeRulesSection title="Scoring">
-        <p>Your hand holds up to 5 dice. When they form a recognized combo, the score panel starts flashing — tap it to take the points and clear your hand.</p>
+        <p>Your hand holds up to 5 dice. When they form a recognized combo, the score panel starts flashing — {isDesktop ? "press Space" : "tap it"} to take the points and clear your hand.</p>
         <div style={{ marginTop: 10 }}>
           <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>3 of a kind</span>
           <span style={{ color: "rgba(255,255,255,0.5)" }}> — sum of all dice</span>
@@ -724,6 +724,9 @@ function SnakePageContent() {
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const startedRef = useRef(started);
   useEffect(() => { startedRef.current = started; }, [started]);
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => { setIsDesktop(window.matchMedia("(pointer: fine)").matches); }, []);
+  const handleTakeHandRef = useRef<() => void>(() => {});
   const currentPlayerIdxRef = useRef(0);
   const wallsEnabledRenderRef = useRef(false);
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -869,6 +872,7 @@ function SnakePageContent() {
       w: "up", s: "down", a: "left", d: "right",
     };
     function onKey(e: KeyboardEvent) {
+      if (e.key === " ") { e.preventDefault(); handleTakeHandRef.current(); return; }
       const dir = MAP[e.key];
       if (!dir) return;
       e.preventDefault();
@@ -934,6 +938,7 @@ function SnakePageContent() {
   const [interstitialExiting, setInterstitialExiting] = useState(false);
   const [scoreScreenExiting, setScoreScreenExiting] = useState(false);
 
+  handleTakeHandRef.current = handleTakeHand;
   function handleTakeHand() {
     if (handSlots.length === 0) return;
     const handScore = scoreSnakeHand(handSlots.map(s => s.value));
@@ -1041,7 +1046,7 @@ function SnakePageContent() {
             <div style={{ ...TYPE.headline, color: COLOR.textPrimary, paddingBottom: 16, borderBottom: `1px solid ${COLOR.borderSubtle}`, marginBottom: 0 }}>
               Playing Snake Eyes
             </div>
-            <SnakeRules />
+            <SnakeRules isDesktop={isDesktop} />
             <div style={{ marginTop: 32, borderTop: `1px solid ${COLOR.borderSubtle}`, paddingTop: 24 }}>
               <h3 style={{ ...TYPE.headline, color: COLOR.textPrimary, marginBottom: 12 }}>
                 House rules
@@ -1256,7 +1261,7 @@ function SnakePageContent() {
         {/* Tap to take label */}
         {currentCombo && (
           <div style={{ position: "absolute", bottom: "calc(100% + 8px)", left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", fontSize: 13, fontWeight: WEIGHT.regular, color: COLOR.textPrimary, fontFamily: "inherit", letterSpacing: "0.06em" }}>
-            Tap to take score
+            {isDesktop ? "Space to bank" : "Tap to bank"}
           </div>
         )}
 
