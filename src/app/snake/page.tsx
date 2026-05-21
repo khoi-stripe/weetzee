@@ -216,11 +216,28 @@ function holeScale(hole: HolePair, now: number): number {
   return 1;
 }
 
-function drawHole(ctx: CanvasRenderingContext2D, x: number, y: number, cell: number, scale: number) {
+const HOLE_RING_PERIOD = 1800;
+const HOLE_RING_EXPAND = 0.55; // ring expands to r + cell * HOLE_RING_EXPAND
+
+function drawHole(ctx: CanvasRenderingContext2D, x: number, y: number, cell: number, scale: number, now: number) {
   if (scale <= 0) return;
   const cx = x * cell + cell / 2;
   const cy = y * cell + cell / 2;
   const r = cell * 0.4;
+  // Emit two rings staggered by half a period
+  for (let i = 0; i < 2; i++) {
+    const phase = ((now + i * HOLE_RING_PERIOD / 2) % HOLE_RING_PERIOD) / HOLE_RING_PERIOD;
+    const ringR = r + cell * HOLE_RING_EXPAND * phase;
+    const alpha = (1 - phase) * 0.45 * scale;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+    ctx.strokeStyle = COLOR.textPrimary;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
   const innerR = r * 0.5;
   ctx.save();
   ctx.translate(cx, cy);
@@ -384,8 +401,8 @@ function drawFrame(
   // Holes — paired portals that scale in/out
   if (state.holes) {
     const sc = holeScale(state.holes, now);
-    drawHole(ctx, state.holes.a.x, state.holes.a.y, cell, sc);
-    drawHole(ctx, state.holes.b.x, state.holes.b.y, cell, sc);
+    drawHole(ctx, state.holes.a.x, state.holes.a.y, cell, sc, now);
+    drawHole(ctx, state.holes.b.x, state.holes.b.y, cell, sc, now);
   }
 
   // Power-up dice — ghost: hollow static; diet: hollow 1, spinning
@@ -747,6 +764,41 @@ function LegendDie({ value, spin = false, pulse = false }: { value: number; spin
   return <canvas ref={canvasRef} style={{ display: "block", width: CANVAS_SIZE, height: CANVAS_SIZE, flexShrink: 0 }} />;
 }
 
+function LegendHole() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Ring expands to CELL/2 + CELL*HOLE_RING_EXPAND from center; add 4px padding.
+  const CELL = 32;
+  const MAX_RING_R = CELL * 0.4 + CELL * HOLE_RING_EXPAND;
+  const CANVAS_SIZE = Math.ceil(MAX_RING_R * 2) + 8;
+  const animRef = useRef<number>(0);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = CANVAS_SIZE * dpr;
+    canvas.height = CANVAS_SIZE * dpr;
+    ctx.scale(dpr, dpr);
+    let running = true;
+    function frame() {
+      if (!running) return;
+      ctx!.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      // drawHole expects grid coords; draw at cell (0,0) with the canvas offset so center lands at CANVAS_SIZE/2
+      const offsetX = CANVAS_SIZE / 2 - CELL / 2;
+      const offsetY = CANVAS_SIZE / 2 - CELL / 2;
+      ctx!.save();
+      ctx!.translate(offsetX, offsetY);
+      drawHole(ctx!, 0, 0, CELL, 1, Date.now());
+      ctx!.restore();
+      animRef.current = requestAnimationFrame(frame);
+    }
+    frame();
+    return () => { running = false; cancelAnimationFrame(animRef.current); };
+  }, [CANVAS_SIZE, CELL]);
+  return <canvas ref={canvasRef} style={{ display: "block", width: CANVAS_SIZE, height: CANVAS_SIZE, flexShrink: 0 }} />;
+}
+
 function SnakeRulesSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 24 }}>
@@ -798,7 +850,10 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
       </SnakeRulesSection>
 
       <SnakeRulesSection title="Holes">
-        <p>When enabled, pairs of portals periodically open on the board. Entering one teleports the snake to the other. Holes scale open and closed — you can only pass through when they're fully open.</p>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <LegendHole />
+          <p style={{ margin: 0 }}>When enabled, pairs of portals periodically open on the board. Entering one teleports the snake to the other.</p>
+        </div>
       </SnakeRulesSection>
 
       <SnakeRulesSection title="Power-ups">
