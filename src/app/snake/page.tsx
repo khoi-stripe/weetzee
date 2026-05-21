@@ -552,8 +552,8 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
         let teleporting = false;
         let head: Point;
         if (s.pendingTeleport) {
-          const raw = step(s.pendingTeleport, dir);
-          head = { x: ((raw.x % cols) + cols) % cols, y: ((raw.y % rows) + rows) % rows };
+          // Place head at exit cell itself — it will step forward next tick
+          head = { x: s.pendingTeleport.x, y: s.pendingTeleport.y };
           teleporting = true;
         } else {
           const raw = step(s.snake[0], dir);
