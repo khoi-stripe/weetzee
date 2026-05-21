@@ -294,12 +294,15 @@ function drawSnake(
     return lerp(prev.y, curr.y) * cell + cell / 2;
   };
   const outerW = cell * 0.78;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
+  const r = outerW / 2;
+
+  // Pass 1: segments with butt caps — no round-cap protrusion at corners
+  ctx.lineCap = "butt";
   ctx.lineWidth = outerW;
   for (let i = len - 1; i >= 1; i--) {
     const x1 = lx(i), y1 = ly(i), x2 = lx(i - 1), y2 = ly(i - 1);
     if (Math.abs(x2 - x1) > cell || Math.abs(y2 - y1) > cell) continue;
+    if (x1 === x2 && y1 === y2) continue;
     const grad = ctx.createLinearGradient(x1, y1, x2, y2);
     grad.addColorStop(0, snakeColor(segmentFrac(i, len, now)));
     grad.addColorStop(1, snakeColor(segmentFrac(i - 1, len, now)));
@@ -309,13 +312,27 @@ function drawSnake(
     ctx.lineTo(x2, y2);
     ctx.stroke();
   }
+
+  // Pass 2: filled circle at every joint — fills corner gaps left by butt caps
+  for (let i = len - 1; i >= 0; i--) {
+    const x = lx(i), y = ly(i);
+    const toPrev = i >= 1     && Math.abs(lx(i - 1) - x) <= cell && Math.abs(ly(i - 1) - y) <= cell;
+    const toNext = i < len - 1 && Math.abs(lx(i + 1) - x) <= cell && Math.abs(ly(i + 1) - y) <= cell;
+    if (!toPrev && !toNext) continue;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = snakeColor(segmentFrac(i, len, now));
+    ctx.fill();
+  }
+
+  // Head and tail rounded squares on top
   ctx.beginPath();
   ctx.fillStyle = snakeColor(segmentFrac(0, len, now));
-  roundedRect(ctx, lx(0) - outerW / 2, ly(0) - outerW / 2, outerW, outerW, 4);
+  roundedRect(ctx, lx(0) - r, ly(0) - r, outerW, outerW, 4);
   ctx.fill();
   ctx.beginPath();
   ctx.fillStyle = snakeColor(segmentFrac(len - 1, len, now));
-  roundedRect(ctx, lx(len - 1) - outerW / 2, ly(len - 1) - outerW / 2, outerW, outerW, 4);
+  roundedRect(ctx, lx(len - 1) - r, ly(len - 1) - r, outerW, outerW, 4);
   ctx.fill();
 }
 
