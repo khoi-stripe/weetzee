@@ -1248,12 +1248,16 @@ function SnakePageContent() {
     const handScore = scoreSnakeHand(handSlots.map(s => s.value));
     stateRef.current = { ...stateRef.current, score: stateRef.current.score + handScore };
     setHandSlots([]);
+    // Clear labels above the panel before the score number rises
+    if (comboFlashTimerRef.current) clearTimeout(comboFlashTimerRef.current);
+    setComboFlash(null);
     popTimersRef.current.forEach(clearTimeout);
-    setPopAnim({ score: handScore, phase: "rise", color: COLOR.textPrimary });
+    setPopAnim(null);
     popTimersRef.current = [
-      setTimeout(() => setPopAnim(p => p ? { ...p, phase: "hold" } : null), 260),
-      setTimeout(() => setPopAnim(p => p ? { ...p, phase: "exit" } : null), 1260),
-      setTimeout(() => setPopAnim(null), 1460),
+      setTimeout(() => setPopAnim({ score: handScore, phase: "rise", color: COLOR.textPrimary }), 60),
+      setTimeout(() => setPopAnim(p => p ? { ...p, phase: "hold" } : null), 320),
+      setTimeout(() => setPopAnim(p => p ? { ...p, phase: "exit" } : null), 1320),
+      setTimeout(() => setPopAnim(null), 1520),
     ];
   }
 
