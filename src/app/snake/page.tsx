@@ -346,7 +346,15 @@ function drawFrame(
       drawDie(ctx, 0, 0, cell, 1);
       ctx.restore();
     } else {
-      drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value);
+      const pulse = 1.0 + 0.1 * Math.sin(now * Math.PI * 2 / 900);
+      const cx = pu.x * cell + cell / 2;
+      const cy = pu.y * cell + cell / 2;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(pulse, pulse);
+      ctx.translate(-cell / 2, -cell / 2);
+      drawDie(ctx, 0, 0, cell, pu.value);
+      ctx.restore();
     }
   }
 
