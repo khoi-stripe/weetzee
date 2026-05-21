@@ -1112,6 +1112,16 @@ function SnakePageContent() {
     };
     function onKey(e: KeyboardEvent) {
       if (e.key === " ") { e.preventDefault(); handleTakeHandRef.current(); return; }
+      if (e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        if (started && !over) setPaused(p => !p);
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (!started && !over) setStarted(true);
+        return;
+      }
       const dir = MAP[e.key];
       if (!dir) return;
       e.preventDefault();
@@ -1120,7 +1130,7 @@ function SnakePageContent() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [steer, started]);
+  }, [steer, started, over, setPaused]);
 
   // Native (non-passive) touch handlers — assigned each render so closures stay fresh.
   const nativeTouchRef = useRef<{
