@@ -259,31 +259,61 @@ function drawHole(ctx: CanvasRenderingContext2D, x: number, y: number, cell: num
 
 const SLOW_COLOR = "#60a5fa"; // blue-400
 
+// Drawn from hourglass.svg (24×24 viewBox). cx/cy = center, size = target px size.
 function drawHourglass(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, alpha = 1) {
-  const w = size * 0.42;
-  const h = size * 0.46;
-  const neckH = size * 0.08;
+  const s = size / 24;
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.fillStyle = SLOW_COLOR;
-  // Top triangle
+  ctx.strokeStyle = SLOW_COLOR;
+  ctx.lineWidth = Math.max(0.5, s);
+  ctx.translate(cx - size / 2, cy - size / 2);
+
+  // Top horizontal bar  (rect x=4 y=2 w=16 h=1)
+  ctx.fillRect(4 * s, 2 * s, 16 * s, s);
+  // Bottom horizontal bar  (rect x=4 y=21 w=16 h=1, derived from rotated rect)
+  ctx.fillRect(4 * s, 21 * s, 16 * s, s);
+
+  // Top outline (stroke only)
   ctx.beginPath();
-  ctx.moveTo(cx - w, cy - h);
-  ctx.lineTo(cx + w, cy - h);
-  ctx.lineTo(cx, cy - neckH);
+  ctx.moveTo(18.4355 * s, 3.5 * s);
+  ctx.bezierCurveTo(18.2933 * s, 4.45164 * s, 17.9577 * s, 5.77865 * s, 17.333 * s, 7.1416 * s);
+  ctx.bezierCurveTo(16.597 * s, 8.74733 * s, 15.4764 * s, 10.3695 * s, 13.8428 * s, 11.5 * s);
+  ctx.lineTo(10.1572 * s, 11.5 * s);
+  ctx.bezierCurveTo(8.5236 * s, 10.3695 * s, 7.40295 * s, 8.74733 * s, 6.66699 * s, 7.1416 * s);
+  ctx.bezierCurveTo(6.04231 * s, 5.77865 * s, 5.70674 * s, 4.45164 * s, 5.56445 * s, 3.5 * s);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Bottom outline (stroke only)
+  ctx.beginPath();
+  ctx.moveTo(5.56445 * s, 20.5 * s);
+  ctx.bezierCurveTo(5.70674 * s, 19.5484 * s, 6.04231 * s, 18.2214 * s, 6.66699 * s, 16.8584 * s);
+  ctx.bezierCurveTo(7.40295 * s, 15.2527 * s, 8.5236 * s, 13.6305 * s, 10.1572 * s, 12.5 * s);
+  ctx.lineTo(13.8428 * s, 12.5 * s);
+  ctx.bezierCurveTo(15.4764 * s, 13.6305 * s, 16.597 * s, 15.2527 * s, 17.333 * s, 16.8584 * s);
+  ctx.bezierCurveTo(17.9577 * s, 18.2214 * s, 18.2933 * s, 19.5484 * s, 18.4355 * s, 20.5 * s);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Top filled funnel
+  ctx.beginPath();
+  ctx.moveTo(17.9424 * s, 7 * s);
+  ctx.bezierCurveTo(17.1719 * s, 8.80659 * s, 15.9239 * s, 10.7174 * s, 14 * s, 12 * s);
+  ctx.lineTo(10 * s, 12 * s);
+  ctx.bezierCurveTo(8.07614 * s, 10.7174 * s, 6.82809 * s, 8.80659 * s, 6.05762 * s, 7 * s);
   ctx.closePath();
   ctx.fill();
-  // Bottom triangle
+
+  // Bottom filled funnel
   ctx.beginPath();
-  ctx.moveTo(cx - w, cy + h);
-  ctx.lineTo(cx + w, cy + h);
-  ctx.lineTo(cx, cy + neckH);
+  ctx.moveTo(18.3242 * s, 18 * s);
+  ctx.bezierCurveTo(18.7336 * s, 19.1913 * s, 18.9391 * s, 20.269 * s, 19 * s, 21 * s);
+  ctx.lineTo(5 * s, 21 * s);
+  ctx.bezierCurveTo(5.06092 * s, 20.269 * s, 5.26638 * s, 19.1913 * s, 5.67578 * s, 18 * s);
   ctx.closePath();
   ctx.fill();
-  // Neck dot
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.06, 0, Math.PI * 2);
-  ctx.fill();
+
   ctx.restore();
 }
 
