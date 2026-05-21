@@ -69,6 +69,7 @@ type GameState = {
   holes: HolePair | null;
   nextHoleTime: number;
   holeCooldown: number;
+  pendingTeleport: Point | null;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -143,7 +144,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0 };
+  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0, pendingTeleport: null };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -262,13 +263,17 @@ function drawSnake(
   const lx = (i: number) => {
     const prev = prevSnake[i];
     const curr = state.snake[i];
-    if (!prev || Math.abs(curr.x - prev.x) > 1) return curr.x * cell + cell / 2;
+    if (!prev) return curr.x * cell + cell / 2;
+    const dx = curr.x - prev.x, dy = curr.y - prev.y;
+    if (dx * dx + dy * dy > 1) return curr.x * cell + cell / 2;
     return lerp(prev.x, curr.x) * cell + cell / 2;
   };
   const ly = (i: number) => {
     const prev = prevSnake[i];
     const curr = state.snake[i];
-    if (!prev || Math.abs(curr.y - prev.y) > 1) return curr.y * cell + cell / 2;
+    if (!prev) return curr.y * cell + cell / 2;
+    const dx = curr.x - prev.x, dy = curr.y - prev.y;
+    if (dx * dx + dy * dy > 1) return curr.y * cell + cell / 2;
     return lerp(prev.y, curr.y) * cell + cell / 2;
   };
   const outerW = cell * 0.78;
@@ -543,20 +548,24 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
       if (!s.over) {
         const now = Date.now();
         const dir = s.nextDir;
-        const raw = step(s.snake[0], dir);
-        let head = {
-          x: ((raw.x % cols) + cols) % cols,
-          y: ((raw.y % rows) + rows) % rows,
-        };
-        // Hole teleport — active for the full lifetime; animation is visual only
+        // If a teleport was queued last tick (head was at entrance), step from exit now
         let teleporting = false;
-        if (s.holes && now > s.holeCooldown) {
+        let head: Point;
+        if (s.pendingTeleport) {
+          const raw = step(s.pendingTeleport, dir);
+          head = { x: ((raw.x % cols) + cols) % cols, y: ((raw.y % rows) + rows) % rows };
+          teleporting = true;
+        } else {
+          const raw = step(s.snake[0], dir);
+          head = { x: ((raw.x % cols) + cols) % cols, y: ((raw.y % rows) + rows) % rows };
+        }
+        // Hole teleport — queue for next tick so head visually enters the entrance cell
+        let newPendingTeleport: Point | null = null;
+        if (!teleporting && s.holes && now > s.holeCooldown) {
           if (head.x === s.holes.a.x && head.y === s.holes.a.y) {
-            head = { x: s.holes.b.x, y: s.holes.b.y };
-            teleporting = true;
+            newPendingTeleport = { x: s.holes.b.x, y: s.holes.b.y };
           } else if (head.x === s.holes.b.x && head.y === s.holes.b.y) {
-            head = { x: s.holes.a.x, y: s.holes.a.y };
-            teleporting = true;
+            newPendingTeleport = { x: s.holes.a.x, y: s.holes.a.y };
           }
         }
         const newWallTick = s.wallTick + 1;
@@ -631,8 +640,8 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
             : holesExpired ? null : s.holes;
           const nextHoleTime = (holesExpired || shouldSpawnHoles) ? now + randomHoleInterval() : s.nextHoleTime;
           if (teleporting) {
-            // Snap prevSnake[0] to exit so lx/ly never lerp the head from the entrance approach
-            prevSnakeRef.current = [snakeAfterDiet[0], ...prevSnakeRef.current.slice(1)];
+            // Snap entire prevSnake to new state so no segment lerps across the teleport gap
+            prevSnakeRef.current = [...snakeAfterDiet];
           }
           stateRef.current = {
             snake: snakeAfterDiet,
@@ -650,7 +659,8 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
             intangibleColor: ateGhost ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
             holes: newHoles,
             nextHoleTime,
-            holeCooldown: teleporting ? now + TICK_MS * 3 : s.holeCooldown,
+            holeCooldown: (teleporting || newPendingTeleport) ? now + TICK_MS * 4 : s.holeCooldown,
+            pendingTeleport: newPendingTeleport,
           };
         }
       }
