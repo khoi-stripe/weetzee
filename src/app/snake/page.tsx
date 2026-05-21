@@ -27,6 +27,12 @@ function computeFoodCount(cols: number, rows: number) {
 }
 const FOOD_LIFETIME = 10000;
 const RADIUS_RATIO = 0.25; // segment corner radius as fraction of cell size
+const HOLE_DURATION = 10000;
+const HOLE_INTERVAL_MIN = 10000;
+const HOLE_INTERVAL_MAX = 20000;
+const HOLE_OPEN_ANIM = 400;
+const HOLE_CLOSE_ANIM = 400;
+function randomHoleInterval() { return HOLE_INTERVAL_MIN + Math.random() * (HOLE_INTERVAL_MAX - HOLE_INTERVAL_MIN); }
 
 const PIP_PATTERNS: Record<number, [number, number][]> = {
   1: [[0.50, 0.50]],
@@ -44,6 +50,7 @@ type Dir = "up" | "down" | "left" | "right";
 type Food = Point & { value: number; expiry: number };
 type WallSide = "top" | "bottom" | "left" | "right";
 type Wall = { side: WallSide; offset: number; dir: 1 | -1 };
+type HolePair = { a: Point; b: Point; openTime: number; closeTime: number };
 
 type GameState = {
   snake: Point[];
@@ -59,6 +66,9 @@ type GameState = {
   powerUpExpiry: number;
   intangibleUntil: number;
   intangibleColor: string;
+  holes: HolePair | null;
+  nextHoleTime: number;
+  holeCooldown: number;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -133,7 +143,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "" };
+  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0 };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -197,6 +207,37 @@ function drawDie(
   ctx.restore();
 }
 
+function holeScale(hole: HolePair, now: number): number {
+  const age = now - hole.openTime;
+  const remaining = hole.closeTime - now;
+  if (age < HOLE_OPEN_ANIM) return age / HOLE_OPEN_ANIM;
+  if (remaining < HOLE_CLOSE_ANIM) return Math.max(0, remaining / HOLE_CLOSE_ANIM);
+  return 1;
+}
+
+function drawHole(ctx: CanvasRenderingContext2D, x: number, y: number, cell: number, scale: number) {
+  if (scale <= 0) return;
+  const cx = x * cell + cell / 2;
+  const cy = y * cell + cell / 2;
+  const r = cell * 0.4;
+  const innerR = r * 0.5;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  ctx.fill();
+  ctx.strokeStyle = COLOR.textPrimary;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+  ctx.fillStyle = COLOR.surfaceBg;
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawWalls(ctx: CanvasRenderingContext2D, walls: Wall[], snakeLen: number, cols: number, rows: number, cell: number) {
   for (const wall of walls) {
     const sideLen = wall.side === "top" || wall.side === "bottom" ? cols : rows;
@@ -236,7 +277,7 @@ function drawSnake(
   ctx.lineWidth = outerW;
   for (let i = len - 1; i >= 1; i--) {
     const x1 = lx(i), y1 = ly(i), x2 = lx(i - 1), y2 = ly(i - 1);
-    if (Math.abs(x2 - x1) > cell * 2 || Math.abs(y2 - y1) > cell * 2) continue;
+    if (Math.abs(x2 - x1) > cell || Math.abs(y2 - y1) > cell) continue;
     const grad = ctx.createLinearGradient(x1, y1, x2, y2);
     grad.addColorStop(0, snakeColor(segmentFrac(i, len, now)));
     grad.addColorStop(1, snakeColor(segmentFrac(i - 1, len, now)));
@@ -290,7 +331,9 @@ function scoreSnakeHand(values: number[]): number {
 }
 
 type PoppedDie = { x: number; y: number; value: number; color: string; startTime: number };
+type PoppedSegment = { x: number; y: number; startTime: number };
 const POP_DURATION = 125;
+const SEG_POP_DURATION = 200;
 
 function drawFrame(
   ctx: CanvasRenderingContext2D,
@@ -303,6 +346,7 @@ function drawFrame(
   now: number,
   snakeCanvas: HTMLCanvasElement,
   poppedDice: PoppedDie[],
+  poppedSegments: PoppedSegment[],
   dpr: number,
   wallsEnabled: boolean,
 ) {
@@ -330,6 +374,13 @@ function drawFrame(
   for (const food of state.foods) {
     const c = VALUE_COLORS[food.value] ?? COLOR.textPrimary;
     drawDie(ctx, food.x * cell, food.y * cell, cell, food.value, c, "#000000", c);
+  }
+
+  // Holes — paired portals that scale in/out
+  if (state.holes) {
+    const sc = holeScale(state.holes, now);
+    drawHole(ctx, state.holes.a.x, state.holes.a.y, cell, sc);
+    drawHole(ctx, state.holes.b.x, state.holes.b.y, cell, sc);
   }
 
   // Power-up dice — ghost: hollow static; diet: hollow 1, spinning
@@ -390,6 +441,23 @@ function drawFrame(
     ctx.restore();
   }
 
+  // Pop animations for diet-removed snake segments
+  for (const ps of poppedSegments) {
+    const prog = (now - ps.startTime) / SEG_POP_DURATION;
+    if (prog >= 1) continue;
+    const eased = 1 - Math.pow(1 - prog, 2);
+    const r = (cell * 0.35) * (1 - eased * 0.6);
+    const cx = ps.x * cell + cell / 2;
+    const cy = ps.y * cell + cell / 2;
+    ctx.save();
+    ctx.globalAlpha = 1 - prog;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = COLOR.textPrimary;
+    ctx.fill();
+    ctx.restore();
+  }
+
   // Snake — draw to offscreen canvas first, then composite at desired alpha
   const intangible = now < state.intangibleUntil;
   const flashAlpha = (() => {
@@ -414,13 +482,17 @@ function drawFrame(
 
 // ─── Game loop hook ───────────────────────────────────────────────────────────
 
-function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>, expiredFoodsRef: React.MutableRefObject<Array<{ x: number; y: number; value: number; color: string }>>) {
+function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled: boolean, holesEnabled: boolean, paused: boolean, onFoodEatenRef: React.MutableRefObject<(value: number) => void>, expiredFoodsRef: React.MutableRefObject<Array<{ x: number; y: number; value: number; color: string }>>, removedSegmentsRef: React.MutableRefObject<Array<{ x: number; y: number }>>) {
   const stateRef = useRef<GameState>(makeInitial(cols, rows));
   const prevSnakeRef = useRef<Point[]>(stateRef.current.snake);
   const lastTickRef = useRef(Date.now());
   const tickDurRef = useRef(TICK_MS);
   const wallsEnabledRef = useRef(false);
+  const holesEnabledRef = useRef(false);
+  const pausedRef = useRef(false);
   useEffect(() => { wallsEnabledRef.current = wallsEnabled; }, [wallsEnabled]);
+  useEffect(() => { holesEnabledRef.current = holesEnabled; }, [holesEnabled]);
+  useEffect(() => { pausedRef.current = paused; }, [paused]);
 
   // Reinitialize once when dimensions first become valid (initial state has cols=0,rows=0)
   const dimInitialized = useRef(false);
@@ -461,22 +533,37 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
     function tick() {
       if (cancelled) return;
       pendingId = null;
+      lastTickRef.current = Date.now();
+      if (pausedRef.current) {
+        pendingId = setTimeout(tick, 100);
+        return;
+      }
       const s = stateRef.current;
       prevSnakeRef.current = s.snake;
-      lastTickRef.current = Date.now();
       if (!s.over) {
+        const now = Date.now();
         const dir = s.nextDir;
         const raw = step(s.snake[0], dir);
-        const head = {
+        let head = {
           x: ((raw.x % cols) + cols) % cols,
           y: ((raw.y % rows) + rows) % rows,
         };
+        // Hole teleport — active for the full lifetime; animation is visual only
+        let teleporting = false;
+        if (s.holes && now > s.holeCooldown) {
+          if (head.x === s.holes.a.x && head.y === s.holes.a.y) {
+            head = { x: s.holes.b.x, y: s.holes.b.y };
+            teleporting = true;
+          } else if (head.x === s.holes.b.x && head.y === s.holes.b.y) {
+            head = { x: s.holes.a.x, y: s.holes.a.y };
+            teleporting = true;
+          }
+        }
         const newWallTick = s.wallTick + 1;
         const snakeLen = s.snake.length;
         const newWalls = newWallTick % 2 === 0
           ? s.walls.map(w => advanceWall(w, wallLength(snakeLen, w.side === "top" || w.side === "bottom" ? cols : rows), cols, rows))
           : s.walls;
-        const now = Date.now();
         const intangible = now < s.intangibleUntil;
         const hitWall = wallsEnabledRef.current && !intangible && newWalls.some(w =>
           wallCells(w, wallLength(snakeLen, w.side === "top" || w.side === "bottom" ? cols : rows), cols, rows)
@@ -524,8 +611,29 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
           const ateGhost = atePowerUp && s.powerUp?.type === "ghost";
           const ateDiet  = atePowerUp && s.powerUp?.type === "diet";
           const snakeAfterDiet = ateDiet
-            ? newSnake.slice(0, Math.max(3, Math.floor(newSnake.length * 0.9)))
+            ? (() => {
+                const kept = Math.max(3, Math.floor(newSnake.length * 0.8));
+                const removed = newSnake.slice(kept);
+                removed.forEach(seg => removedSegmentsRef.current.push({ x: seg.x, y: seg.y }));
+                return newSnake.slice(0, kept);
+              })()
             : newSnake;
+          // Holes: expire old pair, spawn new pair
+          const holesExpired = s.holes !== null && now >= s.holes.closeTime;
+          const allOccupiedForHoles = [...snakeAfterDiet, ...newFoods, ...(newPowerUp ? [newPowerUp] : [])];
+          const shouldSpawnHoles = holesEnabledRef.current && (s.holes === null || holesExpired) && now >= s.nextHoleTime;
+          const newHoles: HolePair | null = shouldSpawnHoles
+            ? (() => {
+                const pa = randomFood(allOccupiedForHoles, cols, rows, now);
+                const pb = randomFood([...allOccupiedForHoles, pa], cols, rows, now);
+                return { a: { x: pa.x, y: pa.y }, b: { x: pb.x, y: pb.y }, openTime: now, closeTime: now + HOLE_DURATION };
+              })()
+            : holesExpired ? null : s.holes;
+          const nextHoleTime = (holesExpired || shouldSpawnHoles) ? now + randomHoleInterval() : s.nextHoleTime;
+          if (teleporting) {
+            // Snap prevSnake[0] to exit so lx/ly never lerp the head from the entrance approach
+            prevSnakeRef.current = [snakeAfterDiet[0], ...prevSnakeRef.current.slice(1)];
+          }
           stateRef.current = {
             snake: snakeAfterDiet,
             dir,
@@ -540,6 +648,9 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
             powerUpExpiry: newPowerUpExpiry,
             intangibleUntil: ateGhost ? now + INTANGIBLE_DURATION : s.intangibleUntil,
             intangibleColor: ateGhost ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
+            holes: newHoles,
+            nextHoleTime,
+            holeCooldown: teleporting ? now + TICK_MS * 3 : s.holeCooldown,
           };
         }
       }
@@ -676,6 +787,10 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
         <p>The snake dies if it hits itself or a moving wall segment. Walls grow longer as the snake gets bigger, so the board gets tighter over time.</p>
       </SnakeRulesSection>
 
+      <SnakeRulesSection title="Holes">
+        <p>When enabled, pairs of portals periodically open on the board. Entering one teleports the snake to the other. Holes scale open and closed — you can only pass through when they're fully open.</p>
+      </SnakeRulesSection>
+
       <SnakeRulesSection title="Power-ups">
         <p>Occasionally a hollow die appears on the board. Eat it for an effect. Two types can spawn:</p>
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -801,6 +916,7 @@ function SlotDie({ value, color }: { value: number; color: string }) {
 
 const HS_KEY = "weetzee-snake-highscore";
 const WALLS_KEY = "weetzee-snake-walls";
+const HOLES_KEY = "weetzee-snake-holes";
 
 function SnakePageContent() {
   const router = useRouter();
@@ -829,13 +945,16 @@ function SnakePageContent() {
   const handleTakeHandRef = useRef<() => void>(() => {});
   const currentPlayerIdxRef = useRef(0);
   const wallsEnabledRenderRef = useRef(false);
+  const pausedRenderRef = useRef(false);
   const snakeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const poppedDiceRef = useRef<PoppedDie[]>([]);
+  const poppedSegmentsRef = useRef<PoppedSegment[]>([]);
   const prevPowerUpRef = useRef<GameState["powerUp"]>(null);
   const popTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [comboFlash, setComboFlash] = useState<string | null>(null);
   const comboFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const expiredFoodsRef = useRef<Array<{ x: number; y: number; value: number; color: string }>>([]);
+  const removedSegmentsRef = useRef<Array<{ x: number; y: number }>>([]);
   const onFoodEatenRef = useRef<(value: number) => void>(() => {});
   onFoodEatenRef.current = (value: number) => {
     const color = VALUE_COLORS[value] ?? COLOR.textPrimary;
@@ -854,12 +973,17 @@ function SnakePageContent() {
   };
 
   const [wallsEnabled, setWallsEnabled] = useState(false);
+  const [holesEnabled, setHolesEnabled] = useState(false);
+  const [paused, setPaused] = useState(false);
   useEffect(() => { wallsEnabledRenderRef.current = wallsEnabled; }, [wallsEnabled]);
+  useEffect(() => { pausedRenderRef.current = paused; }, [paused]);
   useEffect(() => {
     const stored = parseInt(localStorage.getItem(HS_KEY) ?? "0", 10);
     if (!isNaN(stored)) setHighScore(stored);
     const walls = localStorage.getItem(WALLS_KEY);
     if (walls !== null) setWallsEnabled(walls !== "0");
+    const holes = localStorage.getItem(HOLES_KEY);
+    if (holes !== null) setHolesEnabled(holes !== "0");
   }, []);
 
   // Countdown before game starts
@@ -894,7 +1018,7 @@ function SnakePageContent() {
     return () => ro.disconnect();
   }, []);
 
-  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, wallsEnabled, onFoodEatenRef, expiredFoodsRef);
+  const { stateRef, prevSnakeRef, lastTickRef, tickDurRef, steer, reset } = useSnakeGame(cols, rows, started && !over, wallsEnabled, holesEnabled, paused, onFoodEatenRef, expiredFoodsRef, removedSegmentsRef);
 
   // Render loop
   useEffect(() => {
@@ -918,7 +1042,7 @@ function SnakePageContent() {
       if (!running) return;
       const s = stateRef.current;
       const now = Date.now();
-      const t = s.over ? 1 : Math.min(1, (now - lastTickRef.current) / tickDurRef.current);
+      const t = (s.over || pausedRenderRef.current) ? 1 : Math.min(1, (now - lastTickRef.current) / tickDurRef.current);
       // Detect power-up expiry (disappeared without being eaten by snake head)
       const prev = prevPowerUpRef.current;
       if (prev !== null && s.powerUp === null) {
@@ -932,11 +1056,15 @@ function SnakePageContent() {
       const expiredFoods = expiredFoodsRef.current.splice(0);
       expiredFoods.forEach(f => poppedDiceRef.current.push({ ...f, startTime: now }));
       poppedDiceRef.current = poppedDiceRef.current.filter(p => now - p.startTime < POP_DURATION);
+      // Drain diet-removed segments into segment pop queue
+      const removedSegs = removedSegmentsRef.current.splice(0);
+      removedSegs.forEach(seg => poppedSegmentsRef.current.push({ ...seg, startTime: now }));
+      poppedSegmentsRef.current = poppedSegmentsRef.current.filter(p => now - p.startTime < SEG_POP_DURATION);
       if (!startedRef.current) {
         ctx!.fillStyle = COLOR.surfaceBg;
         ctx!.fillRect(0, 0, cols * cell, rows * cell);
       } else {
-        drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current, dpr, wallsEnabledRenderRef.current);
+        drawFrame(ctx!, s, prevSnakeRef.current, t, cols, rows, cell, now, snakeCanvas, poppedDiceRef.current, poppedSegmentsRef.current, dpr, wallsEnabledRenderRef.current);
       }
       setScore(s.score);
       if (s.over && !over) {
@@ -1055,6 +1183,7 @@ function SnakePageContent() {
   }
 
   function resetGameState(mode: boolean | "pause" = false) {
+    setPaused(false);
     reset();
     setOver(false);
     setScore(0);
@@ -1064,6 +1193,7 @@ function SnakePageContent() {
     popTimersRef.current.forEach(clearTimeout);
     if (comboFlashTimerRef.current) clearTimeout(comboFlashTimerRef.current);
     poppedDiceRef.current = [];
+    poppedSegmentsRef.current = [];
     prevPowerUpRef.current = null;
     if (mode === true) {
       setStarted(false);
@@ -1131,6 +1261,8 @@ function SnakePageContent() {
   const currentComboScore = currentCombo ? scoreSnakeHand(handSlots.map(s => s.value)) : null;
   const isEndState = (over && playerCount === 1) || mpPhase === "done" || mpPhase === "score";
   const [showInfo, setShowInfo] = useState(false);
+  function openInfo() { if (started && !over) setPaused(true); setShowInfo(true); }
+  function closeInfo() { setShowInfo(false); setPaused(false); }
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   return (
@@ -1141,7 +1273,7 @@ function SnakePageContent() {
       {showInfo && (
         <div className="fixed inset-0 flex flex-col" style={{ zIndex: Z.modal, background: COLOR.surfaceBg, paddingTop: "env(safe-area-inset-top, 0px)", animation: "interstitial-in 200ms ease forwards" }}>
           <div className="relative shrink-0 w-full" style={{ height: 48 }}>
-            <button onClick={() => { playTap(); setShowInfo(false); }} className="absolute flex items-center justify-center pressable" style={{ fontSize: 24, fontWeight: WEIGHT.regular, right: 4, top: 2, padding: "8px 12px", background: "none", border: "none", color: COLOR.textPrimary, lineHeight: 1 }} aria-label="Close">×</button>
+            <button onClick={() => { playTap(); closeInfo(); }} className="absolute flex items-center justify-center pressable" style={{ fontSize: 24, fontWeight: WEIGHT.regular, right: 4, top: 2, padding: "8px 12px", background: "none", border: "none", color: COLOR.textPrimary, lineHeight: 1 }} aria-label="Close">×</button>
           </div>
           <div className="flex-1 overflow-y-auto selectable" style={{ padding: "0 24px 48px", fontSize: 14, lineHeight: 1.6, color: COLOR.textReadable, maxWidth: 640, margin: "0 auto", width: "100%" }}>
             <div style={{ ...TYPE.headline, color: COLOR.textPrimary, paddingBottom: 16, borderBottom: `1px solid ${COLOR.borderSubtle}`, marginBottom: 0 }}>
@@ -1152,18 +1284,20 @@ function SnakePageContent() {
               <h3 style={{ ...TYPE.headline, color: COLOR.textPrimary, marginBottom: 12 }}>
                 House rules
               </h3>
-              <div
-                onClick={() => { playToggle(!wallsEnabled); const next = !wallsEnabled; setWallsEnabled(next); localStorage.setItem(WALLS_KEY, next ? "1" : "0"); }}
-                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", cursor: "pointer" }}
-              >
-                <div>
-                  <div style={{ ...TYPE.body, color: COLOR.textPrimary }}>Walls</div>
-                  <div style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 2 }}>Moving wall segments that grow as the snake gets longer.</div>
+              {[
+                { label: "Walls", desc: "Moving wall segments that grow as the snake gets longer.", value: wallsEnabled, toggle: () => { const next = !wallsEnabled; playToggle(next); setWallsEnabled(next); localStorage.setItem(WALLS_KEY, next ? "1" : "0"); } },
+                { label: "Holes", desc: "Pairs of portals that open and close at random. Enter one to exit the other.", value: holesEnabled, toggle: () => { const next = !holesEnabled; playToggle(next); setHolesEnabled(next); localStorage.setItem(HOLES_KEY, next ? "1" : "0"); } },
+              ].map(({ label, desc, value, toggle }) => (
+                <div key={label} onClick={toggle} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", cursor: "pointer", borderTop: `1px solid ${COLOR.borderSubtle}` }}>
+                  <div>
+                    <div style={{ ...TYPE.body, color: COLOR.textPrimary }}>{label}</div>
+                    <div style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 2 }}>{desc}</div>
+                  </div>
+                  <div className="pressable" style={{ width: 40, height: 22, borderRadius: 11, background: value ? "#34c759" : COLOR.borderSubtle, position: "relative", transition: "background 200ms", flexShrink: 0, marginLeft: 16 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 9, background: COLOR.textPrimary, position: "absolute", top: 2, left: value ? 20 : 2, transition: `left 200ms ${EASE.spring}` }} />
+                  </div>
                 </div>
-                <div className="pressable" style={{ width: 40, height: 22, borderRadius: 11, background: wallsEnabled ? "#34c759" : COLOR.borderSubtle, position: "relative", transition: "background 200ms", flexShrink: 0, marginLeft: 16 }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 9, background: COLOR.textPrimary, position: "absolute", top: 2, left: wallsEnabled ? 20 : 2, transition: `left 200ms ${EASE.spring}` }} />
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1195,9 +1329,18 @@ function SnakePageContent() {
         <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "50%" }}>
           {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
         </span>
-        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 20 }}>
+          {started && !over && (
+            <button
+              onClick={() => { playTap(); setPaused(p => !p); }}
+              style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 13, fontFamily: "inherit", cursor: "pointer", padding: 0, letterSpacing: "0.02em" }}
+              aria-label={paused ? "Resume" : "Pause"}
+            >
+              {paused ? "▶" : "❙❙"}
+            </button>
+          )}
           <button
-            onClick={() => { playTap(); setShowInfo(true); }}
+            onClick={() => { playTap(); openInfo(); }}
             style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}
             aria-label="Rules"
           >
@@ -1222,7 +1365,7 @@ function SnakePageContent() {
         {!started && !over && countdown === null && mpPhase === "playing" && (
           <Scrim position="fixed" zIndex={Z.interstitial}>
             <button onClick={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }} style={EXIT_BTN_STYLE}>Exit</button>
-            <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
+            <button onClick={() => { playTap(); openInfo(); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
@@ -1250,7 +1393,7 @@ function SnakePageContent() {
         {over && playerCount === 1 && (
           <Scrim zIndex={Z.interstitial}>
             <button onClick={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }} style={EXIT_BTN_STYLE}>Exit</button>
-            <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
+            <button onClick={() => { playTap(); openInfo(); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
             <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
               <div className="snake-modal-border" />
               <DialogCard enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
@@ -1303,7 +1446,7 @@ function SnakePageContent() {
           return (
             <Scrim zIndex={Z.interstitial}>
               <button onClick={() => { playTap(); router.push(`/ruleset?players=${playerCount}`); }} style={EXIT_BTN_STYLE}>Exit</button>
-              <button onClick={() => { playTap(); setShowInfo(true); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
+              <button onClick={() => { playTap(); openInfo(); }} style={{ ...EXIT_BTN_STYLE, left: "auto", right: 16 }} aria-label="Rules">i</button>
               <div style={{ position: "relative", width: "100%", maxWidth: "min(80vw, 80vh, 400px)" }}>
                 <div className="snake-modal-border" />
                 <DialogCard background={winner.player.color} enter="spinIn" style={{ borderRadius: 4, position: "relative" }}>
