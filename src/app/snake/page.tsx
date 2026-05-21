@@ -62,7 +62,8 @@ type GameState = {
   over: boolean;
   walls: Wall[];
   wallTick: number;
-  powerUp: (Point & { value: number; color: string; type: "ghost" | "diet" }) | null;
+  powerUp: (Point & { value: number; color: string; type: "ghost" | "diet" | "slow" }) | null;
+  slowFactor: number;
   powerUpExpiry: number;
   intangibleUntil: number;
   intangibleColor: string;
@@ -144,7 +145,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0, pendingTeleport: null };
+  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0, pendingTeleport: null, slowFactor: 1 };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -252,6 +253,36 @@ function drawHole(ctx: CanvasRenderingContext2D, x: number, y: number, cell: num
   ctx.beginPath();
   ctx.arc(0, 0, innerR, 0, Math.PI * 2);
   ctx.fillStyle = COLOR.surfaceBg;
+  ctx.fill();
+  ctx.restore();
+}
+
+const SLOW_COLOR = "#60a5fa"; // blue-400
+
+function drawHourglass(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, alpha = 1) {
+  const w = size * 0.42;
+  const h = size * 0.46;
+  const neckH = size * 0.08;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = SLOW_COLOR;
+  // Top triangle
+  ctx.beginPath();
+  ctx.moveTo(cx - w, cy - h);
+  ctx.lineTo(cx + w, cy - h);
+  ctx.lineTo(cx, cy - neckH);
+  ctx.closePath();
+  ctx.fill();
+  // Bottom triangle
+  ctx.beginPath();
+  ctx.moveTo(cx - w, cy + h);
+  ctx.lineTo(cx + w, cy + h);
+  ctx.lineTo(cx, cy + neckH);
+  ctx.closePath();
+  ctx.fill();
+  // Neck dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 0.06, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -422,7 +453,7 @@ function drawFrame(
     drawHole(ctx, state.holes.b.x, state.holes.b.y, cell, sc, now);
   }
 
-  // Power-up dice — ghost: hollow static; diet: hollow 1, spinning
+  // Power-up dice — ghost: hollow pulsing; diet: hollow spinning 1; slow: hourglass
   if (state.powerUp) {
     const pu = state.powerUp;
     if (pu.type === "diet") {
@@ -435,6 +466,11 @@ function drawFrame(
       ctx.translate(-cell / 2, -cell / 2);
       drawDie(ctx, 0, 0, cell, 1);
       ctx.restore();
+    } else if (pu.type === "slow") {
+      const pulse = 1.0 + 0.08 * Math.sin(now * Math.PI * 2 / 1400);
+      const cx = pu.x * cell + cell / 2;
+      const cy = pu.y * cell + cell / 2;
+      drawHourglass(ctx, cx, cy, cell * pulse);
     } else {
       const pulse = 1.0 + 0.1 * Math.sin(now * Math.PI * 2 / 900);
       const cx = pu.x * cell + cell / 2;
@@ -647,12 +683,14 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
               ? (() => {
                   const p = randomFood(allOccupied, cols, rows, now);
                   const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-                  const type: "ghost" | "diet" = Math.random() < 0.6 ? "ghost" : "diet";
-                  return { ...p, color, type, value: type === "diet" ? 1 : p.value };
+                  const roll = Math.random();
+                  const type: "ghost" | "diet" | "slow" = roll < 0.5 ? "ghost" : roll < 0.8 ? "diet" : "slow";
+                  return { ...p, color: type === "slow" ? SLOW_COLOR : color, type, value: type === "diet" ? 1 : p.value };
                 })()
               : s.powerUp;
           const ateGhost = atePowerUp && s.powerUp?.type === "ghost";
           const ateDiet  = atePowerUp && s.powerUp?.type === "diet";
+          const ateSlow  = atePowerUp && s.powerUp?.type === "slow";
           const snakeAfterDiet = ateDiet
             ? (() => {
                 const kept = Math.max(3, Math.floor(newSnake.length * 0.8));
@@ -691,6 +729,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
             powerUpExpiry: newPowerUpExpiry,
             intangibleUntil: ateGhost ? now + INTANGIBLE_DURATION : s.intangibleUntil,
             intangibleColor: ateGhost ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
+            slowFactor: ateSlow ? Math.min(s.slowFactor * 1.4, 3.0) : s.slowFactor,
             holes: newHoles,
             nextHoleTime,
             holeCooldown: (teleporting || newPendingTeleport) ? now + TICK_MS * 4 : s.holeCooldown,
@@ -699,7 +738,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
         }
       }
       const len = stateRef.current.snake.length;
-      const delay = TICK_MS * Math.pow(0.985, len - 3);
+      const delay = TICK_MS * Math.pow(0.985, len - 3) * stateRef.current.slowFactor;
       tickDurRef.current = delay;
       pendingId = setTimeout(tick, delay);
     }
@@ -816,6 +855,33 @@ function LegendHole() {
   return <canvas ref={canvasRef} style={{ display: "block", width: CANVAS_SIZE, height: CANVAS_SIZE, flexShrink: 0 }} />;
 }
 
+function LegendHourglass() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const SIZE = 48;
+  const animRef = useRef<number>(0);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = SIZE * dpr;
+    canvas.height = SIZE * dpr;
+    ctx.scale(dpr, dpr);
+    let running = true;
+    function frame() {
+      if (!running) return;
+      ctx!.clearRect(0, 0, SIZE, SIZE);
+      const pulse = 1.0 + 0.08 * Math.sin(Date.now() * Math.PI * 2 / 1400);
+      drawHourglass(ctx!, SIZE / 2, SIZE / 2, SIZE * 0.75 * pulse);
+      animRef.current = requestAnimationFrame(frame);
+    }
+    frame();
+    return () => { running = false; cancelAnimationFrame(animRef.current); };
+  }, []);
+  return <canvas ref={canvasRef} style={{ display: "block", width: SIZE, height: SIZE, flexShrink: 0 }} />;
+}
+
 function SnakeRulesSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 24 }}>
@@ -874,7 +940,7 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
       </SnakeRulesSection>
 
       <SnakeRulesSection title="Power-ups">
-        <p>Occasionally a hollow die appears on the board. Eat it for an effect. Two types can spawn:</p>
+        <p>Occasionally a power-up appears on the board. Three types can spawn:</p>
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <LegendDie value={4} pulse />
@@ -887,7 +953,14 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
             <LegendDie value={1} spin />
             <div>
               <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Diet</span>
-              <span style={{ color: "rgba(255,255,255,0.5)" }}> — shrinks the snake by 10%. Spins to stand out. Slightly rarer than Ghost.</span>
+              <span style={{ color: "rgba(255,255,255,0.5)" }}> — shrinks the snake by 20%.</span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <LegendHourglass />
+            <div>
+              <span style={{ color: SLOW_COLOR, fontWeight: WEIGHT.medium }}>Slow</span>
+              <span style={{ color: "rgba(255,255,255,0.5)" }}> — permanently reduces the snake's speed. Stacks up to 3×.</span>
             </div>
           </div>
         </div>
