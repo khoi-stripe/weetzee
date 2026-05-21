@@ -55,7 +55,7 @@ type GameState = {
   over: boolean;
   walls: Wall[];
   wallTick: number;
-  powerUp: (Point & { value: number; color: string }) | null;
+  powerUp: (Point & { value: number; color: string; type: "ghost" | "diet" }) | null;
   powerUpExpiry: number;
   intangibleUntil: number;
   intangibleColor: string;
@@ -332,10 +332,22 @@ function drawFrame(
     drawDie(ctx, food.x * cell, food.y * cell, cell, food.value, c, "#000000", c);
   }
 
-  // Power-up die — hollow (black bg, white border/pips)
+  // Power-up dice — ghost: hollow static; diet: hollow 1, spinning
   if (state.powerUp) {
     const pu = state.powerUp;
-    drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value);
+    if (pu.type === "diet") {
+      const angle = (now % 2000) / 2000 * Math.PI * 2;
+      const cx = pu.x * cell + cell / 2;
+      const cy = pu.y * cell + cell / 2;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.translate(-cell / 2, -cell / 2);
+      drawDie(ctx, 0, 0, cell, 1);
+      ctx.restore();
+    } else {
+      drawDie(ctx, pu.x * cell, pu.y * cell, cell, pu.value);
+    }
   }
 
   // Pop-out animations for expired power-up dice
@@ -497,11 +509,17 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
               ? (() => {
                   const p = randomFood(allOccupied, cols, rows, now);
                   const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-                  return { ...p, color };
+                  const type: "ghost" | "diet" = Math.random() < 0.6 ? "ghost" : "diet";
+                  return { ...p, color, type, value: type === "diet" ? 1 : p.value };
                 })()
               : s.powerUp;
+          const ateGhost = atePowerUp && s.powerUp?.type === "ghost";
+          const ateDiet  = atePowerUp && s.powerUp?.type === "diet";
+          const snakeAfterDiet = ateDiet
+            ? newSnake.slice(0, Math.max(3, Math.floor(newSnake.length * 0.9)))
+            : newSnake;
           stateRef.current = {
-            snake: newSnake,
+            snake: snakeAfterDiet,
             dir,
             nextDir: dir,
             foods: newFoods,
@@ -512,8 +530,8 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
             wallTick: newWallTick,
             powerUp: newPowerUp,
             powerUpExpiry: newPowerUpExpiry,
-            intangibleUntil: atePowerUp ? now + INTANGIBLE_DURATION : s.intangibleUntil,
-            intangibleColor: atePowerUp ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
+            intangibleUntil: ateGhost ? now + INTANGIBLE_DURATION : s.intangibleUntil,
+            intangibleColor: ateGhost ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
           };
         }
       }
@@ -543,6 +561,46 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
+
+function LegendDie({ value, spin = false }: { value: number; spin?: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Canvas is large enough that a rotating die never clips its corners.
+  // A die of DIE_SIZE has diagonal DIE_SIZE*√2 ≈ 42px; CANVAS_SIZE=48 gives ~3px clearance.
+  const CANVAS_SIZE = 48;
+  const DIE_SIZE = 30;
+  const DIE_OFFSET = (CANVAS_SIZE - DIE_SIZE) / 2;
+  const animRef = useRef<number>(0);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = CANVAS_SIZE * dpr;
+    canvas.height = CANVAS_SIZE * dpr;
+    ctx.scale(dpr, dpr);
+    if (spin) {
+      let running = true;
+      function frame() {
+        if (!running) return;
+        const angle = (Date.now() % 2000) / 2000 * Math.PI * 2;
+        ctx!.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        ctx!.save();
+        ctx!.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+        ctx!.rotate(angle);
+        ctx!.translate(-DIE_SIZE / 2, -DIE_SIZE / 2);
+        drawDie(ctx!, 0, 0, DIE_SIZE, value);
+        ctx!.restore();
+        animRef.current = requestAnimationFrame(frame);
+      }
+      frame();
+      return () => { running = false; cancelAnimationFrame(animRef.current); };
+    } else {
+      drawDie(ctx, DIE_OFFSET, DIE_OFFSET, DIE_SIZE, value);
+    }
+  }, [value, spin]);
+  return <canvas ref={canvasRef} style={{ display: "block", width: CANVAS_SIZE, height: CANVAS_SIZE, flexShrink: 0 }} />;
+}
 
 function SnakeRulesSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -594,8 +652,24 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
         <p>The snake dies if it hits itself or a moving wall segment. Walls grow longer as the snake gets bigger, so the board gets tighter over time.</p>
       </SnakeRulesSection>
 
-      <SnakeRulesSection title="Power-up">
-        <p>Occasionally a hollow die appears on the board. Eat it to become intangible for 10 seconds — you can pass through walls and your own tail without dying.</p>
+      <SnakeRulesSection title="Power-ups">
+        <p>Occasionally a hollow die appears on the board. Eat it for an effect. Two types can spawn:</p>
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <LegendDie value={4} />
+            <div>
+              <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Ghost</span>
+              <span style={{ color: "rgba(255,255,255,0.5)" }}> — pass through walls and your own tail for 10 seconds.</span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <LegendDie value={1} spin />
+            <div>
+              <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Diet</span>
+              <span style={{ color: "rgba(255,255,255,0.5)" }}> — shrinks the snake by 10%. Spins to stand out. Slightly rarer than Ghost.</span>
+            </div>
+          </div>
+        </div>
       </SnakeRulesSection>
     </>
   );
@@ -1085,16 +1159,27 @@ function SnakePageContent() {
       )}
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", flexShrink: 0, gap: 8 }}>
-        <button
-          onClick={() => { playTap(); if (started && !over) { setShowExitConfirm(true); } else { router.push(`/ruleset?players=${playerCount}`); } }}
-          style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0, flexShrink: 0 }}
-        >
-          Exit
-        </button>
-        <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "right", whiteSpace: "nowrap", flex: 1 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", flexShrink: 0 }}>
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
+          <button
+            onClick={() => { playTap(); if (started && !over) { setShowExitConfirm(true); } else { router.push(`/ruleset?players=${playerCount}`); } }}
+            style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}
+          >
+            Exit
+          </button>
+        </div>
+        <span style={{ fontFamily: "inherit", fontSize: 13, fontWeight: WEIGHT.semibold, color: COLOR.textPrimary, letterSpacing: "0.06em", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "50%" }}>
           {currentCombo ? `${currentCombo} · ${currentComboScore}pt` : ""}
         </span>
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={() => { playTap(); setShowInfo(true); }}
+            style={{ background: "none", border: "none", color: COLOR.textPrimary, fontSize: 15, fontFamily: "inherit", cursor: "pointer", padding: 0 }}
+            aria-label="Rules"
+          >
+            i
+          </button>
+        </div>
       </div>
 
       {/* Canvas */}
