@@ -742,8 +742,9 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
             : holesExpired ? null : s.holes;
           const nextHoleTime = (holesExpired || shouldSpawnHoles) ? now + randomHoleInterval() : s.nextHoleTime;
           if (teleporting) {
-            // Snap entire prevSnake to new state so no segment lerps across the teleport gap
-            prevSnakeRef.current = [...snakeAfterDiet];
+            // Snap only the head — prevents it lerping from entrance to exit across the board.
+            // Body segments handle the entrance→exit transition via the Euclidean snap in lx/ly.
+            prevSnakeRef.current = [snakeAfterDiet[0], ...prevSnakeRef.current.slice(1)];
           }
           stateRef.current = {
             snake: snakeAfterDiet,
