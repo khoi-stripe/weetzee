@@ -570,7 +570,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-function LegendDie({ value, spin = false }: { value: number; spin?: boolean }) {
+function LegendDie({ value, spin = false, pulse = false }: { value: number; spin?: boolean; pulse?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Canvas is large enough that a rotating die never clips its corners.
   // A die of DIE_SIZE has diagonal DIE_SIZE*√2 ≈ 42px; CANVAS_SIZE=48 gives ~3px clearance.
@@ -603,10 +603,26 @@ function LegendDie({ value, spin = false }: { value: number; spin?: boolean }) {
       }
       frame();
       return () => { running = false; cancelAnimationFrame(animRef.current); };
+    } else if (pulse) {
+      let running = true;
+      function frame() {
+        if (!running) return;
+        const scale = 1.0 + 0.1 * Math.sin(Date.now() * Math.PI * 2 / 900);
+        ctx!.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        ctx!.save();
+        ctx!.translate(CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+        ctx!.scale(scale, scale);
+        ctx!.translate(-DIE_SIZE / 2, -DIE_SIZE / 2);
+        drawDie(ctx!, 0, 0, DIE_SIZE, value);
+        ctx!.restore();
+        animRef.current = requestAnimationFrame(frame);
+      }
+      frame();
+      return () => { running = false; cancelAnimationFrame(animRef.current); };
     } else {
       drawDie(ctx, DIE_OFFSET, DIE_OFFSET, DIE_SIZE, value);
     }
-  }, [value, spin]);
+  }, [value, spin, pulse]);
   return <canvas ref={canvasRef} style={{ display: "block", width: CANVAS_SIZE, height: CANVAS_SIZE, flexShrink: 0 }} />;
 }
 
@@ -664,7 +680,7 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
         <p>Occasionally a hollow die appears on the board. Eat it for an effect. Two types can spawn:</p>
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <LegendDie value={4} />
+            <LegendDie value={4} pulse />
             <div>
               <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Ghost</span>
               <span style={{ color: "rgba(255,255,255,0.5)" }}> — pass through walls and your own tail for 10 seconds.</span>
