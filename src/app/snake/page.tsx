@@ -1058,7 +1058,11 @@ function SnakePageContent() {
   const [holesEnabled, setHolesEnabled] = useState(false);
   const [paused, setPaused] = useState(false);
   useEffect(() => { wallsEnabledRenderRef.current = wallsEnabled; }, [wallsEnabled]);
-  useEffect(() => { pausedRenderRef.current = paused; }, [paused]);
+  const pauseTimeRef = useRef<number>(0);
+  useEffect(() => {
+    pausedRenderRef.current = paused;
+    if (paused) pauseTimeRef.current = Date.now();
+  }, [paused]);
   useEffect(() => {
     const stored = parseInt(localStorage.getItem(HS_KEY) ?? "0", 10);
     if (!isNaN(stored)) setHighScore(stored);
@@ -1123,7 +1127,7 @@ function SnakePageContent() {
     function loop() {
       if (!running) return;
       const s = stateRef.current;
-      const now = Date.now();
+      const now = pausedRenderRef.current ? pauseTimeRef.current : Date.now();
       const t = (s.over || pausedRenderRef.current) ? 1 : Math.min(1, (now - lastTickRef.current) / tickDurRef.current);
       // Detect power-up expiry (disappeared without being eaten by snake head)
       const prev = prevPowerUpRef.current;
