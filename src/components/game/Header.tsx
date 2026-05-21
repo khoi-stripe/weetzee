@@ -307,8 +307,10 @@ function SnakeEyesRules() {
       <Section title="Hazards">
         <p>The snake dies if it hits itself or a moving wall segment. Walls grow longer as the snake gets bigger, so the board gets tighter over time.</p>
       </Section>
-      <Section title="Power-up">
-        <p>Occasionally a hollow die appears. Eat it to become intangible for 10 seconds — pass through walls and your own tail without dying.</p>
+      <Section title="Power-ups">
+        <p>Occasionally a hollow die appears on the board. Two types can spawn:</p>
+        <p style={{ marginTop: 8 }}><strong>Ghost</strong> — pass through walls and your own tail for 10 seconds.</p>
+        <p style={{ marginTop: 4 }}><strong>Diet</strong> — shrinks the snake by 10%. Spins to stand out. Slightly rarer than Ghost.</p>
       </Section>
     </>
   );
