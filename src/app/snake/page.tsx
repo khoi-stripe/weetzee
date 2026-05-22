@@ -1521,8 +1521,16 @@ function SnakePageContent() {
   const currentComboScore = currentCombo ? scoreSnakeHand(handSlots.map(s => s.value)) : null;
   const isEndState = (over && playerCount === 1) || mpPhase === "done" || mpPhase === "score";
   const [showInfo, setShowInfo] = useState(false);
-  function openInfo() { if (started && !over) setPaused(true); setShowInfo(true); }
-  function closeInfo() { setShowInfo(false); setPaused(false); }
+  const infoPausedRef = useRef(false);
+  function openInfo() {
+    if (started && !over && !paused) { setPaused(true); infoPausedRef.current = true; }
+    else { infoPausedRef.current = false; }
+    setShowInfo(true);
+  }
+  function closeInfo() {
+    setShowInfo(false);
+    if (infoPausedRef.current) { setPaused(false); infoPausedRef.current = false; }
+  }
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   return (
