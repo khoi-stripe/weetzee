@@ -1547,17 +1547,22 @@ function SnakePageContent() {
               {[
                 { label: "Walls", desc: "Moving wall segments that grow as the snake gets longer.", value: wallsEnabled, toggle: () => { const next = !wallsEnabled; playToggle(next); setWallsEnabled(next); localStorage.setItem(WALLS_KEY, next ? "1" : "0"); } },
                 { label: "Holes", desc: "Pairs of portals that open and close at random. Enter one to exit the other.", value: holesEnabled, toggle: () => { const next = !holesEnabled; playToggle(next); setHolesEnabled(next); localStorage.setItem(HOLES_KEY, next ? "1" : "0"); } },
-              ].map(({ label, desc, value, toggle }) => (
-                <div key={label} onClick={toggle} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", cursor: "pointer", borderTop: `1px solid ${COLOR.borderSubtle}` }}>
-                  <div>
-                    <div style={{ ...TYPE.body, color: COLOR.textPrimary }}>{label}</div>
-                    <div style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 2 }}>{desc}</div>
+              ].map(({ label, desc, value, toggle }, i) => {
+                const toggleColor = COLORS[i * 2 % COLORS.length];
+                return (
+                  <div key={label} onClick={toggle} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", cursor: "pointer", borderTop: `1px solid ${COLOR.borderSubtle}` }}>
+                    <div>
+                      <div style={{ ...TYPE.body, color: COLOR.textPrimary }}>{label}</div>
+                      <div style={{ ...TYPE.microRegular, color: COLOR.textMuted, marginTop: 2 }}>{desc}</div>
+                    </div>
+                    <div className="pressable" style={{ width: 40, height: 22, borderRadius: 11, background: value ? toggleColor : COLOR.borderSubtle, position: "relative", transition: "background 200ms", flexShrink: 0, marginLeft: 16 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: 9, background: COLOR.textPrimary, position: "absolute", top: 2, left: value ? 20 : 2, transition: `left 200ms ${EASE.spring}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ width: 5, height: 5, borderRadius: "50%", background: value ? toggleColor : COLOR.borderSubtle }} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="pressable" style={{ width: 40, height: 22, borderRadius: 11, background: value ? "#34c759" : COLOR.borderSubtle, position: "relative", transition: "background 200ms", flexShrink: 0, marginLeft: 16 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: 9, background: COLOR.textPrimary, position: "absolute", top: 2, left: value ? 20 : 2, transition: `left 200ms ${EASE.spring}` }} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
