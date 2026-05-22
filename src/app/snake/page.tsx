@@ -281,7 +281,7 @@ function drawHole(ctx: CanvasRenderingContext2D, x: number, y: number, cell: num
 const SLOW_COLOR = "#ffffff";
 
 // Drawn from hourglass.svg (24×24 viewBox). cx/cy = center, size = target px size.
-function drawHourglass(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, alpha = 1) {
+function drawHourglass(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, alpha = 1, now = 0) {
   const s = size / 24;
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -334,6 +334,32 @@ function drawHourglass(ctx: CanvasRenderingContext2D, cx: number, cy: number, si
   ctx.bezierCurveTo(5.06092 * s, 20.269 * s, 5.26638 * s, 19.1913 * s, 5.67578 * s, 18 * s);
   ctx.closePath();
   ctx.fill();
+
+  // Falling sand grains through the neck (y: 12→18, x: 12 in 24-unit space)
+  if (now > 0) {
+    const neckTopY = 12.2 * s;
+    const neckBotY = 17.8 * s;
+    const neckH    = neckBotY - neckTopY;
+    const grainW   = Math.max(1, s * 0.9);
+    const CYCLE    = 1100;
+    const grains: [number, number, number][] = [
+      [0,   1.8, 0.42],  // [timeOffset, grainHeight in s-units, activeFraction]
+      [390, 1.1, 0.33],
+      [760, 1.5, 0.38],
+    ];
+    for (const [tOff, hUnits, active] of grains) {
+      const phase = ((now + tOff) % CYCLE) / CYCLE;
+      if (phase > active) continue;
+      const progress = phase / active;
+      const grainH   = hUnits * s;
+      const centerY  = neckTopY + neckH * progress;
+      const top = Math.max(neckTopY, centerY - grainH / 2);
+      const bot = Math.min(neckBotY, centerY + grainH / 2);
+      if (bot <= top) continue;
+      ctx.globalAlpha = alpha * (1 - progress * 0.25);
+      ctx.fillRect(12 * s - grainW / 2, top, grainW, bot - top);
+    }
+  }
 
   ctx.restore();
 }
@@ -521,7 +547,7 @@ function drawFrame(
       const pulse = 1.0 + 0.08 * Math.sin(now * Math.PI * 2 / 1400);
       const cx = pu.x * cell + cell / 2;
       const cy = pu.y * cell + cell / 2;
-      drawHourglass(ctx, cx, cy, cell * pulse);
+      drawHourglass(ctx, cx, cy, cell * pulse, 1, now);
     } else {
       const pulse = 1.0 + 0.1 * Math.sin(now * Math.PI * 2 / 900);
       const cx = pu.x * cell + cell / 2;
@@ -925,7 +951,7 @@ function LegendHourglass() {
       if (!running) return;
       ctx!.clearRect(0, 0, SIZE, SIZE);
       const pulse = 1.0 + 0.08 * Math.sin(Date.now() * Math.PI * 2 / 1400);
-      drawHourglass(ctx!, SIZE / 2, SIZE / 2, SIZE * 0.75 * pulse);
+      drawHourglass(ctx!, SIZE / 2, SIZE / 2, SIZE * 0.75 * pulse, 1, Date.now());
       animRef.current = requestAnimationFrame(frame);
     }
     frame();
