@@ -326,19 +326,20 @@ function drawHourglass(ctx: CanvasRenderingContext2D, cx: number, cy: number, si
   ctx.closePath();
   ctx.fill();
 
-  // Bottom filled funnel
+  // Bottom filled funnel (thin crescent at base)
   ctx.beginPath();
-  ctx.moveTo(18.3242 * s, 18 * s);
-  ctx.bezierCurveTo(18.7336 * s, 19.1913 * s, 18.9391 * s, 20.269 * s, 19 * s, 21 * s);
+  ctx.moveTo(18.8564 * s, 20 * s);
+  ctx.bezierCurveTo(18.928 * s, 20.377 * s, 18.9762 * s, 20.7147 * s, 19 * s, 21 * s);
   ctx.lineTo(5 * s, 21 * s);
-  ctx.bezierCurveTo(5.06092 * s, 20.269 * s, 5.26638 * s, 19.1913 * s, 5.67578 * s, 18 * s);
+  ctx.bezierCurveTo(5.02378 * s, 20.7147 * s, 5.07197 * s, 20.377 * s, 5.14355 * s, 20 * s);
+  ctx.lineTo(18.8564 * s, 20 * s);
   ctx.closePath();
   ctx.fill();
 
-  // Falling sand grains through the neck (y: 12→18, x: 12 in 24-unit space)
+  // Falling sand grains through the neck (y: 12→20, x: 12 in 24-unit space)
   if (now > 0) {
     const neckTopY = 12.2 * s;
-    const neckBotY = 17.8 * s;
+    const neckBotY = 19.8 * s;
     const neckH    = neckBotY - neckTopY;
     const grainW   = Math.max(1, s * 0.9);
     const CYCLE    = 1100;
