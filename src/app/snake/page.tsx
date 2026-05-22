@@ -1012,7 +1012,9 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
 
       <SnakeRulesSection title="Holes">
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <LegendHole />
+          <div style={{ width: 48, minWidth: 48, display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <LegendHole />
+          </div>
           <p style={{ margin: 0 }}>When enabled, pairs of portals periodically open on the board. Entering one teleports the snake to the other.</p>
         </div>
       </SnakeRulesSection>
@@ -1021,21 +1023,27 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
         <p>Occasionally a power-up appears on the board. Three types can spawn:</p>
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <LegendDie value={4} pulse />
+            <div style={{ width: 48, minWidth: 48, display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <LegendDie value={4} pulse />
+            </div>
             <div>
               <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Ghost</span>
               <span style={{ color: "rgba(255,255,255,0.5)" }}> — pass through walls and your own tail for 10 seconds.</span>
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <LegendDie value={1} spin />
+            <div style={{ width: 48, minWidth: 48, display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <LegendDie value={1} spin />
+            </div>
             <div>
               <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Diet</span>
               <span style={{ color: "rgba(255,255,255,0.5)" }}> — shrinks the snake by 20%.</span>
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <LegendHourglass />
+            <div style={{ width: 48, minWidth: 48, display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <LegendHourglass />
+            </div>
             <div>
               <span style={{ color: SLOW_COLOR, fontWeight: WEIGHT.medium }}>Slow</span>
               <span style={{ color: "rgba(255,255,255,0.5)" }}> — rewinds the snake's speed as if it were shorter. Stacks.</span>
