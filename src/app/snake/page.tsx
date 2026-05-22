@@ -990,12 +990,12 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
           <span style={{ color: "rgba(255,255,255,0.5)" }}> — sum of all dice</span>
         </div>
         <div style={{ marginTop: 6 }}>
-          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Small straight</span>
-          <span style={{ color: "rgba(255,255,255,0.5)" }}> — any 4 in a row — 30 pts</span>
-        </div>
-        <div style={{ marginTop: 6 }}>
           <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Full house</span>
           <span style={{ color: "rgba(255,255,255,0.5)" }}> — 3 + 2 of a kind — 25 pts</span>
+        </div>
+        <div style={{ marginTop: 6 }}>
+          <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Small straight</span>
+          <span style={{ color: "rgba(255,255,255,0.5)" }}> — any 4 in a row — 30 pts</span>
         </div>
         <div style={{ marginTop: 6 }}>
           <span style={{ color: COLOR.textPrimary, fontWeight: WEIGHT.medium }}>Large straight</span>
