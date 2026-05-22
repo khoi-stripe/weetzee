@@ -63,7 +63,7 @@ type GameState = {
   walls: Wall[];
   wallTick: number;
   powerUp: (Point & { value: number; color: string; type: "ghost" | "diet" | "slow" }) | null;
-  slowFactor: number;
+  speedRewind: number;
   powerUpExpiry: number;
   intangibleUntil: number;
   intangibleColor: string;
@@ -145,7 +145,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0, pendingTeleport: null, slowFactor: 1 };
+  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0, pendingTeleport: null, speedRewind: 0 };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -278,7 +278,7 @@ function drawHole(ctx: CanvasRenderingContext2D, x: number, y: number, cell: num
   ctx.restore();
 }
 
-const SLOW_COLOR = "#60a5fa"; // blue-400
+const SLOW_COLOR = "#ffffff";
 
 // Drawn from hourglass.svg (24×24 viewBox). cx/cy = center, size = target px size.
 function drawHourglass(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, alpha = 1) {
@@ -781,7 +781,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
             powerUpExpiry: newPowerUpExpiry,
             intangibleUntil: ateGhost ? now + INTANGIBLE_DURATION : s.intangibleUntil,
             intangibleColor: ateGhost ? (s.powerUp?.color ?? s.intangibleColor) : s.intangibleColor,
-            slowFactor: ateSlow ? Math.min(s.slowFactor * 1.4, 3.0) : s.slowFactor,
+            speedRewind: ateSlow ? s.speedRewind + 12 : s.speedRewind,
             holes: newHoles,
             nextHoleTime,
             holeCooldown: (teleporting || newPendingTeleport) ? now + TICK_MS * 4 : s.holeCooldown,
@@ -790,7 +790,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
         }
       }
       const len = stateRef.current.snake.length;
-      const delay = TICK_MS * Math.pow(0.985, len - 3) * stateRef.current.slowFactor;
+      const delay = TICK_MS * Math.pow(0.985, Math.max(0, len - 3 - stateRef.current.speedRewind));
       tickDurRef.current = delay;
       pendingId = setTimeout(tick, delay);
     }
@@ -1012,7 +1012,7 @@ function SnakeRules({ isDesktop = false }: { isDesktop?: boolean }) {
             <LegendHourglass />
             <div>
               <span style={{ color: SLOW_COLOR, fontWeight: WEIGHT.medium }}>Slow</span>
-              <span style={{ color: "rgba(255,255,255,0.5)" }}> — permanently reduces the snake's speed. Stacks up to 3×.</span>
+              <span style={{ color: "rgba(255,255,255,0.5)" }}> — rewinds the snake's speed as if it were shorter. Stacks.</span>
             </div>
           </div>
         </div>
