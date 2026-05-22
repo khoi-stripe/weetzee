@@ -164,14 +164,35 @@ function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   ctx.closePath();
 }
 
-function hexToRgb(hex: string): [number, number, number] {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+function hexToHsl(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = max === r ? (g - b) / d + (g < b ? 6 : 0)
+        : max === g ? (b - r) / d + 2
+        : (r - g) / d + 4;
+  return [h / 6, s, l];
+}
+
+function hslToRgb(h: number, s: number, l: number): string {
+  const k = (n: number) => (n + h * 12) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))));
+  return `rgb(${f(0)},${f(8)},${f(4)})`;
 }
 
 function lerpColor(a: string, b: string, t: number): string {
-  const [r1, g1, b1] = hexToRgb(a);
-  const [r2, g2, b2] = hexToRgb(b);
-  return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
+  const [h1, s1, l1] = hexToHsl(a);
+  const [h2, s2, l2] = hexToHsl(b);
+  let dh = h2 - h1;
+  if (dh > 0.5) dh -= 1;
+  if (dh < -0.5) dh += 1;
+  return hslToRgb(((h1 + dh * t) % 1 + 1) % 1, s1 + (s2 - s1) * t, l1 + (l2 - l1) * t);
 }
 
 function snakeColor(frac: number): string {
@@ -362,7 +383,7 @@ function drawSnake(
   ctx.lineWidth = outerW;
   for (let i = len - 1; i >= 1; i--) {
     const x1 = lx(i), y1 = ly(i), x2 = lx(i - 1), y2 = ly(i - 1);
-    if (Math.abs(x2 - x1) > cell || Math.abs(y2 - y1) > cell) continue;
+    if (Math.abs(x2 - x1) > cell * 1.5 || Math.abs(y2 - y1) > cell * 1.5) continue;
     if (x1 === x2 && y1 === y2) continue;
     const grad = ctx.createLinearGradient(x1, y1, x2, y2);
     grad.addColorStop(0, snakeColor(segmentFrac(i, len, now)));
@@ -377,8 +398,8 @@ function drawSnake(
   // Pass 2: filled circle at every joint — fills corner gaps left by butt caps
   for (let i = len - 1; i >= 0; i--) {
     const x = lx(i), y = ly(i);
-    const toPrev = i >= 1     && Math.abs(lx(i - 1) - x) <= cell && Math.abs(ly(i - 1) - y) <= cell;
-    const toNext = i < len - 1 && Math.abs(lx(i + 1) - x) <= cell && Math.abs(ly(i + 1) - y) <= cell;
+    const toPrev = i >= 1     && Math.abs(lx(i - 1) - x) <= cell * 1.5 && Math.abs(ly(i - 1) - y) <= cell * 1.5;
+    const toNext = i < len - 1 && Math.abs(lx(i + 1) - x) <= cell * 1.5 && Math.abs(ly(i + 1) - y) <= cell * 1.5;
     if (!toPrev && !toNext) continue;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
