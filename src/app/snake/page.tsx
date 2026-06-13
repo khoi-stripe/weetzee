@@ -19,7 +19,7 @@ import { hapticLight } from "@/lib/haptics";
 
 const COLORS = PLAYER_COLORS;
 const SPIN_MS = 10000;
-const TICK_MS = 150;
+const TICK_MS = 165;
 const MOBILE_FOOD_COUNT = 5;
 const MOBILE_AREA = 432; // ~16×27 cells on a phone
 function computeFoodCount(cols: number, rows: number) {
@@ -734,7 +734,8 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
           const eatenIdx = s.foods.findIndex(f => head.x === f.x && head.y === f.y);
           const ate = eatenIdx >= 0;
           const atePowerUp = s.powerUp !== null && head.x === s.powerUp.x && head.y === s.powerUp.y;
-          const newSnake = [head, ...s.snake.slice(0, ate ? undefined : -1)];
+          const shouldGrow = ate && s.snake.length % 2 === 1;
+          const newSnake = [head, ...s.snake.slice(0, shouldGrow ? undefined : -1)];
           const afterEat: Food[] = ate
             ? [...s.foods.slice(0, eatenIdx), ...s.foods.slice(eatenIdx + 1),
                randomFood([...newSnake, ...s.foods.filter((_, i) => i !== eatenIdx)], cols, rows, now)]
@@ -817,7 +818,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
         }
       }
       const len = stateRef.current.snake.length;
-      const delay = TICK_MS * Math.pow(0.985, Math.max(0, len - 3 - stateRef.current.speedRewind));
+      const delay = TICK_MS * Math.pow(0.99, Math.max(0, len - 3 - stateRef.current.speedRewind));
       tickDurRef.current = delay;
       pendingId = setTimeout(tick, delay);
     }
