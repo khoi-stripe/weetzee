@@ -71,6 +71,7 @@ type GameState = {
   nextHoleTime: number;
   holeCooldown: number;
   pendingTeleport: Point | null;
+  eatCount: number;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -145,7 +146,7 @@ function makeInitial(cols: number, rows: number): GameState {
     { side: "left",   offset: 0,                         dir: 1 },
     { side: "right",  offset: Math.floor(rows / 2),      dir: -1 },
   ];
-  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0, pendingTeleport: null, speedRewind: 0 };
+  return { snake, dir: "right", nextDir: "right", foods, foodCount, score: 0, over: false, walls, wallTick: 0, powerUp: null, powerUpExpiry: 0, intangibleUntil: 0, intangibleColor: "", holes: null, nextHoleTime: now + randomHoleInterval(), holeCooldown: 0, pendingTeleport: null, speedRewind: 0, eatCount: 0 };
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -734,7 +735,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
           const eatenIdx = s.foods.findIndex(f => head.x === f.x && head.y === f.y);
           const ate = eatenIdx >= 0;
           const atePowerUp = s.powerUp !== null && head.x === s.powerUp.x && head.y === s.powerUp.y;
-          const shouldGrow = ate && s.snake.length % 2 === 1;
+          const shouldGrow = ate && s.eatCount % 2 === 0;
           const newSnake = [head, ...s.snake.slice(0, shouldGrow ? undefined : -1)];
           const afterEat: Food[] = ate
             ? [...s.foods.slice(0, eatenIdx), ...s.foods.slice(eatenIdx + 1),
@@ -814,6 +815,7 @@ function useSnakeGame(cols: number, rows: number, active: boolean, wallsEnabled:
             nextHoleTime,
             holeCooldown: (teleporting || newPendingTeleport) ? now + TICK_MS * 4 : s.holeCooldown,
             pendingTeleport: newPendingTeleport,
+            eatCount: ate ? s.eatCount + 1 : s.eatCount,
           };
         }
       }
